@@ -101,27 +101,35 @@ function SideHead({
   return (
     <div className={`min-w-0 ${align === "right" ? "text-right" : ""}`}>
       <div className="text-[10px] font-bold tracking-wider text-brand-600">{caption}</div>
-      <ProductThumb
-        category={side.category}
-        colors={side.colors}
-        imageUrl={side.imageUrl}
-        size={72}
-        className={`my-1 rounded-xl ${align === "right" ? "ml-auto" : ""}`}
-      />
-      <div className="truncate text-[10px] text-ink-400">{side.brand}</div>
-      {href ? (
-        <Link href={href} className="block text-sm font-bold leading-tight hover:underline">
-          {side.name}
-        </Link>
-      ) : (
-        <div className="text-sm font-bold leading-tight">{side.name}</div>
-      )}
-      <div className="mt-0.5 text-lg font-bold tabular-nums leading-none">
-        ¥{side.priceYen.toLocaleString()}
+      <div
+        className={`mt-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 ${
+          align === "right" ? "items-end sm:flex-row-reverse" : "items-start"
+        }`}
+      >
+        <ProductThumb
+          category={side.category}
+          colors={side.colors}
+          imageUrl={side.imageUrl}
+          size={72}
+          className="shrink-0 rounded-xl"
+        />
+        <div className="min-w-0">
+          <div className="truncate text-[10px] text-ink-400">{side.brand}</div>
+          {href ? (
+            <Link href={href} className="block text-sm font-bold leading-tight hover:underline">
+              {side.name}
+            </Link>
+          ) : (
+            <div className="text-sm font-bold leading-tight">{side.name}</div>
+          )}
+          <div className="mt-0.5 text-lg font-bold tabular-nums leading-none">
+            ¥{side.priceYen.toLocaleString()}
+          </div>
+          <span className="mt-1.5 inline-block rounded-full border border-ink-100 bg-white px-2 py-0.5 text-[10px] text-ink-400">
+            {side.measured ? `口コミ${side.reviewCount}人の平均` : "成分からの予想"}
+          </span>
+        </div>
       </div>
-      <span className="mt-1.5 inline-block rounded-full border border-ink-100 bg-white px-2 py-0.5 text-[10px] text-ink-400">
-        {side.measured ? `口コミ${side.reviewCount}人の平均` : "成分からの予想"}
-      </span>
     </div>
   );
 }
