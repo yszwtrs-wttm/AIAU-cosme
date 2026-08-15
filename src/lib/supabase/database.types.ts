@@ -134,6 +134,35 @@ export type Database = {
           },
         ]
       }
+      product_price_history: {
+        Row: {
+          id: number
+          price_yen: number
+          product_id: number
+          recorded_at: string
+        }
+        Insert: {
+          id?: never
+          price_yen: number
+          product_id: number
+          recorded_at?: string
+        }
+        Update: {
+          id?: never
+          price_yen?: number
+          product_id?: number
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_price_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           brand_id: number
@@ -511,6 +540,92 @@ export type Database = {
           },
           {
             foreignKeyName: "user_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wishlist_alerts: {
+        Row: {
+          created_at: string
+          delta_e: number | null
+          id: number
+          ing_sim: number | null
+          kind: string
+          new_price_yen: number | null
+          old_price_yen: number | null
+          product_id: number
+          read_at: string | null
+          related_product_id: number | null
+          score: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta_e?: number | null
+          id?: never
+          ing_sim?: number | null
+          kind: string
+          new_price_yen?: number | null
+          old_price_yen?: number | null
+          product_id: number
+          read_at?: string | null
+          related_product_id?: number | null
+          score?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta_e?: number | null
+          id?: never
+          ing_sim?: number | null
+          kind?: string
+          new_price_yen?: number | null
+          old_price_yen?: number | null
+          product_id?: number
+          read_at?: string | null
+          related_product_id?: number | null
+          score?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlist_alerts_related_product_id_fkey"
+            columns: ["related_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wishlist_items: {
+        Row: {
+          created_at: string
+          product_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          product_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          product_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"

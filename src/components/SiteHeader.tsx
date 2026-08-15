@@ -10,6 +10,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
         { href: "/search", label: "商品を探す" },
         { href: "/feed", label: "みんなの投稿" },
         { href: "/stash", label: "Myポーチ" },
+        { href: "/wishlist", label: "気になる" },
       ]
     : [
         { href: "/search", label: "商品を探す" },

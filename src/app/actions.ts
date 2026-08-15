@@ -10,7 +10,7 @@ type Result = { ok: boolean; error?: string };
 export async function addToStash(
   productId: number,
   source: "manual" | "scan" | "photo" | "quick" = "manual",
-): Promise<Result> {
+): Promise<Result & { overlapLabels?: string[] }> {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
@@ -25,9 +25,38 @@ export async function addToStash(
       { onConflict: "user_id,product_id" },
     );
 
+  // 登録をきっかけに DB のトリガーが被り通知を作る。追加直後に画面で伝えたいので読み直す。
+  const overlapLabels = error ? [] : await unreadOverlapLabels(supabase, productId);
+
   revalidatePath("/stash");
+  revalidatePath("/wishlist");
   revalidatePath(`/products/${productId}`);
-  return { ok: !error, error: error?.message };
+  return { ok: !error, error: error?.message, overlapLabels };
+}
+
+type ServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/** 「気になる」のうち、いま入れた手持ちと被ったものの名前。 */
+async function unreadOverlapLabels(
+  supabase: ServerClient,
+  stashedProductId: number,
+): Promise<string[]> {
+  const { data: alerts } = await supabase
+    .from("wishlist_alerts")
+    .select("product_id")
+    .eq("kind", "overlap")
+    .eq("related_product_id", stashedProductId)
+    .is("read_at", null);
+
+  const wishIds = (alerts ?? []).map((a) => a.product_id);
+  if (wishIds.length === 0) return [];
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("id,name,brands(name)")
+    .in("id", wishIds);
+
+  return (products ?? []).map((p) => `${p.brands?.name ?? ""} ${p.name}`.trim());
 }
 
 export async function addManyToStash(
@@ -66,6 +95,58 @@ export async function removeFromStash(productId: number): Promise<Result> {
 
   revalidatePath("/stash");
   revalidatePath(`/products/${productId}`);
+  return { ok: !error, error: error?.message };
+}
+
+export async function addToWishlist(productId: number): Promise<Result> {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "気になるリストの利用にはアカウント登録が必要です" };
+  }
+
+  const { error } = await supabase
+    .from("wishlist_items")
+    .upsert({ product_id: productId, user_id: user.id }, { onConflict: "user_id,product_id" });
+
+  revalidatePath("/wishlist");
+  revalidatePath(`/products/${productId}`);
+  return { ok: !error, error: error?.message };
+}
+
+export async function removeFromWishlist(productId: number): Promise<Result> {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "気になるリストの利用にはアカウント登録が必要です" };
+  }
+
+  const { error } = await supabase
+    .from("wishlist_items")
+    .delete()
+    .eq("product_id", productId)
+    .eq("user_id", user.id);
+
+  revalidatePath("/wishlist");
+  revalidatePath(`/products/${productId}`);
+  return { ok: !error, error: error?.message };
+}
+
+export async function markWishlistAlertsRead(): Promise<Result> {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+  if (!user) return { ok: false, error: "セッションがありません" };
+
+  const { error } = await supabase
+    .from("wishlist_alerts")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .is("read_at", null);
+
+  revalidatePath("/wishlist");
   return { ok: !error, error: error?.message };
 }
 

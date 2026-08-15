@@ -15,6 +15,7 @@ LIPS や @cosme は「何を買うか」を決めるアプリ。KAWANAI は手�
 | 安い代替 | `find_cheaper_dupes`（類似スコア閾値 × 価格差） |
 | 口コミ信頼度 | `recompute_review_trust`。スコアと除外理由は内部で使い、UI には出さない |
 | 画像から色検出 | `/color`。主要色を抽出 → Lab 変換 → `find_by_color`。色名・系統・肌トーン順で提示 |
+| 気になるリスト | `/wishlist`（本アカウント限定）。保留中の候補を置き、ポーチに手持ちが増えて被ったとき（`user_items` の insert トリガー）と、価格が下がったとき（`products.price_yen` の update トリガー + `product_price_history`）に通知する。値下がりは Realtime で開いている画面にも届く |
 | 手持ちだけのメイク提案 | `/stash`（本アカウント限定）。`OPENAI_API_KEY` があれば LLM、無ければルールベース |
 | 認証 / プロフィール | `/login`（初回はメールのリンクで確認し、プロフィール作成画面でパスワードを設定。以降はメールアドレス＋パスワードでログイン）、`/settings`、`/me`、`/u/[handle]` |
 | 画像つき口コミ | `/feed`。1投稿4枚まで、Supabase Storage の `review-images` に保存 |

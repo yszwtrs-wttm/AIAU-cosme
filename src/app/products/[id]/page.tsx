@@ -7,6 +7,7 @@ import IngredientPanel from "@/components/IngredientPanel";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
+import WishlistButton from "@/components/WishlistButton";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
@@ -33,6 +34,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const [
     { data: product },
     { data: owned },
+    { data: wished },
     dupeRes,
     cheaperRes,
     coverageRes,
@@ -51,6 +53,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     user
       ? supabase
           .from("user_items")
+          .select("product_id")
+          .eq("product_id", productId)
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    user
+      ? supabase
+          .from("wishlist_items")
           .select("product_id")
           .eq("product_id", productId)
           .eq("user_id", user.id)
@@ -226,8 +236,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               ))}
             </ul>
           )}
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap items-start gap-2">
             <StashButton productId={product.id} owned={isOwned} canUse={canUseStash} />
+            <WishlistButton productId={product.id} wished={Boolean(wished)} canUse={canUseStash} />
           </div>
           {isOwned && (
             <p className="mt-2 text-xs font-bold text-brand-700">これは持っている商品です。</p>
