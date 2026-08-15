@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { imageUrl, publicImageUrl } from "@/lib/storage";
 
@@ -8,7 +8,7 @@ const FULL_WIDTH = 1600;
 
 /**
  * 口コミ写真。一覧では表示幅に合わせたサムネを読み、押したときだけ大きい画像を取る。
- * 画像変換が効かない環境（無料プランなど）は原寸 URL に落とす。
+ * 画像変換が効かない環境では原寸 URL に落とす。
  */
 export default function ReviewImage({
   path,
@@ -21,14 +21,24 @@ export default function ReviewImage({
 }) {
   const [failed, setFailed] = useState(false);
   const [open, setOpen] = useState(false);
-  const thumb = failed ? publicImageUrl(path) : imageUrl(path, { width });
+  const thumbRef = useRef<HTMLImageElement>(null);
+
+  // SSR で描いた画像の読み込みは hydration より前に終わっているので、onError では拾えない。
+  // 読み込み済みなのに大きさがない＝失敗しているので、mount 時に自分で見る。
+  useEffect(() => {
+    const img = thumbRef.current;
+    if (img?.complete && img.naturalWidth === 0) setFailed(true);
+  }, []);
+
+  const src = failed ? publicImageUrl(path) : imageUrl(path, { width });
 
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={`block shrink-0 ${className}`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={thumb}
+          ref={thumbRef}
+          src={src}
           alt=""
           loading="lazy"
           decoding="async"
@@ -42,7 +52,7 @@ export default function ReviewImage({
           role="dialog"
           aria-modal="true"
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-50 grid place-items-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

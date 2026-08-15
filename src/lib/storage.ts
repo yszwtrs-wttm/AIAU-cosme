@@ -3,8 +3,8 @@ const BUCKET = "review-images";
 /** 一覧のサムネ幅。拡大表示や単体表示はもっと大きい幅を渡す。 */
 export const THUMB_WIDTH = 640;
 
-/** Storage の画像変換 API は Pro プラン限定なので、使えるかどうかを環境変数で切り替える。 */
-const TRANSFORM_ENABLED = process.env.NEXT_PUBLIC_SUPABASE_IMAGE_TRANSFORM === "true";
+/** Storage の画像変換 API が使えない環境では `false` を入れて原寸配信に戻す。 */
+const TRANSFORM_ENABLED = process.env.NEXT_PUBLIC_SUPABASE_IMAGE_TRANSFORM !== "false";
 
 /** 口コミ写真は公開バケットに置く。パスから表示用 URL を組む。 */
 export function publicImageUrl(path: string): string {
