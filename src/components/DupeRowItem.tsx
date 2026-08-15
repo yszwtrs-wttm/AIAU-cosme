@@ -13,6 +13,7 @@ export default function DupeRowItem({ row, tone }: { row: DupeRow; tone: "warn" 
       <div
         className="swatch h-12 w-12 shrink-0 rounded-2xl"
         style={{ background: row.color_hex ?? "#e9e2e6" }}
+        aria-hidden="true"
       />
       <div className="min-w-0 flex-1">
         <div className="text-[11px] text-ink-400">{row.brand}</div>

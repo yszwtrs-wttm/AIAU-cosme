@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Check, CircleAlert, HelpCircle } from "lucide-react";
 import type { Fit } from "@/lib/fit";
+import { colorName } from "@/lib/wording";
 
 const TONE: Record<Fit["verdict"], { box: string; text: string }> = {
   good: { box: "border-emerald-200 bg-emerald-50", text: "text-emerald-900" },
@@ -30,6 +31,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
         {fit.reasons.map((r) => (
           <li key={r.text} className="flex gap-1.5">
             <span
+              aria-hidden="true"
               className={
                 r.tone === "plus"
                   ? "text-emerald-600"
@@ -50,6 +52,8 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
           <span
             className="swatch inline-block h-7 w-7 rounded-full"
             style={{ background: fit.shade.hex }}
+            role="img"
+            aria-label={colorName(fit.shade.hex)}
           />
           <span className="font-bold">{fit.shade.shade_name}</span>
           <span className="text-xs text-ink-400">肌の色にいちばん近い番号</span>

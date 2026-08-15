@@ -13,10 +13,13 @@ const FULL_WIDTH = 1600;
 export default function ReviewImage({
   path,
   width,
+  alt,
   className = "",
 }: {
   path: string;
   width: number;
+  /** 何が写っているかの説明。押すと拡大するので、ボタンのラベルにも使う。 */
+  alt: string;
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
@@ -34,7 +37,12 @@ export default function ReviewImage({
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={`block shrink-0 ${className}`}>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={`${alt}（押すと拡大）`}
+        className={`block shrink-0 ${className}`}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={thumbRef}
@@ -57,7 +65,7 @@ export default function ReviewImage({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={failed ? publicImageUrl(path) : imageUrl(path, { width: FULL_WIDTH, quality: 80 })}
-            alt=""
+            alt={alt}
             onError={() => setFailed(true)}
             className="max-h-full max-w-full rounded-2xl object-contain"
           />

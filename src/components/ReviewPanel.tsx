@@ -102,11 +102,12 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
 
       {images.length > 0 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
-          {images.map((img) => (
+          {images.map((img, i) => (
             <ReviewImage
               key={img.id}
               path={img.path}
               width={THUMB_WIDTH}
+              alt={`${name}さんの口コミの写真${images.length > 1 ? ` ${i + 1}枚目` : ""}`}
               className="h-28 w-28 overflow-hidden rounded-2xl"
             />
           ))}
@@ -290,6 +291,7 @@ export default function ReviewPanel({
                 onClick={() => setRating(n)}
                 className={`text-2xl leading-none ${n <= rating ? "text-amber-500" : "text-amber-200"}`}
                 aria-label={`${n}点`}
+                aria-pressed={n === rating}
               >
                 ★
               </button>
@@ -301,7 +303,7 @@ export default function ReviewPanel({
             onChange={(e) => setBody(e.target.value)}
             rows={3}
             placeholder="どんなときに使って、どう良かった（悪かった）かを書くと参考になります"
-            className="w-full rounded-2xl border border-brand-100 bg-white px-3 py-2 text-sm outline-none focus:border-brand-300"
+            className="w-full rounded-2xl border border-brand-100 bg-white px-3 py-2 text-sm focus-ring focus:border-brand-300"
           />
 
           <div className="space-y-2 rounded-2xl bg-brand-50/60 p-3">

@@ -84,7 +84,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
   return (
     <div className="space-y-4">
       <section className="rounded-2xl border border-ink-200 bg-white p-5">
-        <div className="text-xs font-bold text-brand-600">STEP 1 ／ 写真を選ぶ</div>
+        <h2 className="text-xs font-bold text-brand-600">STEP 1 ／ 写真を選ぶ</h2>
         <p className="mt-1 text-sm text-ink-600">
           なりたい色が写っている写真（好きなメイク・服・小物など）を選んでください。
         </p>
@@ -106,7 +106,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
 
       {extracted.length > 0 && (
         <section className="rounded-2xl border border-ink-200 bg-white p-5">
-          <div className="text-xs font-bold text-brand-600">STEP 2 ／ 使いたい色を選ぶ</div>
+          <h2 className="text-xs font-bold text-brand-600">STEP 2 ／ 使いたい色を選ぶ</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {extracted.map((c) => (
               <button
@@ -116,13 +116,18 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                   setHex(c.hex);
                   void search(c.hex, category);
                 }}
+                aria-pressed={hex?.toLowerCase() === c.hex.toLowerCase()}
                 className={`flex items-center gap-2 rounded-2xl border bg-white px-2.5 py-2 text-[11px] ${
                   hex?.toLowerCase() === c.hex.toLowerCase()
                     ? "border-brand-400"
                     : "border-brand-100"
                 }`}
               >
-                <span className="swatch inline-block h-8 w-8 rounded-full" style={{ background: c.hex }} />
+                <span
+                  className="swatch inline-block h-8 w-8 rounded-full"
+                  style={{ background: c.hex }}
+                  aria-hidden="true"
+                />
                 <span className="text-left">
                   <span className="block font-bold">{colorName(c.hex)}</span>
                   <span className="text-ink-400">{hueGroup(c.hex)}</span>
@@ -150,6 +155,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                     void search(next, c.value);
                   }
                 }}
+                aria-pressed={category === c.value}
                 className={`rounded-full border px-3 py-1.5 text-sm ${
                   category === c.value
                     ? "border-transparent bg-brand-600 text-white"
@@ -165,7 +171,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
 
       {hex && (
         <section className="space-y-2">
-          <div className="text-xs font-bold text-brand-600">STEP 3 ／ 近いコスメ</div>
+          <h2 className="text-xs font-bold text-brand-600">STEP 3 ／ 近いコスメ</h2>
           {loading && <p className="text-sm text-ink-400">探しています…</p>}
 
           {best && (
@@ -195,6 +201,8 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                 <span
                   className="swatch inline-block h-12 w-12 shrink-0 rounded-full"
                   style={{ background: m.shade_hex ?? m.color_hex ?? "#e9e2e6" }}
+                  role="img"
+                  aria-label={colorName(m.shade_hex ?? m.color_hex ?? "#e9e2e6")}
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block text-[11px] text-ink-400">

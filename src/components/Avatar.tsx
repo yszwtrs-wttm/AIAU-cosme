@@ -45,6 +45,7 @@ export default function Avatar({
 
   return (
     <span
+      aria-hidden="true"
       className={`grid ${sizes[size]} shrink-0 place-items-center rounded-full font-bold text-white ${className}`}
       style={{ background: `hsl(${hue} 70% 62%)` }}
     >

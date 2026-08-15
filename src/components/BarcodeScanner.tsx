@@ -186,8 +186,9 @@ export default function BarcodeScanner() {
             <input
               value={jan}
               onChange={(e) => setJan(e.target.value)}
+              aria-label="バーコードの数字"
               placeholder="バーコードの数字を手入力"
-              className="min-w-0 flex-1 rounded-full border border-brand-100 px-4 py-2.5 text-sm outline-none focus:border-brand-300 sm:w-56 sm:flex-none"
+              className="min-w-0 flex-1 rounded-full border border-brand-100 px-4 py-2.5 text-sm focus-ring focus:border-brand-300 sm:w-56 sm:flex-none"
             />
             <button
               type="submit"
@@ -263,7 +264,8 @@ export default function BarcodeScanner() {
               value={candidateQuery}
               onChange={(e) => setCandidateQuery(e.target.value)}
               placeholder="商品名で絞り込む"
-              className="w-full rounded-full border border-ink-200 bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
+              aria-label="商品名で絞り込む"
+              className="w-full rounded-full border border-ink-200 bg-white py-2 pl-9 pr-4 text-sm focus-ring focus:border-brand-400"
             />
           </label>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -301,6 +303,7 @@ export default function BarcodeScanner() {
                 <span
                   className="swatch inline-block h-8 w-8 shrink-0 rounded-full"
                   style={{ background: p.color_hex ?? "#e9e2e6" }}
+                  aria-hidden="true"
                 />
                 <span className="min-w-0">
                   <span className="block truncate">

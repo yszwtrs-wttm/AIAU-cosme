@@ -24,7 +24,7 @@ export default function PasswordField({
         autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-brand-100 px-3 py-2.5 pr-11 text-sm outline-none focus:border-brand-300"
+        className="w-full rounded-2xl border border-brand-100 px-3 py-2.5 pr-11 text-sm focus-ring focus:border-brand-300"
       />
       <button
         type="button"
