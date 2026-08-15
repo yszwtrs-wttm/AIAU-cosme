@@ -760,6 +760,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      search_products: {
+        Args: { p_category?: string | null; p_limit?: number; p_mens?: boolean | null; p_q: string }
+        Returns: {
+          product_id: number
+          score: number
+        }[]
+      }
       set_limit: {
         Args: { "": number }
         Returns: number
