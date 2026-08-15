@@ -167,6 +167,17 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     feel: feelValues,
   };
 
+  // 一度報告した口コミは最初からボタンを閉じておく（DB の unique 制約と揃える）。
+  let reportedReviewIds: number[] = [];
+  if (isRealAccount(user) && (reviews ?? []).length > 0) {
+    const { data: reportRows } = await supabase
+      .from("review_reports")
+      .select("review_id")
+      .eq("user_id", user!.id)
+      .in("review_id", (reviews ?? []).map((review) => review.id));
+    reportedReviewIds = (reportRows ?? []).map((row) => row.review_id);
+  }
+
   const fit = judgeFit(product, profile);
   const isOwned = Boolean(owned);
   const canUseStash = isRealAccount(user);
@@ -334,6 +345,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           initialReviews={reviews ?? []}
           initialSummary={summary ?? null}
           canPost={canPost}
+          reportedReviewIds={reportedReviewIds}
           viewer={{
             skinType: profile?.skin_type ?? null,
             skinToneHex: profile?.skin_tone_hex ?? null,
