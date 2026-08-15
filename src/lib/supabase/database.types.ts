@@ -809,6 +809,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      search_products: {
+        Args: { p_category?: string | null; p_limit?: number; p_mens?: boolean | null; p_q: string }
+        Returns: {
+          product_id: number
+          score: number
+        }[]
+      }
+>>>>>>> origin/main
       set_limit: {
         Args: { "": number }
         Returns: number
