@@ -89,7 +89,7 @@ function LandingPage({ products }: { products: Product[] }) {
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
-              href="/login"
+              href="/login?mode=signup"
               className="flex items-center gap-1.5 rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-white"
             >
               はじめる <ArrowRight size={16} />
