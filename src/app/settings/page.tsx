@@ -3,7 +3,9 @@ import PasswordSettings from "@/components/PasswordSettings";
 import ProfileForm from "@/components/ProfileForm";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { IngredientMaster } from "@/lib/types";
+import type { IngredientMaster, Product } from "@/lib/types";
+
+type StashRow = { products: Product | null };
 
 export default async function SettingsPage() {
   const user = await getMyUser();
@@ -27,17 +29,23 @@ export default async function SettingsPage() {
   }
 
   const supabase = await createClient();
-  const [{ data: ingredients }, { data: allergenRows }] = await Promise.all([
-    supabase
-      .from("ingredients_master")
-      .select("id,name_ja,inci")
-      .order("name_ja")
-      .returns<IngredientMaster[]>(),
-    supabase
-      .from("profile_allergens")
-      .select("ingredient_id")
-      .eq("user_id", user.id),
-  ]);
+  const [{ data: ingredients }, { data: allergenRows }, { data: stashRows }, { data: shareRow }] =
+    await Promise.all([
+      supabase
+        .from("ingredients_master")
+        .select("id,name_ja,inci")
+        .order("name_ja")
+        .returns<IngredientMaster[]>(),
+      supabase.from("profile_allergens").select("ingredient_id").eq("user_id", user.id),
+      supabase
+        .from("user_items")
+        .select(
+          "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
+        )
+        .eq("user_id", user.id)
+        .returns<StashRow[]>(),
+      supabase.from("profile_share_tokens").select("token").eq("user_id", user.id).maybeSingle(),
+    ]);
 
   return (
     <div className="mx-auto max-w-md space-y-4">
@@ -49,6 +57,10 @@ export default async function SettingsPage() {
         profile={profile}
         ingredients={ingredients ?? []}
         allergenIds={(allergenRows ?? []).map((row) => row.ingredient_id)}
+        stashItems={(stashRows ?? [])
+          .map((row) => row.products)
+          .filter((product): product is Product => Boolean(product))}
+        shareToken={shareRow?.token ?? null}
       />
     </div>
   );

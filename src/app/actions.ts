@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
-import type { PersonalColor, SkinType } from "@/lib/types";
+import type { PersonalColor, SkinType, StashVisibility } from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
 
@@ -152,7 +152,7 @@ export async function saveProfile(input: {
   skinToneHex?: string | null;
   skinType?: SkinType | null;
   personalColor?: PersonalColor | null;
-  stashPublic?: boolean;
+  stashVisibility?: StashVisibility;
   avatarHue?: number;
   avatarUrl?: string | null;
   allergenIds?: number[];
@@ -175,7 +175,7 @@ export async function saveProfile(input: {
     skin_tone_hex: input.skinToneHex ?? null,
     skin_type: input.skinType ?? null,
     personal_color: input.personalColor ?? null,
-    stash_public: input.stashPublic ?? true,
+    stash_visibility: input.stashVisibility ?? "private",
     avatar_hue: input.avatarHue ?? 330,
     avatar_url: input.avatarUrl ?? null,
   });
@@ -209,7 +209,62 @@ export async function saveProfile(input: {
     if (addError) return { ok: false, error: addError.message };
   }
 
+  if (input.stashVisibility === "link") {
+    await ensureShareToken();
+  }
+
   revalidatePath("/me");
   revalidatePath("/settings");
+  revalidatePath(`/u/${input.handle}`);
   return { ok: true };
+}
+
+/**
+ * リンク限定公開の共有トークン。推測できない値を本人だけが読める表に持つ。
+ * 未作成なら作り、既にあればそのまま返す。
+ */
+export async function ensureShareToken(): Promise<{ ok: boolean; token?: string; error?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !isRealAccount(user)) return { ok: false, error: "セッションがありません" };
+
+  const { data: existing } = await supabase
+    .from("profile_share_tokens")
+    .select("token")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (existing) return { ok: true, token: existing.token };
+
+  const { data, error } = await supabase
+    .from("profile_share_tokens")
+    .insert({ user_id: user.id })
+    .select("token")
+    .single();
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, token: data.token };
+}
+
+/** 共有リンクを配り直したいときに、トークンを作り替えて古いリンクを無効にする。 */
+export async function regenerateShareToken(): Promise<{
+  ok: boolean;
+  token?: string;
+  error?: string;
+}> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !isRealAccount(user)) return { ok: false, error: "セッションがありません" };
+
+  const { data, error } = await supabase
+    .from("profile_share_tokens")
+    .upsert({ user_id: user.id, token: crypto.randomUUID() }, { onConflict: "user_id" })
+    .select("token")
+    .single();
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/settings");
+  return { ok: true, token: data.token };
 }

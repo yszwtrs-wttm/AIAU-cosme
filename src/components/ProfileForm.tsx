@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveProfile } from "@/app/actions";
 import Avatar from "@/components/Avatar";
+import StashVisibilityField from "@/components/StashVisibilityField";
 import { shrinkImage } from "@/lib/image";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -11,8 +12,10 @@ import {
   SKIN_TYPE_LABEL,
   type IngredientMaster,
   type PersonalColor,
+  type Product,
   type Profile,
   type SkinType,
+  type StashVisibility,
 } from "@/lib/types";
 
 const SKIN_TONES = [
@@ -30,10 +33,14 @@ export default function ProfileForm({
   profile,
   ingredients,
   allergenIds,
+  stashItems,
+  shareToken,
 }: {
   profile: Profile | null;
   ingredients: IngredientMaster[];
   allergenIds: number[];
+  stashItems: Product[];
+  shareToken: string | null;
 }) {
   const router = useRouter();
   const [handle, setHandle] = useState(profile?.handle ?? "");
@@ -46,7 +53,9 @@ export default function ProfileForm({
   );
   const [hue, setHue] = useState(profile?.avatar_hue ?? 330);
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? null);
-  const [stashPublic, setStashPublic] = useState(profile?.stash_public ?? true);
+  const [stashVisibility, setStashVisibility] = useState<StashVisibility>(
+    profile?.stash_visibility ?? "private",
+  );
   const [selectedAllergenIds, setSelectedAllergenIds] = useState<number[]>(allergenIds);
   const [allergenQuery, setAllergenQuery] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -134,7 +143,7 @@ export default function ProfileForm({
             skinToneHex: skinTone || null,
             skinType: skinType || null,
             personalColor: personalColor || null,
-            stashPublic,
+            stashVisibility,
             avatarHue: hue,
             avatarUrl,
             allergenIds: selectedAllergenIds,
@@ -352,14 +361,22 @@ export default function ProfileForm({
         </div>
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={stashPublic}
-          onChange={(e) => setStashPublic(e.target.checked)}
-        />
-        ポーチの中身を、ユーザーページで公開する
-      </label>
+      <StashVisibilityField
+        value={stashVisibility}
+        onChange={setStashVisibility}
+        profile={{
+          handle,
+          displayName,
+          bio,
+          avatarHue: hue,
+          avatarUrl,
+          skinToneHex: skinTone,
+          skinType,
+          personalColor,
+        }}
+        items={stashItems}
+        shareToken={shareToken}
+      />
 
       {error && <p className="text-xs text-red-600">{error}</p>}
       {message && <p className="text-xs text-emerald-600">{message}</p>}
