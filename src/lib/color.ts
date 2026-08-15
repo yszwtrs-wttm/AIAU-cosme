@@ -97,6 +97,7 @@ export function extractPalette(
 
   return picked
     .filter((p) => p.n / total >= 0.02)
+    .sort((a, b) => b.n - a.n)
     .map((p) => ({ hex: p.hex, share: p.n / total }));
 }
 
