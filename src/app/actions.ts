@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
+import { PHASH_ALGO } from "@/lib/phash";
 import type { PersonalColor, SkinType } from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
@@ -110,7 +111,7 @@ export async function postReview(input: {
 
 export async function attachReviewImages(
   reviewId: number,
-  images: { path: string; phash?: string | null }[],
+  images: { path: string; phash?: string | null; phashAlgo?: string | null }[],
 ): Promise<Result> {
   const supabase = await createClient();
   const {
@@ -124,6 +125,7 @@ export async function attachReviewImages(
       user_id: user.id,
       path: img.path,
       phash: img.phash ?? null,
+      phash_algo: img.phash ? (img.phashAlgo ?? PHASH_ALGO) : null,
       pos,
     })),
   );

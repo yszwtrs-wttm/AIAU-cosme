@@ -12,7 +12,7 @@ import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
 import ReviewImage from "@/components/ReviewImage";
 import { shrinkImage } from "@/lib/image";
-import { averageHash } from "@/lib/phash";
+import { PHASH_ALGO, perceptualHash } from "@/lib/phash";
 import { THUMB_WIDTH } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
@@ -207,7 +207,7 @@ export default function ReviewPanel({
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        const uploaded: { path: string; phash?: string | null }[] = [];
+        const uploaded: { path: string; phash?: string | null; phashAlgo?: string }[] = [];
 
         const targets = files.slice(0, MAX_IMAGES);
 
@@ -219,7 +219,7 @@ export default function ReviewPanel({
             .from("review-images")
             .upload(path, file, { upsert: true, contentType: file.type });
           if (upErr) continue;
-          uploaded.push({ path, phash: await averageHash(file) });
+          uploaded.push({ path, phash: await perceptualHash(file), phashAlgo: PHASH_ALGO });
         }
 
         const attached: { ok: boolean; error?: string } =
