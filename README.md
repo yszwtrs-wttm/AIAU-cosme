@@ -54,6 +54,17 @@ npm run dev
 
 シードの商品・ブランド・口コミはすべて架空。実在商品のデータは使っていない。
 
+## デモ用バーコード
+
+シードの JAN は EAN-13 のチェックディジット付きなので、印刷すれば実機のカメラで読める。
+
+```bash
+pip install python-barcode reportlab
+python scripts/generate_barcodes.py kawanai_barcodes.pdf   # .env.local の Supabase から商品を取得
+```
+
+印刷したシートを `/scan` の「カメラでスキャン」で読むと手持ちに登録される。カメラが無い環境では「バーコード画像から読み取る」に写真を渡すか、JAN を手入力する。
+
 ## 検証
 
 ```bash
