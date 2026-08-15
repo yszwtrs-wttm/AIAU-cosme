@@ -154,7 +154,8 @@ export async function reportReview(reviewId: number, reason: string): Promise<Re
     if (error.code === "23505") {
       return { ok: false, error: "この口コミはすでに報告しています" };
     }
-    return { ok: false, error: error.message };
+    console.error("reportReview failed", error);
+    return { ok: false, error: "報告を受け付けられませんでした。しばらくしてからもう一度お試しください" };
   }
 
   return { ok: true };
