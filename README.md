@@ -17,7 +17,7 @@ LIPS や @cosme は「何を買うか」を決めるアプリ。KAWANAI は手�
 | 画像から色検出 | `/color`。主要色を抽出 → Lab 変換 → `find_by_color`。色名・系統・肌トーン順で提示 |
 | 手持ちだけのメイク提案 | `/stash`（本アカウント限定）。`OPENAI_API_KEY` があれば LLM、無ければルールベース |
 | 認証 / プロフィール | `/login`（初回はメールのリンクで確認し、プロフィール作成画面でパスワードを設定。以降はメールアドレス＋パスワードでログイン）、`/settings`、`/me`、`/u/[handle]` |
-| 画像つき口コミ | `/feed`。1投稿4枚まで、Supabase Storage の `review-images` に保存 |
+| 画像つき口コミ | `/feed`。1投稿4枚まで、Supabase Storage の `review-images` に保存。アップロード時に長辺1600pxのWebPへ縮小し、一覧はサムネ幅で読む |
 | 成分の日本語化 | `src/lib/ingredients.ts` の辞書で日本語名・役割・効果に変換 |
 | 使用感 | `src/lib/feel.ts`。口コミがあれば平均、無ければ成分からの推定 |
 | メンズ | シャンプー / トリートメント / BB / 日焼け止めをカテゴリに保持 |
@@ -31,6 +31,19 @@ w_i = (1 / log2(i + 2)) * idf(ingredient)
 ```
 
 共通の基剤（水、BG、グリセリンなど）は IDF で寄与を落とす。L2 正規化して pgvector の cosine 距離で比較する。
+
+### 定期再計算
+
+IDF は商品が増えるたびに変わるので、Supabase Cron（`pg_cron`）で日次 18:00 UTC（JST 3:00）に
+`refresh_ingredient_idf_logged()` を実行し、DF / IDF を数え直して `products.ingredient_vec` を全行再生成する。
+手動で走らせたい場合は `select refresh_ingredient_idf_logged();`。
+
+実行ログは `maintenance_runs` に残る。最終実行はビューで確認する。
+
+```sql
+select * from ingredient_idf_status;
+-- started_at | finished_at | duration_ms | products | ingredients | status | detail
+```
 
 ## 色差
 
@@ -65,6 +78,17 @@ npm run dev
 シードを作り直す場合は `npm run seed:gen`（`scripts/generate_seed.py` が決定論的に生成）。
 
 シードの商品・ブランド・口コミはすべて架空。実在商品のデータは使っていない。
+
+## 型定義
+
+`src/lib/supabase/database.types.ts` は `supabase/migrations/` から生成する。マイグレーションを追加・変更したら再生成してコミットする。
+
+```bash
+npx supabase start             # ローカルDBが起動していること
+npm run db:types
+```
+
+再生成し忘れると CI（`.github/workflows/ci.yml` の `db-types` ジョブ）が差分を検出して落ちる。
 
 ## 検証
 
