@@ -52,7 +52,16 @@ export default function LoginForm({
 
   const finishAuth = async () => {
     const supabase = createClient();
-    const { data } = await supabase.from("profiles").select("handle").maybeSingle();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const { data } = user
+      ? await supabase
+          .from("profiles")
+          .select("handle")
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : { data: null };
     router.push(data ? "/me" : "/settings");
     router.refresh();
   };
