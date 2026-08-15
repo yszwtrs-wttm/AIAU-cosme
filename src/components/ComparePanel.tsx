@@ -142,13 +142,13 @@ function Bar({
       <span className="relative h-4 flex-1 rounded-full bg-ink-100">
         <span
           className={`absolute inset-y-0 left-0 rounded-full ${
-            tone === "high" ? "bg-brand-600" : "bg-emerald-600"
+            tone === "high" ? "bg-brand-500" : "bg-emerald-500"
           } ${lead ? "ring-2 ring-inset ring-white/40" : ""}`}
           style={{ width: `${v}%` }}
         />
         <span
           className={`absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white shadow ${
-            tone === "high" ? "bg-brand-600" : "bg-emerald-600"
+            tone === "high" ? "bg-brand-500" : "bg-emerald-500"
           }`}
           style={{ left: `${v}%` }}
         />
