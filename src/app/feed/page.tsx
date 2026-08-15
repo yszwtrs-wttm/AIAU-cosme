@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/server";
@@ -30,20 +31,24 @@ export default async function FeedPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {(reviews ?? []).map((r) => {
+        {(reviews ?? []).map((r, index) => {
           const images = [...(r.review_images ?? [])].sort((a, b) => a.pos - b.pos);
           return (
             <article key={r.id} className="overflow-hidden rounded-2xl border border-ink-200 bg-white">
               {images.length > 0 && (
                 <div className="flex gap-1 overflow-x-auto">
-                  {images.map((img) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={img.id}
-                      src={publicImageUrl(img.path)}
-                      alt=""
-                      className="h-48 w-full shrink-0 object-cover"
-                    />
+                  {images.map((img, imageIndex) => (
+                    <div key={img.id} className="relative h-48 w-full shrink-0">
+                      <Image
+                        src={publicImageUrl(img.path)}
+                        alt=""
+                        fill
+                        sizes="(min-width: 640px) 50vw, 100vw"
+                        // 先頭の投稿の1枚目がファーストビューの LCP になる。
+                        priority={index === 0 && imageIndex === 0}
+                        className="object-cover"
+                      />
+                    </div>
                   ))}
                 </div>
               )}

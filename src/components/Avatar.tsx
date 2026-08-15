@@ -1,3 +1,7 @@
+import Image from "next/image";
+
+const PX = { sm: 24, md: 40, lg: 64 } as const;
+
 export default function Avatar({
   name,
   hue = 330,
@@ -20,10 +24,12 @@ export default function Avatar({
 
   if (avatarUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={avatarUrl}
         alt={`${name}のアイコン`}
+        width={PX[size]}
+        height={PX[size]}
+        sizes={`${PX[size]}px`}
         className={`${sizes[size]} shrink-0 rounded-full object-cover ${className}`}
       />
     );

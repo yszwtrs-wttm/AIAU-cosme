@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Flag, ImagePlus, Lock, X } from "lucide-react";
@@ -89,11 +90,13 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
       {images.length > 0 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {images.map((img) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <Image
               key={img.id}
               src={publicImageUrl(img.path)}
               alt=""
+              width={112}
+              height={112}
+              sizes="112px"
               className="h-28 w-28 shrink-0 rounded-2xl object-cover"
             />
           ))}

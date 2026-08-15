@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
@@ -121,11 +122,13 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
                 {(r.review_images ?? []).length > 0 && (
                   <div className="mt-2 flex gap-2 overflow-x-auto">
                     {(r.review_images ?? []).map((img) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <Image
                         key={img.id}
                         src={publicImageUrl(img.path)}
                         alt=""
+                        width={96}
+                        height={96}
+                        sizes="96px"
                         className="h-24 w-24 shrink-0 rounded-2xl object-cover"
                       />
                     ))}
