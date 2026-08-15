@@ -28,6 +28,7 @@ function Stars({ value }: { value: number }) {
 
 function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   const [reported, setReported] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
   const skin = review.profiles?.skin_type;
@@ -57,14 +58,17 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
           type="button"
           disabled={reported}
           onClick={async () => {
-            await reportReview(review.id, "fake");
-            setReported(true);
+            const res = await reportReview(review.id, "fake");
+            if (res.ok) setReported(true);
+            else setReportError(res.error ?? "報告できませんでした");
           }}
           className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
         >
           <Flag size={12} /> {reported ? "報告しました" : "報告"}
         </button>
       </div>
+
+      {reportError && <p className="mt-1 text-right text-[11px] text-red-600">{reportError}</p>}
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
         {close && (
