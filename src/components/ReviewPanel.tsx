@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Flag, ImagePlus, Lock, X } from "lucide-react";
+import { ChevronDown, Flag, ImagePlus, Lock, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { attachReviewImages, postReview, reportReview } from "@/app/actions";
 import Avatar from "@/components/Avatar";
@@ -10,6 +10,7 @@ import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
 import { averageHash } from "@/lib/phash";
 import { publicImageUrl } from "@/lib/storage";
+import { excludeReasonText } from "@/lib/wording";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
 
@@ -26,14 +27,39 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-function ReviewCard({ review, close }: { review: Review; close: boolean }) {
+function ReviewCard({
+  review,
+  close,
+  excluded = false,
+}: {
+  review: Review;
+  close: boolean;
+  excluded?: boolean;
+}) {
   const [reported, setReported] = useState(false);
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
   const skin = review.profiles?.skin_type;
 
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-4">
+    <div
+      className={`rounded-2xl border p-4 ${
+        excluded ? "border-dashed border-ink-200 bg-ink-50/60" : "border-ink-200 bg-white"
+      }`}
+    >
+      {excluded && review.flags.length > 0 && (
+        <ul className="mb-3 space-y-1 text-[11px] leading-relaxed text-ink-600">
+          {review.flags.map((flag) => (
+            <li key={flag} className="flex gap-1.5">
+              <span aria-hidden className="text-ink-300">
+                ・
+              </span>
+              {excludeReasonText(flag)}
+            </li>
+          ))}
+        </ul>
+      )}
+
       <div className="flex items-center gap-2">
         <Avatar
           name={name}
@@ -169,6 +195,7 @@ export default function ReviewPanel({
     .filter((r) => !r.excluded)
     .map((r) => ({ review: r, score: closenessScore(viewer, r.profiles) }))
     .sort((a, b) => b.score - a.score);
+  const setAside = reviews.filter((r) => r.excluded);
   const rated = summary?.adjusted_rating ?? null;
   const counted = summary?.counted_count ?? 0;
   const hasViewerProfile = Boolean(viewer.skinType || viewer.skinToneHex);
@@ -220,9 +247,12 @@ export default function ReviewPanel({
         <div className="text-sm text-ink-600">
           {summary?.review_count ? (
             <>
-              点数に入っている口コミ {counted} 件
+              集計に使った口コミ {counted} 件
+              {setAside.length > 0 && (
+                <span className="text-ink-400"> / 参考にしなかった {setAside.length} 件</span>
+              )}
               <p className="mt-0.5 text-[11px] text-ink-400">
-                宣伝目的・使い回しと判断した投稿は点数に入れていません。実際に登録している人の声は、
+                宣伝目的や使い回しの可能性がある投稿は点数に入れていません。実際に登録している人の声は、
                 少し重く見て平均を出しています。
               </p>
             </>
@@ -353,6 +383,27 @@ export default function ReviewPanel({
           <ReviewCard key={review.id} review={review} close={score > 0} />
         ))}
       </div>
+
+      {setAside.length > 0 && (
+        <details className="group rounded-2xl border border-ink-200 bg-white">
+          <summary className="flex cursor-pointer list-none items-center gap-2 p-4 text-sm font-bold">
+            <ChevronDown
+              size={16}
+              className="shrink-0 text-ink-400 transition-transform group-open:rotate-180"
+            />
+            見極めモード：参考にしなかった口コミ {setAside.length} 件
+          </summary>
+          <div className="space-y-2 px-4 pb-4">
+            <p className="text-[11px] leading-relaxed text-ink-400">
+              下の投稿も消していません。ただ、次のような点が見つかったので点数の平均からは外しています。
+              うそだと決めつけているわけではないので、中身は読んだうえで判断してください。
+            </p>
+            {setAside.map((review) => (
+              <ReviewCard key={review.id} review={review} close={false} excluded />
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 }
