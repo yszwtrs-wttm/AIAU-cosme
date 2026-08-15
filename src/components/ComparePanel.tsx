@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { FeelAxis, FeelValues } from "@/lib/feel";
-import { axisDiffs, describeDiffs, ingredientEdge, ingredientEdgeText } from "@/lib/compare";
+import { axisDiffs, ingredientEdge, ingredientEdgeText } from "@/lib/compare";
 
 export type CompareSide = {
   productId: number;
@@ -50,10 +50,6 @@ export default function ComparePanel({
         </div>
         <SideHead side={low} caption="似ていて安い方" href={`/products/${low.productId}`} align="right" />
       </div>
-
-      <p className="border-b border-ink-100 bg-white px-4 py-3 text-center text-base font-bold">
-        {describeDiffs(diffs)}
-      </p>
 
       <ul className="divide-y divide-ink-100">
         {diffs.map(({ axis, high: h, low: l, diff }) => {

@@ -28,26 +28,6 @@ export function axisDiffs(axes: FeelAxis[], high: FeelValues, low: FeelValues): 
     .sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
 }
 
-/**
- * 差の大きい軸を「どちらが上か」の文にする。
- * 差が小さい軸は「同じくらい」とまとめて 1 文に混ぜる。
- */
-export function describeDiffs(diffs: AxisDiff[]): string {
-  const notable = diffs.filter((d) => Math.abs(d.diff) >= 12).slice(0, 2);
-  const same = diffs.filter((d) => Math.abs(d.diff) < 12);
-
-  const parts = notable.map(
-    (d) => `${d.axis.label}は${d.diff > 0 ? "高い方" : "安い方"}が上`,
-  );
-
-  if (same.length > 0) {
-    parts.push(`${same.slice(0, 2).map((d) => d.axis.label).join("・")}は同じくらい`);
-  }
-
-  if (parts.length === 0) return "使い心地はほとんど同じです";
-  return `${parts.join("、")}です`;
-}
-
 const NOTABLE_ROLES: Role[] = ["active", "moisture", "uv"];
 
 /**
