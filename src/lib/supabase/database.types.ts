@@ -120,6 +120,42 @@ export type Database = {
         }
         Relationships: []
       }
+      maintenance_runs: {
+        Row: {
+          detail: string | null
+          duration_ms: number | null
+          finished_at: string | null
+          id: number
+          ingredients: number | null
+          job: string
+          products: number | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          detail?: string | null
+          duration_ms?: number | null
+          finished_at?: string | null
+          id?: number
+          ingredients?: number | null
+          job: string
+          products?: number | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          detail?: string | null
+          duration_ms?: number | null
+          finished_at?: string | null
+          id?: number
+          ingredients?: number | null
+          job?: string
+          products?: number | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       product_colors: {
         Row: {
           hex: string
@@ -555,6 +591,18 @@ export type Database = {
       }
     }
     Views: {
+      ingredient_idf_status: {
+        Row: {
+          detail: string | null
+          duration_ms: number | null
+          finished_at: string | null
+          ingredients: number | null
+          products: number | null
+          started_at: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
       ingredient_normalization_status: {
         Row: {
           alias_count: number | null
@@ -817,6 +865,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      refresh_ingredient_idf_logged: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       resolve_ingredient: {
         Args: { p_name: string }
         Returns: {
@@ -833,7 +885,12 @@ export type Database = {
         Returns: number
       }
       search_products: {
-        Args: { p_category?: string | null; p_limit?: number; p_mens?: boolean | null; p_q: string }
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_mens?: boolean
+          p_q: string
+        }
         Returns: {
           product_id: number
           score: number

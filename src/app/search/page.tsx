@@ -67,8 +67,8 @@ export default async function SearchPage({
   const { data: matches, error: searchError } = term
     ? await supabase.rpc("search_products", {
         p_q: term,
-        p_category: params.category ?? null,
-        p_mens: params.mens === "1" ? true : null,
+        p_category: params.category,
+        p_mens: params.mens === "1" ? true : undefined,
       })
     : { data: null, error: null };
   const searchScores = new Map((matches ?? []).map((match) => [match.product_id, match.score]));
