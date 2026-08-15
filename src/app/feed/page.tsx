@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/server";
-import { publicImageUrl } from "@/lib/storage";
+import ReviewImage from "@/components/ReviewImage";
+import { THUMB_WIDTH } from "@/lib/storage";
 import type { Profile, Review } from "@/lib/types";
 
 type FeedReview = Review & {
@@ -29,7 +30,7 @@ export default async function FeedPage() {
         <h1 className="font-display text-2xl font-bold">みんなの投稿</h1>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {(reviews ?? []).map((r) => {
           const images = [...(r.review_images ?? [])].sort((a, b) => a.pos - b.pos);
           return (
@@ -37,12 +38,11 @@ export default async function FeedPage() {
               {images.length > 0 && (
                 <div className="flex gap-1 overflow-x-auto">
                   {images.map((img) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <ReviewImage
                       key={img.id}
-                      src={publicImageUrl(img.path)}
-                      alt=""
-                      className="h-48 w-full shrink-0 object-cover"
+                      path={img.path}
+                      width={THUMB_WIDTH}
+                      className="h-48 w-full"
                     />
                   ))}
                 </div>
@@ -50,7 +50,7 @@ export default async function FeedPage() {
               <div className="space-y-1.5 p-4">
                 <div className="flex items-center gap-2 text-xs">
                   <Avatar
-                    name={r.profiles?.display_name ?? "?"}
+                    name={r.profiles?.display_name ?? ""}
                     hue={r.profiles?.avatar_hue ?? 330}
                     avatarUrl={r.profiles?.avatar_url}
                     size="sm"

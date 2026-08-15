@@ -7,7 +7,7 @@ import IngredientPanel from "@/components/IngredientPanel";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
-import { getMyProfile, isRealAccount } from "@/lib/auth";
+import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
@@ -28,9 +28,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   if (!Number.isFinite(productId)) notFound();
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getMyUser();
 
   const [
     { data: product },
@@ -295,7 +293,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   </span>
                   <span className="ml-2 text-ink-600">は、持っているコスメでほぼ同じ色が作れます</span>
                 </div>
-                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {coverage.map((c) => (
                     <li key={c.pos} className="flex items-center gap-2 rounded-xl bg-ink-50 p-2 text-xs">
                       <span className="swatch inline-block h-6 w-6 shrink-0 rounded-full" style={{ background: c.shade_hex }} />
