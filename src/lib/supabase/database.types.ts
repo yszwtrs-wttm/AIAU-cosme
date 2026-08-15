@@ -232,6 +232,32 @@ export type Database = {
           },
         ]
       }
+      profile_allergens: {
+        Row: {
+          created_at: string
+          ingredient_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ingredient_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          ingredient_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_allergens_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_hue: number
@@ -273,32 +299,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      profile_allergens: {
-        Row: {
-          created_at: string
-          ingredient_id: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          ingredient_id: number
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          ingredient_id?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_allergens_ingredient_id_fkey"
-            columns: ["ingredient_id"]
-            isOneToOne: false
-            referencedRelation: "ingredients_master"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       review_images: {
         Row: {
@@ -999,3 +999,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

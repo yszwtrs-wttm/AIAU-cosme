@@ -79,6 +79,17 @@ npm run dev
 
 シードの商品・ブランド・口コミはすべて架空。実在商品のデータは使っていない。
 
+## 型定義
+
+`src/lib/supabase/database.types.ts` は `supabase/migrations/` から生成する。マイグレーションを追加・変更したら再生成してコミットする。
+
+```bash
+npx supabase start             # ローカルDBが起動していること
+npm run db:types
+```
+
+再生成し忘れると CI（`.github/workflows/ci.yml` の `db-types` ジョブ）が差分を検出して落ちる。
+
 ## 検証
 
 ```bash
