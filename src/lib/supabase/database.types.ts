@@ -816,7 +816,6 @@ export type Database = {
           score: number
         }[]
       }
->>>>>>> origin/main
       set_limit: {
         Args: { "": number }
         Returns: number
