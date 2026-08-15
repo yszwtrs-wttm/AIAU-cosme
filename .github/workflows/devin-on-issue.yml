@@ -46,7 +46,7 @@ jobs:
         id: devin
         env:
           DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
-          DEVIN_API_BASE: ${{ vars.DEVIN_API_BASE || 'https://aiau.devinenterprise.com' }}
+          DEVIN_API_BASE: ${{ vars.DEVIN_API_BASE || 'https://aiau.devinenterprise.com/api' }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           REPO: ${{ github.repository }}
@@ -58,10 +58,14 @@ jobs:
             --arg issue "$ISSUE_NUMBER" \
             '{prompt: $prompt, title: $title, idempotent: true, max_acu_limit: 100,
               tags: ["src:github", "repo:" + $repo, "issue:" + $issue]}')
-          curl -fsS "$DEVIN_API_BASE/v1/sessions" \
+          if ! curl -sS --fail-with-body "$DEVIN_API_BASE/v1/sessions" \
             -H "Authorization: Bearer $DEVIN_API_KEY" \
             -H "Content-Type: application/json" \
-            -d "$payload" > resp.json
+            -d "$payload" > resp.json; then
+            echo "Devin API request failed:"
+            cat resp.json
+            exit 1
+          fi
           echo "url=$(jq -er '.url' resp.json)" >> "$GITHUB_OUTPUT"
           echo "is_new_session=$(jq -r '.is_new_session // true' resp.json)" >> "$GITHUB_OUTPUT"
 
