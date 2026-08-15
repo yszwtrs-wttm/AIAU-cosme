@@ -21,6 +21,7 @@ export default async function MyPage() {
       .select(
         "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
       )
+      .is("finished_at", null)
       .returns<StashRow[]>(),
     user
       ? supabase

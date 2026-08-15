@@ -31,7 +31,10 @@ export default async function Home() {
 
   const [page, { count: stashCount }, profile] = await Promise.all([
     searchProducts(supabase, { sort: "recommended", limit: SUGGESTION_POOL }),
-    supabase.from("user_items").select("product_id", { count: "exact", head: true }),
+    supabase
+      .from("user_items")
+      .select("product_id", { count: "exact", head: true })
+      .is("finished_at", null),
     getMyProfile(),
   ]);
 

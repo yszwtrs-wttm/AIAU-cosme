@@ -526,27 +526,33 @@ export type Database = {
       user_items: {
         Row: {
           created_at: string
+          finished_at: string | null
           id: number
           opened_at: string | null
           product_id: number
+          remaining_level: string
           remaining_pct: number
           source: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          finished_at?: string | null
           id?: never
           opened_at?: string | null
           product_id: number
+          remaining_level?: string
           remaining_pct?: number
           source?: string
           user_id?: string
         }
         Update: {
           created_at?: string
+          finished_at?: string | null
           id?: never
           opened_at?: string | null
           product_id?: number
+          remaining_level?: string
           remaining_pct?: number
           source?: string
           user_id?: string
@@ -738,9 +744,11 @@ export type Database = {
           image_url: string
           ing_sim: number
           name: string
+          opened_at: string
           price_diff: number
           price_yen: number
           product_id: number
+          remaining_level: string
           score: number
         }[]
       }

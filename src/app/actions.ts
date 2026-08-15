@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
-import type { PersonalColor, SkinType } from "@/lib/types";
+import { isPlausibleOpenedAt, isRemainingLevel } from "@/lib/usage";
+import type { PersonalColor, RemainingLevel, SkinType } from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
 
@@ -61,6 +62,52 @@ export async function removeFromStash(productId: number): Promise<Result> {
   const { error } = await supabase
     .from("user_items")
     .delete()
+    .eq("product_id", productId)
+    .eq("user_id", user.id);
+
+  revalidatePath("/stash");
+  revalidatePath(`/products/${productId}`);
+  return { ok: !error, error: error?.message };
+}
+
+/**
+ * 開封日・残量・使い切りの更新。買い足しの判断はこの3つで決まるので、ポーチから直接いじれるようにする。
+ * 「使い切った」は削除ではない。買い直しの判断に開封日と履歴が要るため、行は残す。
+ */
+export async function updateStashUsage(
+  productId: number,
+  input: { remainingLevel?: RemainingLevel; openedAt?: string | null; finished?: boolean },
+): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "ポーチの利用にはアカウント登録が必要です" };
+  }
+
+  if (input.remainingLevel && !isRemainingLevel(input.remainingLevel)) {
+    return { ok: false, error: "残量の指定が不正です" };
+  }
+  if (input.openedAt && !isPlausibleOpenedAt(input.openedAt)) {
+    return { ok: false, error: "開封日は今日までの日付で入力してください" };
+  }
+
+  const patch: {
+    remaining_level?: RemainingLevel;
+    opened_at?: string | null;
+    finished_at?: string | null;
+  } = {};
+  if (input.remainingLevel) patch.remaining_level = input.remainingLevel;
+  if (input.openedAt !== undefined) patch.opened_at = input.openedAt || null;
+  if (input.finished !== undefined) {
+    patch.finished_at = input.finished ? new Date().toISOString().slice(0, 10) : null;
+    if (input.finished) patch.remaining_level = "low";
+  }
+
+  const { error } = await supabase
+    .from("user_items")
+    .update(patch)
     .eq("product_id", productId)
     .eq("user_id", user.id);
 

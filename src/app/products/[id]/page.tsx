@@ -7,6 +7,7 @@ import IngredientPanel from "@/components/IngredientPanel";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
+import StashUsage from "@/components/StashUsage";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
@@ -19,7 +20,9 @@ import {
   type Product,
   type RatingSummary,
   type Review,
+  type StashEntry,
 } from "@/lib/types";
+import { dupeAdviceText, judgeUsage } from "@/lib/usage";
 import { colorDifferenceText, colorMatchText, colorName, formulaMatchText } from "@/lib/wording";
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -51,10 +54,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     user
       ? supabase
           .from("user_items")
-          .select("product_id")
+          .select("product_id, remaining_level, opened_at, finished_at")
           .eq("product_id", productId)
           .eq("user_id", user.id)
-          .maybeSingle()
+          .maybeSingle<StashEntry>()
       : Promise.resolve({ data: null }),
     supabase.rpc("find_duplicates_in_stash", { p_product_id: productId }),
     supabase.rpc("find_cheaper_dupes", { p_product_id: productId, p_limit: 5 }),
@@ -168,7 +171,16 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   };
 
   const fit = judgeFit(product, profile);
-  const isOwned = Boolean(owned);
+  // 使い切ったものは在庫として数えない。被り判定も「持っていない」側で出す。
+  const isOwned = Boolean(owned && !owned.finished_at);
+  const ownedUsage = owned ? judgeUsage(product.category, owned) : null;
+  const topDupeUsage = topDupe
+    ? judgeUsage(topDupe.category ?? product.category, {
+        remaining_level: topDupe.remaining_level ?? "plenty",
+        opened_at: topDupe.opened_at ?? null,
+        finished_at: null,
+      })
+    : null;
   const canUseStash = isRealAccount(user);
   const canPost = canUseStash;
 
@@ -227,10 +239,18 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </ul>
           )}
           <div className="mt-4">
-            <StashButton productId={product.id} owned={isOwned} canUse={canUseStash} />
+            <StashButton productId={product.id} owned={Boolean(owned)} canUse={canUseStash} />
           </div>
-          {isOwned && (
-            <p className="mt-2 text-xs font-bold text-brand-700">これは持っている商品です。</p>
+          {owned && (
+            <div className="mt-2 space-y-2">
+              <p className="text-xs font-bold text-brand-700">
+                {isOwned ? "これは持っている商品です。" : "これは使い切った商品です。"}
+              </p>
+              {isOwned && ownedUsage?.note && (
+                <p className="text-xs text-ink-600">{ownedUsage.note}</p>
+              )}
+              <StashUsage category={product.category} entry={owned} />
+            </div>
           )}
         </div>
       </section>
@@ -264,8 +284,13 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                     product.color_hex &&
                     `${colorDifferenceText(topDupe.color_hex, product.color_hex)}`}
                 </p>
+                {topDupeUsage?.readyToBuy && (
+                  <p className="mt-1 text-sm font-bold text-brand-700">
+                    ポーチの方は{topDupeUsage.overdue ? "開封から時間が経っています" : "残りわずかです"}。
+                  </p>
+                )}
                 <p className="mt-1 text-xs text-ink-400">
-                  使い分けたい理由があるなら買う意味はあります。同じ用途で足りるなら、持っている方で済みます。
+                  {topDupeUsage ? dupeAdviceText(topDupeUsage) : ""}
                 </p>
                 <div className="mt-3 space-y-2">
                   {dupes.map((row) => (

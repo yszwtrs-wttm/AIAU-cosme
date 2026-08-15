@@ -73,6 +73,7 @@ export default async function SearchPage({
           .from("user_items")
           .select("product_id", { count: "exact", head: true })
           .eq("user_id", realUser.id)
+          .is("finished_at", null)
       : Promise.resolve({ count: 0 }),
   ]);
 
