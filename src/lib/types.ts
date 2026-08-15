@@ -1,4 +1,11 @@
-export type Category = "lip" | "foundation" | "shampoo" | "treatment" | "sunscreen" | "bb";
+export type Category =
+  | "lip"
+  | "foundation"
+  | "shampoo"
+  | "treatment"
+  | "sunscreen"
+  | "bb"
+  | "eyeshadow";
 
 export const CATEGORY_LABEL: Record<Category, string> = {
   lip: "リップ",
@@ -7,6 +14,13 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   treatment: "トリートメント",
   sunscreen: "日焼け止め",
   bb: "BBクリーム",
+  eyeshadow: "アイシャドウ",
+};
+
+export type ProductColor = {
+  pos: number;
+  shade_name: string;
+  hex: string;
 };
 
 export type Product = {
@@ -22,6 +36,7 @@ export type Product = {
   color_hex: string | null;
   ingredients: string[];
   brands: { name: string } | null;
+  product_colors?: ProductColor[];
 };
 
 export type DupeRow = {
@@ -92,4 +107,17 @@ export type ColorMatch = {
   color_hex: string | null;
   image_url: string | null;
   delta_e: number;
+  shade_name: string | null;
+  shade_hex: string | null;
+};
+
+export type PaletteCoverage = {
+  pos: number;
+  shade_name: string;
+  shade_hex: string;
+  owned_product_id: number | null;
+  owned_label: string | null;
+  owned_shade: string | null;
+  owned_hex: string | null;
+  delta_e: number | null;
 };

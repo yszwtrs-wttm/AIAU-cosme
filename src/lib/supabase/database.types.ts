@@ -85,6 +85,48 @@ export type Database = {
         }
         Relationships: []
       }
+      product_colors: {
+        Row: {
+          hex: string
+          id: number
+          lab: number[] | null
+          pos: number
+          product_id: number
+          shade_name: string
+        }
+        Insert: {
+          hex: string
+          id?: never
+          lab?: number[] | null
+          pos?: number
+          product_id: number
+          shade_name: string
+        }
+        Update: {
+          hex?: string
+          id?: never
+          lab?: number[] | null
+          pos?: number
+          product_id?: number
+          shade_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_colors_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_colors_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           brand_id: number
@@ -323,6 +365,8 @@ export type Database = {
           name: string
           price_yen: number
           product_id: number
+          shade_hex: string
+          shade_name: string
         }[]
       }
       find_cheaper_dupes: {
@@ -354,6 +398,19 @@ export type Database = {
           price_yen: number
           product_id: number
           score: number
+        }[]
+      }
+      find_palette_coverage: {
+        Args: { p_max_delta?: number; p_product_id: number }
+        Returns: {
+          delta_e: number
+          owned_hex: string
+          owned_label: string
+          owned_product_id: number
+          owned_shade: string
+          pos: number
+          shade_hex: string
+          shade_name: string
         }[]
       }
       find_stash_overlaps: {
@@ -454,6 +511,10 @@ export type Database = {
       }
       mod_deg: {
         Args: { x: number }
+        Returns: number
+      }
+      products_min_delta_e: {
+        Args: { p_a: number; p_b: number }
         Returns: number
       }
       recompute_review_trust: {

@@ -1,9 +1,17 @@
 import { notFound } from "next/navigation";
 import DupeRowItem from "@/components/DupeRowItem";
 import ReviewPanel from "@/components/ReviewPanel";
+import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORY_LABEL, type DupeRow, type Product, type RatingSummary, type Review } from "@/lib/types";
+import {
+  CATEGORY_LABEL,
+  type DupeRow,
+  type PaletteCoverage,
+  type Product,
+  type RatingSummary,
+  type Review,
+} from "@/lib/types";
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,16 +20,27 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const supabase = await createClient();
 
-  const [{ data: product }, { data: owned }, dupeRes, cheaperRes, { data: reviews }, { data: summary }] =
+  const [
+    { data: product },
+    { data: owned },
+    dupeRes,
+    cheaperRes,
+    coverageRes,
+    { data: reviews },
+    { data: summary },
+  ] =
     await Promise.all([
       supabase
         .from("products")
-        .select("id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name)")
+        .select(
+          "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
+        )
         .eq("id", productId)
         .maybeSingle<Product>(),
       supabase.from("user_items").select("product_id").eq("product_id", productId).maybeSingle(),
       supabase.rpc("find_duplicates_in_stash", { p_product_id: productId }),
       supabase.rpc("find_cheaper_dupes", { p_product_id: productId, p_limit: 5 }),
+      supabase.rpc("find_palette_coverage", { p_product_id: productId }),
       supabase.from("reviews").select("*").eq("product_id", productId).order("posted_at", { ascending: false }).returns<Review[]>(),
       supabase.from("product_rating_summary").select("*").eq("product_id", productId).maybeSingle<RatingSummary>(),
     ]);
@@ -32,13 +51,19 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const cheaper = (cheaperRes.data ?? []) as DupeRow[];
   const topDupe = dupes[0];
   const bestSaving = cheaper[0];
+  const shades = [...(product.product_colors ?? [])].sort((a, b) => a.pos - b.pos);
+  const coverage = (coverageRes.data ?? []) as PaletteCoverage[];
+  const covered = coverage.filter((c) => c.owned_product_id !== null);
 
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-start gap-4 rounded-2xl border border-neutral-200 bg-white p-5">
-        <div
-          className="h-24 w-24 rounded-xl border border-neutral-200"
-          style={{ background: product.color_hex ?? "linear-gradient(135deg,#eee,#ddd)" }}
+        <ProductThumb
+          category={product.category}
+          colors={shades}
+          imageUrl={product.image_url}
+          size={96}
+          className="rounded-xl"
         />
         <div className="min-w-64 flex-1">
           <div className="text-sm text-neutral-500">
@@ -57,6 +82,19 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             )}
           </div>
           {product.jan && <div className="mt-1 text-xs text-neutral-400">JAN {product.jan}</div>}
+          {shades.length > 0 && (
+            <ul className="mt-3 flex flex-wrap gap-2 text-[11px] text-neutral-600">
+              {shades.map((s) => (
+                <li key={s.pos} className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block h-4 w-4 rounded border border-neutral-300"
+                    style={{ background: s.hex }}
+                  />
+                  {s.shade_name}
+                </li>
+              ))}
+            </ul>
+          )}
           <div className="mt-3">
             <StashButton productId={product.id} owned={Boolean(owned)} />
           </div>
@@ -96,6 +134,46 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           </div>
         )}
       </section>
+
+      {coverage.length > 1 && (
+        <section className="space-y-2">
+          <h2 className="text-base font-bold">パレットの再現率</h2>
+          <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+            <div className="text-sm">
+              <span className="text-lg font-bold">
+                {coverage.length} 色中 {covered.length} 色
+              </span>
+              <span className="ml-2 text-neutral-600">は手持ちで再現できます（ΔE &lt; 5）</span>
+            </div>
+            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+              {coverage.map((c) => (
+                <li key={c.pos} className="flex items-center gap-2 rounded-lg bg-neutral-50 p-2 text-xs">
+                  <span
+                    className="inline-block h-6 w-6 shrink-0 rounded border border-neutral-300"
+                    style={{ background: c.shade_hex }}
+                  />
+                  <span className="w-24 shrink-0 truncate">{c.shade_name}</span>
+                  {c.owned_product_id !== null ? (
+                    <span className="flex min-w-0 items-center gap-1.5 text-emerald-800">
+                      <span
+                        className="inline-block h-4 w-4 shrink-0 rounded border border-neutral-300"
+                        style={{ background: c.owned_hex ?? undefined }}
+                      />
+                      <span className="truncate">
+                        {c.owned_label}
+                        {c.owned_shade && ` / ${c.owned_shade}`}
+                      </span>
+                      <span className="shrink-0 tabular-nums">ΔE {c.delta_e?.toFixed(2)}</span>
+                    </span>
+                  ) : (
+                    <span className="text-neutral-400">手持ちになし</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       <section className="space-y-2">
         <h2 className="text-base font-bold">全成分（配合量の多い順）</h2>

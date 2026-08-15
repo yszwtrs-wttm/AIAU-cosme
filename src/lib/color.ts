@@ -33,12 +33,10 @@ export function rgbToHex(r: number, g: number, b: number): string {
   return formatHex({ mode: "rgb", r: r / 255, g: g / 255, b: b / 255 }) ?? "#000000";
 }
 
-/**
- * 画像の主要色を取り出す。彩度が極端に低い/明るすぎる画素（背景・白飛び）は捨て、
- * 残りを粗い格子に量子化して最頻色の平均を返す。
- */
-export function dominantColorFromImageData(data: Uint8ClampedArray): string {
-  const buckets = new Map<string, { r: number; g: number; b: number; n: number }>();
+type Bucket = { r: number; g: number; b: number; n: number };
+
+function collectBuckets(data: Uint8ClampedArray): Bucket[] {
+  const buckets = new Map<string, Bucket>();
 
   for (let i = 0; i < data.length; i += 4) {
     const [r, g, b, a] = [data[i], data[i + 1], data[i + 2], data[i + 3]];
@@ -59,15 +57,51 @@ export function dominantColorFromImageData(data: Uint8ClampedArray): string {
     buckets.set(key, cur);
   }
 
-  let best: { r: number; g: number; b: number; n: number } | null = null;
-  for (const bucket of buckets.values()) {
-    if (!best || bucket.n > best.n) best = bucket;
-  }
-  if (!best) return "#808080";
+  return [...buckets.values()].sort((x, y) => y.n - x.n);
+}
 
+function bucketHex(bucket: Bucket): string {
   return rgbToHex(
-    Math.round(best.r / best.n),
-    Math.round(best.g / best.n),
-    Math.round(best.b / best.n),
+    Math.round(bucket.r / bucket.n),
+    Math.round(bucket.g / bucket.n),
+    Math.round(bucket.b / bucket.n),
   );
+}
+
+export type ExtractedColor = { hex: string; share: number };
+
+/**
+ * 画像から代表色を複数取り出す。アイシャドウパレットのように色が並んだ商品画像を
+ * 1 色に潰さないため、量子化した色塊を頻度順に見て、既に採った色と ΔE が近いものは捨てる。
+ */
+export function extractPalette(
+  data: Uint8ClampedArray,
+  maxColors = 6,
+  minDelta = 12,
+): ExtractedColor[] {
+  const buckets = collectBuckets(data);
+  const total = buckets.reduce((sum, b) => sum + b.n, 0);
+  if (total === 0) return [];
+
+  const picked: { hex: string; n: number }[] = [];
+  for (const bucket of buckets) {
+    if (picked.length >= maxColors) break;
+    const hex = bucketHex(bucket);
+    const near = picked.find((p) => deltaE(p.hex, hex) < minDelta);
+    if (near) {
+      near.n += bucket.n;
+      continue;
+    }
+    picked.push({ hex, n: bucket.n });
+  }
+
+  return picked
+    .filter((p) => p.n / total >= 0.02)
+    .map((p) => ({ hex: p.hex, share: p.n / total }));
+}
+
+/** 画像の主要色（最頻の1色）。 */
+export function dominantColorFromImageData(data: Uint8ClampedArray): string {
+  const [best] = collectBuckets(data);
+  return best ? bucketHex(best) : "#808080";
 }

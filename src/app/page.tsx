@@ -3,7 +3,7 @@ import ProductCard from "@/components/ProductCard";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABEL, type Category, type Product } from "@/lib/types";
 
-const CATEGORIES: Category[] = ["lip", "foundation", "shampoo", "treatment"];
+const CATEGORIES: Category[] = ["lip", "eyeshadow", "foundation", "shampoo", "treatment"];
 
 export default async function Home({
   searchParams,
@@ -15,7 +15,7 @@ export default async function Home({
 
   let query = supabase
     .from("products")
-    .select("id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name)")
+    .select("id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)")
     .order("price_yen", { ascending: false });
 
   if (params.category) query = query.eq("category", params.category);

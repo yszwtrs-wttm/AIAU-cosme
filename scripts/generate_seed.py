@@ -54,6 +54,14 @@ TREATMENT_INGREDIENTS = [
     "SHEA BUTTER ETHYL ESTERS", "TOCOPHEROL", "SODIUM HYALURONATE",
 ]
 
+EYESHADOW_INGREDIENTS = [
+    "TALC", "MICA", "SYNTHETIC FLUORPHLOGOPITE", "DIMETHICONE", "SILICA",
+    "ZINC STEARATE", "CALCIUM ALUMINUM BOROSILICATE", "OCTYLDODECANOL",
+    "CAPRYLIC/CAPRIC TRIGLYCERIDE", "MAGNESIUM MYRISTATE", "BORON NITRIDE",
+    "TIN OXIDE", "TOCOPHEROL", "PHENOXYETHANOL", "TITANIUM DIOXIDE",
+    "CI 77491", "CI 77492", "CI 77499", "CI 77891", "CI 15850", "CI 42090",
+]
+
 JA_NAMES = {
     "WATER": "水", "GLYCERIN": "グリセリン", "DIMETHICONE": "ジメチコン",
     "TITANIUM DIOXIDE": "酸化チタン", "MICA": "マイカ", "TALC": "タルク",
@@ -88,7 +96,8 @@ HAZARD = {
 }
 
 ALL_INGREDIENTS = []
-for pool in (LIP_INGREDIENTS, FOUNDATION_INGREDIENTS, SHAMPOO_INGREDIENTS, TREATMENT_INGREDIENTS):
+for pool in (LIP_INGREDIENTS, FOUNDATION_INGREDIENTS, SHAMPOO_INGREDIENTS,
+             TREATMENT_INGREDIENTS, EYESHADOW_INGREDIENTS):
     for ing in pool:
         if ing not in ALL_INGREDIENTS:
             ALL_INGREDIENTS.append(ing)
@@ -143,13 +152,17 @@ products = []
 jan_counter = 4901234000000
 
 
-def add_product(brand, name, category, price, volume, unit, ingredients, hex_color=None, is_mens=False):
+def add_product(brand, name, category, price, volume, unit, ingredients,
+                shades=None, is_mens=False):
+    """shades: [(色名, HEX)]。アイシャドウパレットのような複数色商品もここで表す。"""
     global jan_counter
     jan_counter += 7
+    shades = shades or []
     products.append({
         "brand": brand, "name": name, "category": category, "price": price,
         "volume": volume, "unit": unit, "ingredients": ingredients,
-        "hex": hex_color, "is_mens": is_mens, "jan": str(jan_counter),
+        "shades": shades, "hex": shades[0][1] if shades else None,
+        "is_mens": is_mens, "jan": str(jan_counter),
     })
 
 
@@ -196,7 +209,7 @@ for brand, name, price, base, shade_idx, dev in lip_specs:
     color = jitter(shade_hex, dev) if dev else shade_hex
     pigments = random.sample(["CI 15850", "CI 45410", "CI 77491", "CI 77891", "CI 19140", "CI 42090", "MICA", "TITANIUM DIOXIDE"], 4)
     add_product(brand, f"{name} {shade_name}", "lip", price, 3.5, "g",
-                lip_formula(base, pigments, noise=1 if dev else 0), color)
+                lip_formula(base, pigments, noise=1 if dev else 0), [(shade_name, color)])
 
 # --- ファンデーション --------------------------------------------------------
 FDN_BASE_A = [
@@ -229,7 +242,7 @@ for brand, name, price, base, shade_idx, dev in fdn_specs:
     color = jitter(shade_hex, dev) if dev else shade_hex
     extra = random.sample(["CI 77491", "CI 77492", "CI 77499", "MICA", "ALUMINUM HYDROXIDE", "CITRIC ACID"], 4)
     add_product(brand, f"{name} {shade_name}", "foundation", price, 30, "mL",
-                base + extra, color)
+                base + extra, [(shade_name, color)])
 
 # --- メンズシャンプー --------------------------------------------------------
 SHAMPOO_BASE_A = [
@@ -263,7 +276,7 @@ for brand, name, price, base, noise in shampoo_specs:
         formula[i], formula[i + 1] = formula[i + 1], formula[i]
     if "ZINC PYRITHIONE" not in formula and random.random() < 0.4:
         formula.insert(6, "ZINC PYRITHIONE")
-    add_product(brand, name, "shampoo", price, 400, "mL", formula, None, is_mens=True)
+    add_product(brand, name, "shampoo", price, 400, "mL", formula, is_mens=True)
 
 TREATMENT_SPECS = [
     ("GRIT", "スカルプトリートメント", 3300, 0),
@@ -276,7 +289,49 @@ for brand, name, price, noise in TREATMENT_SPECS:
     for _ in range(noise):
         i = random.randrange(0, len(formula) - 1)
         formula[i], formula[i + 1] = formula[i + 1], formula[i]
-    add_product(brand, name, "treatment", price, 400, "g", formula, None, is_mens=True)
+    add_product(brand, name, "treatment", price, 400, "g", formula, is_mens=True)
+
+
+# --- アイシャドウパレット ------------------------------------------------------
+# 1 商品 = 複数色。「パレットの何色が手持ちで再現できるか」を見せるためのデータ。
+EYE_BASE_A = [
+    "TALC", "MICA", "SYNTHETIC FLUORPHLOGOPITE", "DIMETHICONE", "SILICA",
+    "ZINC STEARATE", "OCTYLDODECANOL", "CAPRYLIC/CAPRIC TRIGLYCERIDE",
+    "BORON NITRIDE", "TOCOPHEROL", "PHENOXYETHANOL",
+]
+EYE_BASE_B = [
+    "MICA", "TALC", "CALCIUM ALUMINUM BOROSILICATE", "SYNTHETIC FLUORPHLOGOPITE",
+    "MAGNESIUM MYRISTATE", "DIMETHICONE", "TIN OXIDE", "SILICA",
+    "OCTYLDODECANOL", "TOCOPHEROL", "PHENOXYETHANOL",
+]
+
+BROWN_PALETTE = [
+    ("ベース", "#E8D3C2"), ("ミルクベージュ", "#D9B999"), ("ライトブラウン", "#B98A62"),
+    ("テラコッタ", "#B8604A"), ("ローズブラウン", "#A85F5A"), ("ブリック", "#9E3B33"),
+    ("ダークブラウン", "#6E4630"), ("シマーゴールド", "#D9A441"), ("プラム", "#7A3348"),
+]
+PINK_PALETTE = [
+    ("シアーピンク", "#EFD2D2"), ("ベビーピンク", "#E3A9AE"), ("モーヴ", "#B96C81"),
+    ("コーラル", "#D96A4B"), ("ワインレッド", "#8E2F3E"), ("シルバー", "#C9C5C1"),
+]
+
+eye_specs = [
+    ("LUMINA", "デイリーアイパレット 01 ブラウンベージュ", 6800, EYE_BASE_A, BROWN_PALETTE, 0),
+    # ↓ LUMINA とほぼ同じ配色・処方の安いパレット
+    ("PRICO", "9色アイパレット 01 ブラウン", 1480, EYE_BASE_A, BROWN_PALETTE, 5),
+    ("mode noir", "クチュールアイパレット 02 モーヴ", 8200, EYE_BASE_B, PINK_PALETTE, 0),
+    ("DAILY+", "6色アイパレット 02 ピンク", 1280, EYE_BASE_B, PINK_PALETTE, 6),
+]
+
+for brand, name, price, base, palette, dev in eye_specs:
+    shades = [(shade, jitter(hex_color, dev) if dev else hex_color) for shade, hex_color in palette]
+    pigments = random.sample(["CI 77491", "CI 77492", "CI 77499", "CI 77891", "CI 15850", "CI 42090"], 4)
+    formula = list(base)
+    for _ in range(1 if dev else 0):
+        i = random.randrange(0, len(formula) - 1)
+        formula[i], formula[i + 1] = formula[i + 1], formula[i]
+    add_product(brand, name, "eyeshadow", price, round(len(shades) * 1.2, 1), "g",
+                formula + pigments, shades)
 
 
 # --- 口コミ ------------------------------------------------------------------
@@ -306,7 +361,7 @@ w = lines.append
 w("-- 自動生成: python3 scripts/generate_seed.py > supabase/seed.sql")
 w("-- 実在ブランドの成分表は転載していない。ブランド名・商品名・口コミはすべて架空のデモデータ。")
 w("")
-w("truncate table reviews, user_items, products, brands, ingredients_master restart identity cascade;")
+w("truncate table reviews, user_items, product_colors, products, brands, ingredients_master restart identity cascade;")
 w("")
 w("insert into ingredients_master (dim, inci, name_ja, functions, hazard_tags) values")
 rows = []
@@ -328,6 +383,14 @@ for p in products:
         sql_str(p["brand"]), sql_str(p["name"]), sql_str(p["category"]),
         sql_str(p["is_mens"]), p["price"], sql_str(p["volume"]), sql_str(p["unit"]),
         sql_str(p["jan"]), sql_str(p["hex"]), sql_text_array(p["ingredients"])))
+w(",\n".join(rows) + ";")
+w("")
+
+w("insert into product_colors (product_id, pos, shade_name, hex) values")
+rows = []
+for idx, p in enumerate(products, start=1):
+    for pos, (shade_name, shade_hex) in enumerate(p["shades"]):
+        rows.append("  (%d, %d, %s, %s)" % (idx, pos, sql_str(shade_name), sql_str(shade_hex)))
 w(",\n".join(rows) + ";")
 w("")
 

@@ -1,7 +1,7 @@
 -- 自動生成: python3 scripts/generate_seed.py > supabase/seed.sql
 -- 実在ブランドの成分表は転載していない。ブランド名・商品名・口コミはすべて架空のデモデータ。
 
-truncate table reviews, user_items, products, brands, ingredients_master restart identity cascade;
+truncate table reviews, user_items, product_colors, products, brands, ingredients_master restart identity cascade;
 
 insert into ingredients_master (dim, inci, name_ja, functions, hazard_tags) values
   (1, 'HYDROGENATED POLYISOBUTENE', null, array[]::text[], array[]::text[]),
@@ -83,7 +83,12 @@ insert into ingredients_master (dim, inci, name_ja, functions, hazard_tags) valu
   (77, 'BEHENTRIMONIUM CHLORIDE', null, array[]::text[], array[]::text[]),
   (78, 'AMODIMETHICONE', null, array[]::text[], array[]::text[]),
   (79, 'STEARYL ALCOHOL', null, array[]::text[], array[]::text[]),
-  (80, 'ISOPROPYL MYRISTATE', null, array[]::text[], array[]::text[]);
+  (80, 'ISOPROPYL MYRISTATE', null, array[]::text[], array[]::text[]),
+  (81, 'ZINC STEARATE', null, array[]::text[], array[]::text[]),
+  (82, 'CALCIUM ALUMINUM BOROSILICATE', null, array[]::text[], array[]::text[]),
+  (83, 'MAGNESIUM MYRISTATE', null, array[]::text[], array[]::text[]),
+  (84, 'BORON NITRIDE', null, array[]::text[], array[]::text[]),
+  (85, 'TIN OXIDE', null, array[]::text[], array[]::text[]);
 
 insert into brands (name) values
   ('LUMINA'),
@@ -133,7 +138,65 @@ insert into products (brand_id, name, category, is_mens, price_yen, volume, volu
   ((select id from brands where name = 'GRIT'), 'スカルプトリートメント', 'treatment', true, 3300, 400, 'g', '4901234000217', null, array['WATER', 'CETEARYL ALCOHOL', 'BEHENTRIMONIUM CHLORIDE', 'DIMETHICONE', 'GLYCERIN', 'AMODIMETHICONE', 'STEARYL ALCOHOL', 'ISOPROPYL MYRISTATE', 'HYDROLYZED KERATIN', 'ARGANIA SPINOSA KERNEL OIL', 'PANTHENOL', 'FRAGRANCE', 'PHENOXYETHANOL', 'CITRIC ACID', 'BUTYLENE GLYCOL', 'SHEA BUTTER ETHYL ESTERS', 'TOCOPHEROL', 'SODIUM HYALURONATE']::text[]),
   ((select id from brands where name = 'CLEAR BASE'), 'デイリートリートメント', 'treatment', true, 880, 400, 'g', '4901234000224', null, array['WATER', 'CETEARYL ALCOHOL', 'BEHENTRIMONIUM CHLORIDE', 'DIMETHICONE', 'GLYCERIN', 'AMODIMETHICONE', 'STEARYL ALCOHOL', 'ISOPROPYL MYRISTATE', 'ARGANIA SPINOSA KERNEL OIL', 'HYDROLYZED KERATIN', 'PANTHENOL', 'FRAGRANCE', 'PHENOXYETHANOL', 'BUTYLENE GLYCOL', 'CITRIC ACID', 'SHEA BUTTER ETHYL ESTERS', 'TOCOPHEROL', 'SODIUM HYALURONATE']::text[]),
   ((select id from brands where name = 'STOIC'), 'リペアトリートメント', 'treatment', true, 3600, 400, 'g', '4901234000231', null, array['WATER', 'CETEARYL ALCOHOL', 'BEHENTRIMONIUM CHLORIDE', 'DIMETHICONE', 'AMODIMETHICONE', 'GLYCERIN', 'STEARYL ALCOHOL', 'ISOPROPYL MYRISTATE', 'HYDROLYZED KERATIN', 'ARGANIA SPINOSA KERNEL OIL', 'PANTHENOL', 'FRAGRANCE', 'PHENOXYETHANOL', 'CITRIC ACID', 'BUTYLENE GLYCOL', 'SHEA BUTTER ETHYL ESTERS', 'TOCOPHEROL', 'SODIUM HYALURONATE']::text[]),
-  ((select id from brands where name = 'HARDSCALP'), 'クールトリートメント', 'treatment', true, 2600, 400, 'g', '4901234000238', null, array['WATER', 'BEHENTRIMONIUM CHLORIDE', 'CETEARYL ALCOHOL', 'DIMETHICONE', 'GLYCERIN', 'AMODIMETHICONE', 'STEARYL ALCOHOL', 'HYDROLYZED KERATIN', 'ISOPROPYL MYRISTATE', 'ARGANIA SPINOSA KERNEL OIL', 'PANTHENOL', 'FRAGRANCE', 'PHENOXYETHANOL', 'CITRIC ACID', 'BUTYLENE GLYCOL', 'SHEA BUTTER ETHYL ESTERS', 'TOCOPHEROL', 'SODIUM HYALURONATE']::text[]);
+  ((select id from brands where name = 'HARDSCALP'), 'クールトリートメント', 'treatment', true, 2600, 400, 'g', '4901234000238', null, array['WATER', 'BEHENTRIMONIUM CHLORIDE', 'CETEARYL ALCOHOL', 'DIMETHICONE', 'GLYCERIN', 'AMODIMETHICONE', 'STEARYL ALCOHOL', 'HYDROLYZED KERATIN', 'ISOPROPYL MYRISTATE', 'ARGANIA SPINOSA KERNEL OIL', 'PANTHENOL', 'FRAGRANCE', 'PHENOXYETHANOL', 'CITRIC ACID', 'BUTYLENE GLYCOL', 'SHEA BUTTER ETHYL ESTERS', 'TOCOPHEROL', 'SODIUM HYALURONATE']::text[]),
+  ((select id from brands where name = 'LUMINA'), 'デイリーアイパレット 01 ブラウンベージュ', 'eyeshadow', false, 6800, 10.8, 'g', '4901234000245', '#E8D3C2', array['TALC', 'MICA', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'SILICA', 'ZINC STEARATE', 'OCTYLDODECANOL', 'CAPRYLIC/CAPRIC TRIGLYCERIDE', 'BORON NITRIDE', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 15850', 'CI 77491', 'CI 77492', 'CI 77891']::text[]),
+  ((select id from brands where name = 'PRICO'), '9色アイパレット 01 ブラウン', 'eyeshadow', false, 1480, 10.8, 'g', '4901234000252', '#EACFC2', array['TALC', 'MICA', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'SILICA', 'OCTYLDODECANOL', 'ZINC STEARATE', 'CAPRYLIC/CAPRIC TRIGLYCERIDE', 'BORON NITRIDE', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 77491', 'CI 15850', 'CI 42090', 'CI 77492']::text[]),
+  ((select id from brands where name = 'mode noir'), 'クチュールアイパレット 02 モーヴ', 'eyeshadow', false, 8200, 7.2, 'g', '4901234000259', '#EFD2D2', array['MICA', 'TALC', 'CALCIUM ALUMINUM BOROSILICATE', 'SYNTHETIC FLUORPHLOGOPITE', 'MAGNESIUM MYRISTATE', 'DIMETHICONE', 'TIN OXIDE', 'SILICA', 'OCTYLDODECANOL', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 77492', 'CI 42090', 'CI 77499', 'CI 15850']::text[]),
+  ((select id from brands where name = 'DAILY+'), '6色アイパレット 02 ピンク', 'eyeshadow', false, 1280, 7.2, 'g', '4901234000266', '#ECCDD6', array['MICA', 'TALC', 'CALCIUM ALUMINUM BOROSILICATE', 'MAGNESIUM MYRISTATE', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'TIN OXIDE', 'SILICA', 'OCTYLDODECANOL', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 15850', 'CI 77891', 'CI 42090', 'CI 77492']::text[]);
+
+insert into product_colors (product_id, pos, shade_name, hex) values
+  (1, 0, '03 テラコッタ', '#B8604A'),
+  (2, 0, '03 テラコッタ', '#BB6249'),
+  (3, 0, '05 レッドブリック', '#9E3B33'),
+  (4, 0, '05 レッドブリック', '#993B2D'),
+  (5, 0, '01 ベアヌード', '#C98A78'),
+  (6, 0, '04 モーヴピンク', '#B96C81'),
+  (7, 0, '06 コーラルオレンジ', '#D96A4B'),
+  (8, 0, '07 ダークプラム', '#7A3348'),
+  (9, 0, '08 ミルクティー', '#C79A82'),
+  (10, 0, '02 ローズブラウン', '#A85F5A'),
+  (11, 0, '04 モーヴピンク', '#BC687E'),
+  (12, 0, '06 コーラルオレンジ', '#D6684E'),
+  (13, 0, '200 ナチュラルオークル', '#DDB18C'),
+  (14, 0, '200 ナチュラルオークル', '#D9B28D'),
+  (15, 0, '300 オークル', '#D2A177'),
+  (16, 0, '300 オークル', '#D5A272'),
+  (17, 0, '100 ライトオークル', '#E8C4A2'),
+  (18, 0, '400 ベージュオークル', '#C79268'),
+  (19, 0, '500 ディープオークル', '#B57F55'),
+  (20, 0, '200 ナチュラルオークル', '#DDAC8D'),
+  (21, 0, '100 ライトオークル', '#E3CAA8'),
+  (22, 0, '400 ベージュオークル', '#C68C6D'),
+  (35, 0, 'ベース', '#E8D3C2'),
+  (35, 1, 'ミルクベージュ', '#D9B999'),
+  (35, 2, 'ライトブラウン', '#B98A62'),
+  (35, 3, 'テラコッタ', '#B8604A'),
+  (35, 4, 'ローズブラウン', '#A85F5A'),
+  (35, 5, 'ブリック', '#9E3B33'),
+  (35, 6, 'ダークブラウン', '#6E4630'),
+  (35, 7, 'シマーゴールド', '#D9A441'),
+  (35, 8, 'プラム', '#7A3348'),
+  (36, 0, 'ベース', '#EACFC2'),
+  (36, 1, 'ミルクベージュ', '#D8B49E'),
+  (36, 2, 'ライトブラウン', '#B98E62'),
+  (36, 3, 'テラコッタ', '#BB5C4C'),
+  (36, 4, 'ローズブラウン', '#A85C5E'),
+  (36, 5, 'ブリック', '#A23D38'),
+  (36, 6, 'ダークブラウン', '#72432B'),
+  (36, 7, 'シマーゴールド', '#D7A946'),
+  (36, 8, 'プラム', '#792F47'),
+  (37, 0, 'シアーピンク', '#EFD2D2'),
+  (37, 1, 'ベビーピンク', '#E3A9AE'),
+  (37, 2, 'モーヴ', '#B96C81'),
+  (37, 3, 'コーラル', '#D96A4B'),
+  (37, 4, 'ワインレッド', '#8E2F3E'),
+  (37, 5, 'シルバー', '#C9C5C1'),
+  (38, 0, 'シアーピンク', '#ECCDD6'),
+  (38, 1, 'ベビーピンク', '#E0ADB2'),
+  (38, 2, 'モーヴ', '#B3717B'),
+  (38, 3, 'コーラル', '#DA6847'),
+  (38, 4, 'ワインレッド', '#903439'),
+  (38, 5, 'シルバー', '#CEBFBC');
 
 insert into reviews (product_id, author_name, author_key, rating, body, image_phash, posted_at) values
   ((select p.id from products p join brands b on b.id = p.brand_id where b.name = 'mode noir' and p.name like 'セラムファンデーション%' limit 1), 'mikan_88', 'mikan_88', 4, 'カバー力は十分。ただ夕方は小鼻がよれるので部分的にパウダーがいる。', null, now() - interval '40 days'),

@@ -26,7 +26,7 @@ export default function BarcodeScanner() {
     setJan(code);
     const supabase = createClient();
     const columns =
-      "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name)";
+      "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 
     const { data } = await supabase.from("products").select(columns).eq("jan", code).maybeSingle<Product>();
     if (data) {

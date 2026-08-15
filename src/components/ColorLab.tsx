@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { deltaELabel, dominantColorFromImageData, labArray } from "@/lib/color";
+import { deltaELabel, extractPalette, labArray, type ExtractedColor } from "@/lib/color";
 import { CATEGORY_LABEL, type ColorMatch } from "@/lib/types";
 
 const PRESETS = [
@@ -18,6 +18,7 @@ export default function ColorLab() {
   const [category, setCategory] = useState<string>("lip");
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [extracted, setExtracted] = useState<ExtractedColor[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const search = async (targetHex: string, cat: string) => {
@@ -44,10 +45,13 @@ export default function ColorLab() {
       canvas.height = h;
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, w, h);
-      const detected = dominantColorFromImageData(ctx.getImageData(0, 0, w, h).data);
-      setHex(detected);
-      void search(detected, category);
-      URL.revokeObjectURL(url);
+      const palette = extractPalette(ctx.getImageData(0, 0, w, h).data);
+      setExtracted(palette);
+      const first = palette[0]?.hex;
+      if (first) {
+        setHex(first);
+        void search(first, category);
+      }
     };
     img.src = url;
   };
@@ -75,6 +79,7 @@ export default function ColorLab() {
             className="rounded-lg border border-neutral-300 px-2 py-1.5 text-sm"
           >
             <option value="lip">リップ</option>
+            <option value="eyeshadow">アイシャドウ</option>
             <option value="foundation">ファンデーション</option>
             <option value="all">すべて</option>
           </select>
@@ -104,8 +109,38 @@ export default function ColorLab() {
           ))}
         </div>
         {preview && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="解析対象" className="mt-3 max-h-48 rounded-xl border border-neutral-200" />
+          <div className="mt-3 flex flex-wrap items-start gap-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview} alt="解析対象" className="max-h-48 rounded-xl border border-neutral-200" />
+            {extracted.length > 0 && (
+              <div className="min-w-56">
+                <div className="text-xs text-neutral-500">
+                  抽出した代表色 {extracted.length} 色（クリックでその色を検索）
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {extracted.map((c) => (
+                    <button
+                      key={c.hex}
+                      type="button"
+                      onClick={() => {
+                        setHex(c.hex);
+                        void search(c.hex, category);
+                      }}
+                      className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] ${
+                        hex.toLowerCase() === c.hex.toLowerCase()
+                          ? "border-neutral-900"
+                          : "border-neutral-300"
+                      }`}
+                    >
+                      <span className="h-4 w-4 rounded-full border" style={{ background: c.hex }} />
+                      {c.hex.toUpperCase()}
+                      <span className="text-neutral-400">{Math.round(c.share * 100)}%</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         )}
         <canvas ref={canvasRef} className="hidden" />
       </div>
@@ -117,12 +152,18 @@ export default function ColorLab() {
             href={`/products/${m.product_id}`}
             className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3 hover:border-neutral-400"
           >
-            <span className="h-10 w-10 rounded-lg border" style={{ background: m.color_hex ?? "#e5e5e5" }} />
+            <span
+              className="h-10 w-10 rounded-lg border"
+              style={{ background: m.shade_hex ?? m.color_hex ?? "#e5e5e5" }}
+            />
             <span className="min-w-0 flex-1">
               <span className="block text-xs text-neutral-500">
                 {m.brand} ・ {CATEGORY_LABEL[m.category]}
               </span>
-              <span className="block truncate text-sm font-medium">{m.name}</span>
+              <span className="block truncate text-sm font-medium">
+                {m.name}
+                {m.shade_name && <span className="text-neutral-500"> / {m.shade_name}</span>}
+              </span>
               <span className="text-xs tabular-nums text-neutral-600">
                 ΔE {m.delta_e.toFixed(2)}・{deltaELabel(m.delta_e)}
               </span>
