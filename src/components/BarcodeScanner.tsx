@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Check, Search } from "lucide-react";
+import { Camera, Check, ImagePlus, Search, Send } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
-import { addToStash } from "@/app/actions";
+import { addToStash, requestProduct } from "@/app/actions";
 import { createClient } from "@/lib/supabase/client";
 import { CATEGORY_LABEL, type Category, type Product } from "@/lib/types";
 
@@ -48,6 +48,12 @@ export default function BarcodeScanner() {
   const [candidateQuery, setCandidateQuery] = useState("");
   const [candidateCategory, setCandidateCategory] = useState<Category | "">("");
   const [searching, setSearching] = useState(false);
+  const [requestName, setRequestName] = useState("");
+  const [requestBrand, setRequestBrand] = useState("");
+  const [requestFile, setRequestFile] = useState<File | null>(null);
+  const [requestBusy, setRequestBusy] = useState(false);
+  const [requestedJan, setRequestedJan] = useState<string | null>(null);
+  const [requestError, setRequestError] = useState<string | null>(null);
 
   useEffect(() => () => controlsRef.current?.stop(), []);
 
@@ -122,8 +128,47 @@ export default function BarcodeScanner() {
       setCandidateQuery("");
       setCandidateCategory("");
       setUnknownJan(code);
+      setRequestName("");
+      setRequestBrand("");
+      setRequestFile(null);
+      setRequestError(null);
     }
     setStatus("unknown");
+  };
+
+  /** JAN + 任意の写真・商品名を商品リクエストとして残す。 */
+  const sendRequest = async () => {
+    setRequestBusy(true);
+    setRequestError(null);
+
+    let imagePath: string | null = null;
+    if (requestFile) {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        const ext = requestFile.name.split(".").pop()?.toLowerCase() ?? "jpg";
+        const path = `${user.id}/${unknownJan}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("jan-requests")
+          .upload(path, requestFile, { upsert: true });
+        if (!upErr) imagePath = path;
+      }
+    }
+
+    const res = await requestProduct({
+      jan: unknownJan,
+      productName: requestName,
+      brandName: requestBrand,
+      imagePath,
+    });
+    setRequestBusy(false);
+    if (!res.ok) {
+      setRequestError(res.error ?? "リクエストを送れませんでした");
+      return;
+    }
+    setRequestedJan(unknownJan);
   };
 
   const start = async () => {
@@ -250,7 +295,55 @@ export default function BarcodeScanner() {
           <div className="font-bold text-amber-900">
             このバーコード（{unknownJan}）は登録がありません
           </div>
-          <p className="text-sm text-amber-900">
+
+          {requestedJan === unknownJan ? (
+            <div className="mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+              <div className="flex items-center gap-1.5 font-bold">
+                <Check size={15} /> リクエストを受け付けました
+              </div>
+              <p className="mt-1">商品として登録されたら通知します。</p>
+            </div>
+          ) : (
+            <div className="mt-3 space-y-2 rounded-2xl border border-amber-200 bg-white p-4">
+              <div className="text-sm font-bold">この商品を登録してほしいと伝える</div>
+              <p className="text-xs text-ink-400">
+                商品名と写真は分かる範囲で。バーコードの数字だけでも送れます。
+              </p>
+              <input
+                value={requestName}
+                onChange={(e) => setRequestName(e.target.value)}
+                placeholder="商品名（任意）"
+                className="w-full rounded-full border border-brand-100 px-4 py-2.5 text-sm outline-none focus:border-brand-300"
+              />
+              <input
+                value={requestBrand}
+                onChange={(e) => setRequestBrand(e.target.value)}
+                placeholder="ブランド名（任意）"
+                className="w-full rounded-full border border-brand-100 px-4 py-2.5 text-sm outline-none focus:border-brand-300"
+              />
+              <label className="flex w-fit cursor-pointer items-center gap-1.5 rounded-full border border-brand-200 bg-white px-3 py-2 text-sm">
+                <ImagePlus size={14} />
+                {requestFile ? requestFile.name : "写真を選ぶ（任意）"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setRequestFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
+              <button
+                type="button"
+                disabled={requestBusy}
+                onClick={() => void sendRequest()}
+                className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+              >
+                <Send size={14} /> {requestBusy ? "送信中…" : "リクエストを送る"}
+              </button>
+              {requestError && <p className="text-sm text-red-600">{requestError}</p>}
+            </div>
+          )}
+
+          <p className="mt-4 text-sm text-amber-900">
             登録済みの商品から選んでポーチに入れてください。名前やカテゴリで絞り込めます。
           </p>
           <label className="relative mt-3 block">
