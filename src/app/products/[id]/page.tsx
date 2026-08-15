@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import ComparePanel, { type CompareSide } from "@/components/ComparePanel";
 import DupeRowItem from "@/components/DupeRowItem";
@@ -6,6 +7,7 @@ import FitCard from "@/components/FitCard";
 import IngredientPanel from "@/components/IngredientPanel";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
+import SkipButton, { type SkipChoice } from "@/components/SkipButton";
 import StashButton from "@/components/StashButton";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
@@ -20,7 +22,13 @@ import {
   type RatingSummary,
   type Review,
 } from "@/lib/types";
-import { colorDifferenceText, colorMatchText, colorName, formulaMatchText } from "@/lib/wording";
+import {
+  colorDifferenceText,
+  colorMatchBadge,
+  colorMatchText,
+  colorName,
+  formulaMatchText,
+} from "@/lib/wording";
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -33,6 +41,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const [
     { data: product },
     { data: owned },
+    { data: skipped },
     dupeRes,
     cheaperRes,
     coverageRes,
@@ -51,6 +60,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     user
       ? supabase
           .from("user_items")
+          .select("product_id")
+          .eq("product_id", productId)
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    user
+      ? supabase
+          .from("skipped_purchases")
           .select("product_id")
           .eq("product_id", productId)
           .eq("user_id", user.id)
@@ -172,6 +189,42 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const canUseStash = isRealAccount(user);
   const canPost = canUseStash;
 
+  // 見送りの理由は、この商品で実際に判定できたものだけを出す。
+  const skipChoices: SkipChoice[] = [];
+  if (topDupe && topDupe.delta_e !== null && topDupe.delta_e < 5) {
+    skipChoices.push({
+      reason: "own_similar_color",
+      evidenceProductId: topDupe.product_id,
+      deltaE: topDupe.delta_e,
+      ingSim: topDupe.ing_sim,
+      detail: `ポーチの「${topDupe.brand} ${topDupe.name}」と${colorMatchBadge(topDupe.delta_e)}`,
+    });
+  }
+  if (topDupe && topDupe.ing_sim >= 0.8) {
+    skipChoices.push({
+      reason: "own_similar_formula",
+      evidenceProductId: topDupe.product_id,
+      deltaE: topDupe.delta_e,
+      ingSim: topDupe.ing_sim,
+      detail: `ポーチの「${topDupe.brand} ${topDupe.name}」と${formulaMatchText(topDupe.ing_sim)}`,
+    });
+  }
+  if (cheapestSimilar && cheapestSimilar.price_yen < product.price_yen) {
+    skipChoices.push({
+      reason: "cheaper_alternative",
+      evidenceProductId: cheapestSimilar.product_id,
+      deltaE: cheapestSimilar.delta_e,
+      ingSim: cheapestSimilar.ing_sim,
+      detail: `「${cheapestSimilar.brand} ${cheapestSimilar.name}」が ¥${(
+        product.price_yen - cheapestSimilar.price_yen
+      ).toLocaleString()} 安い（差額だけを節約額にします）`,
+    });
+  }
+  if (fit.verdict === "caution") {
+    skipChoices.push({ reason: "not_fit", detail: fit.headline });
+  }
+  skipChoices.push({ reason: "other" });
+
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-start gap-4 rounded-2xl border border-ink-200 bg-white p-5">
@@ -226,11 +279,27 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               ))}
             </ul>
           )}
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap items-start gap-2">
             <StashButton productId={product.id} owned={isOwned} canUse={canUseStash} />
+            {!isOwned && (
+              <SkipButton
+                productId={product.id}
+                skipped={Boolean(skipped)}
+                choices={skipChoices}
+                canUse={canUseStash}
+              />
+            )}
           </div>
           {isOwned && (
             <p className="mt-2 text-xs font-bold text-brand-700">これは持っている商品です。</p>
+          )}
+          {!isOwned && skipped && (
+            <p className="mt-2 text-xs font-bold text-emerald-700">
+              この商品は見送りました。{" "}
+              <Link href="/savings" className="underline">
+                節約額を見る
+              </Link>
+            </p>
           )}
         </div>
       </section>

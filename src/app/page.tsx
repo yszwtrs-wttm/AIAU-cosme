@@ -8,6 +8,7 @@ import {
   Palette,
   Search,
   ShieldCheck,
+  ShieldOff,
   Sparkles,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
@@ -39,11 +40,12 @@ export default async function Home() {
     return <LandingPage products={await getRankedProducts(supabase)} />;
   }
 
-  const [{ data: products }, { data: scores }, { count: stashCount }, profile] =
+  const [{ data: products }, { data: scores }, { count: stashCount }, { data: skips }, profile] =
     await Promise.all([
       supabase.from("products").select(PRODUCT_SELECT).returns<Product[]>(),
       supabase.from("product_score").select("*").returns<ProductScore[]>(),
       supabase.from("user_items").select("product_id", { count: "exact", head: true }),
+      supabase.from("skipped_purchases").select("saved_yen"),
       getMyProfile(),
     ]);
 
@@ -65,6 +67,8 @@ export default async function Home() {
       hasSkinInfo={hasSkinInfo}
       suggestions={suggestions}
       stashCount={stashCount ?? 0}
+      skipCount={(skips ?? []).length}
+      savedYen={(skips ?? []).reduce((total, skip) => total + skip.saved_yen, 0)}
     />
   );
 }
@@ -131,6 +135,17 @@ function LandingPage({ products }: { products: Product[] }) {
         </div>
       </section>
 
+      <section className="rounded-2xl border-2 border-ink-900 bg-white p-5">
+        <div className="flex items-center gap-2 font-bold">
+          <ShieldOff size={17} />
+          このアプリは商品を売りません
+        </div>
+        <p className="mt-2 text-sm leading-relaxed text-ink-600">
+          カートも決済もなく、外部ショップへのアフィリエイトリンクも入れていません。
+          広告のために並び順を変えることもしません。数えているのは「買わなかった金額」です。
+        </p>
+      </section>
+
       {products.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-end justify-between gap-3">
@@ -178,11 +193,15 @@ function PersonalizedHome({
   hasSkinInfo,
   suggestions,
   stashCount,
+  skipCount,
+  savedYen,
 }: {
   displayName: string;
   hasSkinInfo: boolean;
   suggestions: { product: Product; fit: ReturnType<typeof judgeFit> }[];
   stashCount: number;
+  skipCount: number;
+  savedYen: number;
 }) {
   return (
     <div className="space-y-8">
@@ -249,10 +268,27 @@ function PersonalizedHome({
           </Link>
         </div>
         <div className="rounded-2xl border border-ink-200 bg-white p-5">
+          <div className="flex items-center gap-2 text-sm font-bold">
+            <CircleDollarSign size={17} className="text-emerald-600" /> 買わなかった金額
+          </div>
+          <p className="mt-3 font-display text-3xl font-bold tabular-nums text-emerald-700">
+            ¥{savedYen.toLocaleString()}
+          </p>
+          <p className="mt-0.5 text-xs text-ink-400">見送った商品 {skipCount}点</p>
+          <Link href="/savings" className="mt-3 inline-block text-sm font-bold text-brand-600">
+            買わなかった記録を見る <ArrowRight className="inline" size={14} />
+          </Link>
+        </div>
+        <div className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="text-sm font-bold">すぐ使える機能</div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
             <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />
             <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
+            <QuickLink
+              href="/savings"
+              icon={<CircleDollarSign size={15} />}
+              label="買わなかった記録"
+            />
             <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
             <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
           </div>
