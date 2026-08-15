@@ -52,7 +52,7 @@ export default async function MyPage() {
               `@${profile.handle}`
             ) : real ? (
               <Link href="/settings" className="hover:text-brand-600">
-                プロフィールを作成すると、口コミを書いたり、ポーチを引き継げます
+                プロフィールを作成すると、口コミが書けます
               </Link>
             ) : (
               "ログインすると、口コミが書けてポーチを引き継げます"
