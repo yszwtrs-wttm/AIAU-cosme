@@ -3,23 +3,25 @@ import { Search } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { judgeFit } from "@/lib/fit";
+import { compareUnitPrice } from "@/lib/price";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABEL, type Category, type Product, type ProductScore } from "@/lib/types";
 
 const CATEGORIES: Category[] = ["lip", "eyeshadow", "foundation", "shampoo", "treatment"];
 const PRODUCT_SELECT =
-  "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
+  "id,name,category,is_mens,price_yen,volume,volume_unit,unit_price_yen,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 const CHIP = "rounded-full border px-3 py-1.5 text-sm transition";
 const CHIP_ON = "border-ink-900 bg-ink-900 text-white";
 const CHIP_OFF = "border-ink-200 bg-white text-ink-600 hover:border-ink-400";
 
-type Sort = "recommended" | "new" | "cheap" | "expensive" | "rating";
+type Sort = "recommended" | "new" | "cheap" | "expensive" | "unit_price" | "rating";
 
 const SORT_OPTIONS: { value: Sort; label: string }[] = [
   { value: "recommended", label: "おすすめ" },
   { value: "new", label: "新着" },
   { value: "cheap", label: "安い順" },
   { value: "expensive", label: "高い順" },
+  { value: "unit_price", label: "単価が安い順" },
   { value: "rating", label: "評価順" },
 ];
 
@@ -67,6 +69,11 @@ export default async function SearchPage({
   if (params.q) query = query.ilike("name", `%${params.q}%`);
   if (sort === "new") {
     query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
+  }
+  if (sort === "unit_price") {
+    query = query
+      .order("unit_price_yen", { ascending: true, nullsFirst: false })
+      .order("id", { ascending: false });
   }
 
   const [
@@ -122,6 +129,7 @@ export default async function SearchPage({
     if (sort === "new") return 0;
     if (sort === "cheap") return a.price_yen - b.price_yen || b.id - a.id;
     if (sort === "expensive") return b.price_yen - a.price_yen || b.id - a.id;
+    if (sort === "unit_price") return compareUnitPrice(a, b);
     if (sort === "rating") return (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0) || b.id - a.id;
 
     return (
@@ -139,7 +147,9 @@ export default async function SearchPage({
         ? "価格が安い順に表示しています。"
         : sort === "expensive"
           ? "価格が高い順に表示しています。"
-          : sort === "rating"
+          : sort === "unit_price"
+            ? "容量あたりの価格が安い順に表示しています。容量が未登録の商品は最後に並べています。"
+            : sort === "rating"
             ? "信用できる口コミの評価が高い順に表示しています。"
             : hasPersonalizationMaterial
               ? "肌情報・避けたい成分・ポーチをもとに、あなた向けに並べています。"

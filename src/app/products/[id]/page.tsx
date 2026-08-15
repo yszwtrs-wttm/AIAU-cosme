@@ -10,6 +10,7 @@ import StashButton from "@/components/StashButton";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
+import { compareUnitPrice, unitPriceLabel } from "@/lib/price";
 import { createClient } from "@/lib/supabase/server";
 import {
   CATEGORY_LABEL,
@@ -44,7 +45,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     supabase
       .from("products")
       .select(
-        "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
+        "id,name,category,is_mens,price_yen,volume,volume_unit,unit_price_yen,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
       )
       .eq("id", productId)
       .maybeSingle<Product>(),
@@ -97,6 +98,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const cheaper = (cheaperRes.data ?? []) as DupeRow[];
   const topDupe = dupes[0];
   const cheapestSimilar = cheaper[0];
+  const cheaperByUnitPrice = cheaper
+    .slice(1)
+    .sort((a, b) =>
+      compareUnitPrice(
+        { unit_price_yen: a.unit_price_yen, id: a.product_id },
+        { unit_price_yen: b.unit_price_yen, id: b.product_id },
+      ),
+    );
   const shades = [...(product.product_colors ?? [])].sort((a, b) => a.pos - b.pos);
   const coverage = (coverageRes.data ?? []) as PaletteCoverage[];
   const covered = coverage.filter((c) => c.owned_product_id !== null);
@@ -207,13 +216,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           )}
           <div className="mt-1 text-lg font-bold tabular-nums">
             ¥{product.price_yen.toLocaleString()}
-            {product.volume && (
-              <span className="ml-2 text-xs font-normal text-ink-400">
-                {product.volume}
-                {product.volume_unit} ・ ¥{Math.round(product.price_yen / product.volume).toLocaleString()}/
-                {product.volume_unit}
-              </span>
-            )}
+            <span className="ml-2 text-xs font-normal text-ink-400">
+              {product.volume
+                ? `${product.volume}${product.volume_unit ?? ""} ・ ${unitPriceLabel(product) ?? ""}`
+                : "容量未登録"}
+            </span>
           </div>
           {shades.length > 0 && (
             <ul className="mt-3 flex flex-wrap gap-2 text-[11px] text-ink-600">
@@ -344,7 +351,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       {!isOwned && compareLow && cheaper.length > 1 && (
         <section className="space-y-2">
           <h2 className="font-display text-lg font-bold">ほかの似ていて安いもの</h2>
-          {cheaper.slice(1).map((row) => (
+          <p className="text-xs text-ink-600">
+            容量あたりの価格が安い順。容量が未登録の商品は最後に並べています。
+          </p>
+          {cheaperByUnitPrice.map((row) => (
             <DupeRowItem key={row.product_id} row={row} tone="save" />
           ))}
         </section>

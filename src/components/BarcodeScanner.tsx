@@ -12,7 +12,7 @@ import { CATEGORY_LABEL, type Product } from "@/lib/types";
 type Status = "idle" | "scanning" | "found" | "unknown" | "error";
 
 const COLUMNS =
-  "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
+  "id,name,category,is_mens,price_yen,volume,volume_unit,unit_price_yen,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 
 /**
  * 連続スキャン。1本ごとにカメラを止めず、読めたらそのまま登録して次に進める。

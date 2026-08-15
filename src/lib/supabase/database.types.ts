@@ -149,6 +149,8 @@ export type Database = {
           jan: string | null
           name: string
           price_yen: number
+          unit_price_unit: string | null
+          unit_price_yen: number | null
           volume: number | null
           volume_unit: string | null
         }
@@ -614,6 +616,10 @@ export type Database = {
           product_id: number
           savings: number
           score: number
+          unit_price_savings: number | null
+          unit_price_yen: number | null
+          volume: number | null
+          volume_unit: string | null
         }[]
       }
       find_duplicates_in_stash: {

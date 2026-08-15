@@ -17,7 +17,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { Product, ProductScore } from "@/lib/types";
 
 const PRODUCT_SELECT =
-  "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
+  "id,name,category,is_mens,price_yen,volume,volume_unit,unit_price_yen,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 
 async function getRankedProducts(supabase: Awaited<ReturnType<typeof createClient>>) {
   const [{ data }, { data: scores }] = await Promise.all([
