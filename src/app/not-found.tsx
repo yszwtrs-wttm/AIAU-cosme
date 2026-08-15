@@ -4,7 +4,7 @@ import { Home, Search } from "lucide-react";
 /** 存在しない商品IDやハンドルでも、アプリのデザインのまま案内する。 */
 export default function NotFound() {
   return (
-    <section className="animate-rise space-y-5 py-10 text-center">
+    <section className="animate-rise mx-auto max-w-5xl space-y-5 px-4 py-10 text-center">
       <div>
         <p className="text-xs font-bold tracking-widest text-brand-500">404</p>
         <h1 className="mt-2 font-display text-2xl font-bold">ページが見つかりません</h1>

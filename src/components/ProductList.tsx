@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { loadMoreProducts } from "@/app/search/actions";
+import { loadMoreProducts } from "@/app/(app)/search/actions";
 import ProductCard from "@/components/ProductCard";
 import type { ProductQuery, RankedProduct } from "@/lib/products";
 
