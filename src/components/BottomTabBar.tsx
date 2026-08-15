@@ -13,7 +13,7 @@ const TABS = [
 ];
 const GUEST_TABS = [
   { href: "/search", label: "探す", icon: Search },
-  { href: "/feed", label: "投稿", icon: Images },
+  { href: "/feed", label: "口コミ", icon: Images },
   { href: "/login", label: "ログイン", icon: UserRound },
 ];
 
