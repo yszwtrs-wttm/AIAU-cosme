@@ -1,6 +1,6 @@
 import Link from "next/link";
 import ProductThumb from "@/components/ProductThumb";
-import { axisDiffs, ingredientEdge, ingredientEdgeText } from "@/lib/compare";
+import { axisDiffs } from "@/lib/compare";
 import type { FeelAxis, FeelValues } from "@/lib/feel";
 import type { Category, ProductColor } from "@/lib/types";
 
@@ -13,7 +13,6 @@ export type CompareSide = {
   imageUrl: string | null;
   colors: ProductColor[];
   feel: FeelValues;
-  ingredients: string[];
   /** 口コミの平均が使えているか（推定なら false） */
   measured: boolean;
   /** 使用感の平均に使った口コミ件数 */
@@ -34,8 +33,6 @@ export default function ComparePanel({
   low: CompareSide;
 }) {
   const diffs = axisDiffs(axes, high.feel, low.feel);
-  const highEdge = ingredientEdgeText(ingredientEdge(high.ingredients, low.ingredients));
-  const lowEdge = ingredientEdgeText(ingredientEdge(low.ingredients, high.ingredients));
   const priceDiff = high.priceYen - low.priceYen;
   const estimated = !high.measured || !low.measured;
 
@@ -77,32 +74,8 @@ export default function ComparePanel({
         })}
       </ul>
 
-      <div className="grid gap-3 border-t border-ink-100 p-4 sm:grid-cols-2">
-        <div className="rounded-xl bg-brand-50 p-3 text-xs leading-relaxed">
-          <div className="font-bold">この商品にしかないもの</div>
-          {highEdge.length > 0 ? (
-            <ul className="mt-1 space-y-0.5">
-              {highEdge.map((t) => (
-                <li key={t}>・{t}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-1 text-ink-400">成分の面では、安い方にない特徴は見つかりませんでした</p>
-          )}
-        </div>
-        <div className="rounded-xl bg-emerald-50 p-3 text-xs leading-relaxed">
-          <div className="font-bold">安い方にしかないもの</div>
-          {lowEdge.length > 0 ? (
-            <ul className="mt-1 space-y-0.5">
-              {lowEdge.map((t) => (
-                <li key={t}>・{t}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-1 text-ink-400">成分の面では、この商品にない特徴は見つかりませんでした</p>
-          )}
-        </div>
-        <p className="text-[11px] text-ink-400 sm:col-span-2">
+      <div className="border-t border-ink-100 p-4">
+        <p className="text-[11px] text-ink-400">
           {estimated
             ? "使い心地は、口コミがまだ少ないため成分からの予想を含みます。"
             : "使い心地は、使った人の口コミの平均です。"}

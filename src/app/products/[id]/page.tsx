@@ -128,7 +128,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         category: lowProduct.category,
         imageUrl: lowProduct.image_url,
         colors: [...(lowProduct.product_colors ?? [])].sort((a, b) => a.pos - b.pos),
-        ingredients: lowProduct.ingredients,
         measured: lowMeasured,
         reviewCount: lowFeel?.feel_count ?? 0,
         feel: lowMeasured
@@ -146,7 +145,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     category: product.category,
     imageUrl: product.image_url,
     colors: shades,
-    ingredients: product.ingredients,
     measured: measuredFeel,
     reviewCount: feelSummary?.feel_count ?? 0,
     feel: feelValues,
