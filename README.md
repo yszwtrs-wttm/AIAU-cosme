@@ -80,7 +80,7 @@ flowchart LR
   issue["Issue を作成<br/>(または devin ラベルを付与)"]
   wf[".github/workflows/devin-on-issue.yml<br/>プロンプト生成 → Devin API /v1/sessions"]
   session["Devin セッション<br/>調査 → 実装 → lint / typecheck / build → 画面確認"]
-  pr["PR: devin/issue-&lt;番号&gt;-&lt;説明&gt;<br/>Fixes #&lt;番号&gt;"]
+  pr["PR: devin/issue-N-説明 ブランチ<br/>本文に Fixes #N"]
   review["レビュー → main にマージ"]
   deploy["Vercel で本番反映"]
 
@@ -90,7 +90,7 @@ flowchart LR
 
 - ワークフローは `issues: [opened, labeled]` で起動し、Issue 本文に固定の手順（調査 → 最小限の実装 → `npm run lint` / `npx tsc --noEmit` / `npm run build` → 画面のスクリーンショット → `devin/issue-<番号>-<説明>` ブランチで PR）を添えて渡す。`idempotent: true` なので同じ Issue で二重にセッションは立たない。
 - セッション作成後、Issue にセッション URL がコメントされ、完了時には原因・変更内容・PR URL・未解決事項が Issue に残る。仕様が曖昧なときはコードを変更せず、調査結果と提案だけを Issue にコメントする運用にしている。
-- 実績: この仕組みで作られた Devin の PR は 21 本（うち 16 本がマージ済み）、扱った Issue は 51 件。レスポンシブ崩れの修正、ページ遷移の高速化、デフォルトアイコンの差し替えなど、バグ修正から機能追加まで同じ流れで処理している。
+- 実績（2026-08 時点）: この仕組みで立てた Issue は 73 件、そこから Devin が作った PR は 32 本（うち 16 本がマージ済み）で、`devin/*` 以外のブランチからの PR は無い。レスポンシブ崩れの修正、ページ遷移の高速化、デフォルトアイコンの差し替えなど、バグ修正から機能追加まで同じ流れで処理している。
 
 ## 成分ベクトル
 
