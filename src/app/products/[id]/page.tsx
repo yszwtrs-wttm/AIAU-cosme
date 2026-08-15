@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import AvoidedIngredientNotice from "@/components/AvoidedIngredientNotice";
 import ComparePanel, { type CompareSide } from "@/components/ComparePanel";
 import DupeRowItem from "@/components/DupeRowItem";
 import FeelChart from "@/components/FeelChart";
@@ -74,7 +75,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   if (!product) notFound();
 
-  let avoidedIngredientLabels: string[] = [];
+  let avoidedIngredients: { inci: string; nameJa: string | null }[] = [];
   if (user && product.ingredients.length > 0) {
     const { data: allergenRows } = await supabase
       .from("profile_allergens")
@@ -87,9 +88,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         .select("id,inci,name_ja")
         .in("id", ingredientIds);
       const productIngredients = new Set(product.ingredients.map((ingredient) => ingredient.toUpperCase()));
-      avoidedIngredientLabels = (masters ?? [])
+      avoidedIngredients = (masters ?? [])
         .filter((ingredient) => productIngredients.has(ingredient.inci.toUpperCase()))
-        .map((ingredient) => ingredient.name_ja || ingredient.inci);
+        .map((ingredient) => ({ inci: ingredient.inci, nameJa: ingredient.name_ja }));
     }
   }
 
@@ -200,11 +201,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               {summary?.counted_count ? `（口コミ${summary.counted_count}件）` : "（口コミなし）"}
             </span>
           </div>
-          {avoidedIngredientLabels.length > 0 && (
-            <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
-              避けたい成分が入っています: {avoidedIngredientLabels.join("、")}
-            </p>
-          )}
+          <AvoidedIngredientNotice ingredients={avoidedIngredients} />
           <div className="mt-1 text-lg font-bold tabular-nums">
             ¥{product.price_yen.toLocaleString()}
             {product.volume && (

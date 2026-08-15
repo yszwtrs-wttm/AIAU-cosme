@@ -4,7 +4,9 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveProfile } from "@/app/actions";
 import Avatar from "@/components/Avatar";
+import IngredientDisclaimer from "@/components/IngredientDisclaimer";
 import { shrinkImage } from "@/lib/image";
+import { ROLE_SHORT_LABEL, resolveIngredient } from "@/lib/ingredients";
 import { createClient } from "@/lib/supabase/client";
 import {
   PERSONAL_COLOR_LABEL,
@@ -305,7 +307,7 @@ export default function ProfileForm({
         <div>
           <span className="text-sm font-bold">避けたい成分（任意）</span>
           <p className="text-[11px] text-ink-400">
-            登録した成分が入っている商品に注意を表示します。
+            登録した成分が入っている商品に、役割と「なぜ避けたい人がいるのか」の説明を付けて注意を表示します。
           </p>
         </div>
         {selectedIngredients.length > 0 && (
@@ -332,17 +334,28 @@ export default function ProfileForm({
         <div className="max-h-48 overflow-y-auto rounded-2xl border border-ink-100">
           {filteredIngredients.map((ingredient) => {
             const selected = selectedAllergenIds.includes(ingredient.id);
+            const info = resolveIngredient(ingredient.inci.toUpperCase(), 1);
             return (
               <button
                 key={ingredient.id}
                 type="button"
                 onClick={() => toggleAllergen(ingredient.id)}
-                className={`flex w-full items-center justify-between border-b border-ink-100 px-3 py-2 text-left text-xs last:border-b-0 ${
+                className={`block w-full border-b border-ink-100 px-3 py-2 text-left text-xs last:border-b-0 ${
                   selected ? "bg-brand-50 text-brand-700" : "bg-white"
                 }`}
               >
-                <span>{ingredient.name_ja || ingredient.inci}</span>
-                <span className="ml-2 text-[10px] text-ink-400">{ingredient.inci}</span>
+                <span className="flex items-center justify-between gap-2">
+                  <span>
+                    {ingredient.name_ja || ingredient.inci}
+                    <span className="ml-1.5 text-[10px] text-ink-400">
+                      {ROLE_SHORT_LABEL[info.role]}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-[10px] text-ink-400">{ingredient.inci}</span>
+                </span>
+                <span className="mt-0.5 block text-[11px] leading-relaxed text-ink-600">
+                  {info.avoid ?? info.caution ?? info.effect}
+                </span>
               </button>
             );
           })}
@@ -350,6 +363,7 @@ export default function ProfileForm({
             <p className="p-3 text-xs text-ink-400">一致する成分がありません。</p>
           )}
         </div>
+        <IngredientDisclaimer />
       </div>
 
       <label className="flex items-center gap-2 text-sm">

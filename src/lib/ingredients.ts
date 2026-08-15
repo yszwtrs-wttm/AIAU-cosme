@@ -55,6 +55,31 @@ export const ROLE_ORDER: Role[] = [
   "fragrance",
 ];
 
+/**
+ * 成分の解説の出典。医療的な判断に使えるものではないので、参考にした辞典サイトを必ず併記する。
+ * 個別ページの URL は改廃されるため、サイトのトップを出典として示す。
+ */
+export type SourceId = "cosmetic-ingredients" | "hadapedia";
+
+export type Source = { id: SourceId; name: string; url: string };
+
+export const SOURCES: Record<SourceId, Source> = {
+  "cosmetic-ingredients": {
+    id: "cosmetic-ingredients",
+    name: "化粧品成分オンライン",
+    url: "https://cosmetic-ingredients.org/",
+  },
+  hadapedia: {
+    id: "hadapedia",
+    name: "hadapedia",
+    url: "https://hadapedia.cocoroai.co.jp/",
+  },
+};
+
+/** 成分の解説を出すところには必ずこの一文を添える（医療的な誤解を避けるため）。 */
+export const INGREDIENT_DISCLAIMER =
+  "成分の解説は成分辞典サイトを参考にした一般的な情報で、診断ではありません。合うかどうかは人によって違うので、心配なときは目立たない場所でのパッチテストや、医師・薬剤師への相談をおすすめします。";
+
 export type IngredientInfo = {
   ja: string;
   role: Role;
@@ -62,6 +87,8 @@ export type IngredientInfo = {
   effect: string;
   /** 気にする人向けのひとこと。無い場合は付けない。 */
   caution?: string;
+  /** なぜ避けたい人がいるのかの説明。断定せず「人によっては」の書き方にする。 */
+  avoid?: string;
 };
 
 export const INGREDIENTS: Record<string, IngredientInfo> = {
@@ -75,18 +102,18 @@ export const INGREDIENTS: Record<string, IngredientInfo> = {
   "DIISOSTEARYL MALATE": { ja: "リンゴ酸ジイソステアリル", role: "texture", effect: "とろっとしたツヤと、色の伸びのよさを作る油分" },
   OCTYLDODECANOL: { ja: "オクチルドデカノール", role: "texture", effect: "色材をなめらかに分散させ、伸びを軽くする油分" },
   "ISOPROPYL MYRISTATE": { ja: "ミリスチン酸イソプロピル", role: "texture", effect: "さらっと伸びて浸透感を出す油分" },
-  "RICINUS COMMUNIS SEED OIL": { ja: "ヒマシ油", role: "texture", effect: "色つきとツヤを長持ちさせる、粘りのある植物油" },
+  "RICINUS COMMUNIS SEED OIL": { ja: "ヒマシ油", role: "texture", effect: "色つきとツヤを長持ちさせる、粘りのある植物油", avoid: "口紅に多い植物油。まれに接触皮膚炎（唇の荒れ）の報告があり、唇が荒れやすい人が気にすることがある。" },
   "SIMMONDSIA CHINENSIS SEED OIL": { ja: "ホホバ種子油", role: "moisture", effect: "肌にも髪にもなじみやすい保湿オイル" },
   "ARGANIA SPINOSA KERNEL OIL": { ja: "アルガンオイル", role: "moisture", effect: "パサつきを抑えてしっとりまとめる植物油" },
   "JOJOBA ESTERS": { ja: "ホホバエステル", role: "texture", effect: "ワックスのような感触で、なめらかさを保つ" },
   "SHEA BUTTER ETHYL ESTERS": { ja: "シアバターエチルエステル", role: "moisture", effect: "シアバター由来のこくのある保湿成分" },
   "POLYGLYCERYL-2 TRIISOSTEARATE": { ja: "トリイソステアリン酸ポリグリセリル-2", role: "texture", effect: "色材と油分を混ぜて、均一な発色にする" },
   "PHYTOSTERYL/OCTYLDODECYL LAUROYL GLUTAMATE": { ja: "ラウロイルグルタミン酸ジ（フィトステリル/オクチルドデシル）", role: "moisture", effect: "唇の水分を逃がさず、ぷるんとした感触にする" },
-  "CERA ALBA": { ja: "ミツロウ", role: "texture", effect: "形をキープして落ちにくくする天然ワックス" },
+  "CERA ALBA": { ja: "ミツロウ", role: "texture", effect: "形をキープして落ちにくくする天然ワックス", avoid: "ミツバチ由来。はちみつ・プロポリスでアレルギーが出たことがある人は避ける対象になる。" },
   "CANDELILLA WAX": { ja: "キャンデリラロウ", role: "texture", effect: "固さを出して溶けにくくする植物ワックス" },
   "MICROCRYSTALLINE WAX": { ja: "マイクロクリスタリンワックス", role: "texture", effect: "スティックの形を保ち、密着させるワックス" },
   POLYETHYLENE: { ja: "ポリエチレン", role: "texture", effect: "硬さと厚みを出して、こすれても落ちにくくする" },
-  "CETEARYL ALCOHOL": { ja: "セテアリルアルコール", role: "texture", effect: "とろみを付けて、しっとりした感触にする（お酒のアルコールではない）" },
+  "CETEARYL ALCOHOL": { ja: "セテアリルアルコール", role: "texture", effect: "とろみを付けて、しっとりした感触にする（お酒のアルコールではない）", avoid: "揮発するエタノールとは別物のロウ状の成分だが、まれに接触皮膚炎の報告があり、乳化剤に反応しやすい人が気にすることがある。" },
   "STEARYL ALCOHOL": { ja: "ステアリルアルコール", role: "texture", effect: "こくのあるクリーム状の感触を作る" },
   "GLYCOL DISTEARATE": { ja: "ジステアリン酸グリコール", role: "texture", effect: "とろみとパール感のある見た目にする" },
 
@@ -103,7 +130,7 @@ export const INGREDIENTS: Record<string, IngredientInfo> = {
   "DISTEARDIMONIUM HECTORITE": { ja: "ジステアルジモニウムヘクトライト", role: "texture", effect: "分離を防いで、粉と油を均一に保つ" },
 
   // ---- 粉・質感
-  TALC: { ja: "タルク", role: "texture", effect: "さらさらした肌触りと、なめらかな伸びを作る粉" },
+  TALC: { ja: "タルク", role: "texture", effect: "さらさらした肌触りと、なめらかな伸びを作る粉", avoid: "化粧品用は不純物を管理したものが使われるが、粉を吸い込みたくない人や、産地の不純物を気にする人が避けることがある。" },
   MICA: { ja: "マイカ（雲母）", role: "color", effect: "自然な光沢を出して、肌の凹凸をぼかす" },
   "SYNTHETIC FLUORPHLOGOPITE": { ja: "合成フルオロフロゴパイト", role: "color", effect: "透明感のあるきれいなツヤ・きらめきを出す" },
   SILICA: { ja: "シリカ", role: "texture", effect: "皮脂を吸ってサラサラに保ち、テカリを抑える" },
@@ -122,19 +149,19 @@ export const INGREDIENTS: Record<string, IngredientInfo> = {
   "CI 77492": { ja: "黄色酸化鉄", role: "color", effect: "黄みを作る色材" },
   "CI 77499": { ja: "黒色酸化鉄", role: "color", effect: "暗さ・深みを作る色材" },
   "CI 77891": { ja: "酸化チタン（色材）", role: "color", effect: "明るさを足す白の色材" },
-  "CI 15850": { ja: "赤色202号", role: "color", effect: "青みのある赤を出す色材" },
+  "CI 15850": { ja: "赤色202号", role: "color", effect: "青みのある赤を出す色材", avoid: "いわゆるタール色素。落ちにくい代わりに色素沈着や唇の荒れを心配して避ける人がいる（国が定めた基準の範囲で使われている）。" },
   "CI 45410": { ja: "赤色223号", role: "color", effect: "透け感のあるピンクレッドを出す色材" },
-  "CI 19140": { ja: "黄色4号", role: "color", effect: "黄みを足して明るく見せる色材" },
+  "CI 19140": { ja: "黄色4号", role: "color", effect: "黄みを足して明るく見せる色材", avoid: "タール色素の一つ。まれにアレルギーの報告があり、色素を避けたい人のチェック対象になる。" },
   "CI 42090": { ja: "青色1号", role: "color", effect: "青みを足して、くすみのない発色にする色材" },
 
   // ---- 効果のある成分
   NIACINAMIDE: { ja: "ナイアシンアミド", role: "active", effect: "美白とシワ改善の両方で効果が認められている成分" },
   "ASCORBYL GLUCOSIDE": { ja: "アスコルビルグルコシド", role: "active", effect: "ビタミンCの仲間。透明感のケアに使われる" },
   PANTHENOL: { ja: "パンテノール", role: "active", effect: "荒れをしずめ、うるおいを保つ（髪のハリにも使われる）" },
-  "SALICYLIC ACID": { ja: "サリチル酸", role: "active", effect: "余分な角質や皮脂を落として、ざらつきを整える", caution: "敏感な状態では刺激を感じることがある" },
+  "SALICYLIC ACID": { ja: "サリチル酸", role: "active", effect: "余分な角質や皮脂を落として、ざらつきを整える", caution: "敏感な状態では刺激を感じることがある", avoid: "角質をやわらげる働きがあるぶん、乾燥している肌や荒れている肌ではヒリつき・赤みが出ることがある。日本では配合できる量に上限がある成分。" },
   "PIROCTONE OLAMINE": { ja: "ピロクトンオラミン", role: "active", effect: "フケ・かゆみの原因菌をおさえる" },
-  "ZINC PYRITHIONE": { ja: "ジンクピリチオン", role: "active", effect: "頭皮のフケ・かゆみをおさえる", caution: "国によって配合が制限されている成分" },
-  "ISOPROPYL METHYLPHENOL": { ja: "イソプロピルメチルフェノール", role: "active", effect: "菌の増殖をおさえて、においやニキビを防ぐ" },
+  "ZINC PYRITHIONE": { ja: "ジンクピリチオン", role: "active", effect: "頭皮のフケ・かゆみをおさえる", caution: "国によって配合が制限されている成分", avoid: "殺菌力が強く、頭皮が敏感な人はかゆみや乾燥を感じることがある。EU など一部の国では化粧品への配合が制限されている。" },
+  "ISOPROPYL METHYLPHENOL": { ja: "イソプロピルメチルフェノール", role: "active", effect: "菌の増殖をおさえて、においやニキビを防ぐ", avoid: "殺菌成分なので、肌のバリアが弱っているときは刺激を感じたという声がある。" },
   BIOTIN: { ja: "ビオチン", role: "active", effect: "髪や地肌のコンディションを整える" },
   "HYDROLYZED KERATIN": { ja: "加水分解ケラチン", role: "active", effect: "髪の欠けた部分を補って、ハリとまとまりを出す" },
   "CAMELLIA SINENSIS LEAF EXTRACT": { ja: "チャ葉エキス", role: "active", effect: "におい・皮脂のケアに使われる植物エキス" },
@@ -145,20 +172,20 @@ export const INGREDIENTS: Record<string, IngredientInfo> = {
   "TOCOPHERYL ACETATE": { ja: "酢酸トコフェロール（ビタミンE）", role: "moisture", effect: "血行を助けて、荒れやかさつきをケアする" },
 
   // ---- 洗浄
-  "SODIUM LAURETH SULFATE": { ja: "ラウレス硫酸Na", role: "cleanse", effect: "泡立ちがよく、皮脂をしっかり落とす洗浄成分", caution: "洗浄力が強め。乾燥しやすい人は要注意" },
-  "COCAMIDOPROPYL BETAINE": { ja: "コカミドプロピルベタイン", role: "cleanse", effect: "泡をきめ細かくして、洗い上がりのきしみを減らすやさしい洗浄成分" },
+  "SODIUM LAURETH SULFATE": { ja: "ラウレス硫酸Na", role: "cleanse", effect: "泡立ちがよく、皮脂をしっかり落とす洗浄成分", caution: "洗浄力が強め。乾燥しやすい人は要注意", avoid: "必要な皮脂まで落ちやすく、頭皮の乾燥・かゆみが気になる人が避けることが多い。すすぎ残しでも刺激になりやすい。" },
+  "COCAMIDOPROPYL BETAINE": { ja: "コカミドプロピルベタイン", role: "cleanse", effect: "泡をきめ細かくして、洗い上がりのきしみを減らすやさしい洗浄成分", avoid: "やさしい洗浄成分だが、製造時に残る副生成物によるアレルギー（感作）の報告があり、パッチテストの項目に入っていることがある。" },
   "LAURAMIDOPROPYL BETAINE": { ja: "ラウラミドプロピルベタイン", role: "cleanse", effect: "低刺激な洗浄成分。泡の持ちをよくする" },
   "SODIUM COCOYL GLUTAMATE": { ja: "ココイルグルタミン酸Na", role: "cleanse", effect: "アミノ酸系のやさしい洗浄成分。しっとり洗える" },
   "COCAMIDE MEA": { ja: "コカミドMEA", role: "cleanse", effect: "泡をもっちりさせて、洗いやすくする" },
-  "BEHENTRIMONIUM CHLORIDE": { ja: "ベヘントリモニウムクロリド", role: "cleanse", effect: "髪の表面を整えて、指通りをなめらかにする" },
+  "BEHENTRIMONIUM CHLORIDE": { ja: "ベヘントリモニウムクロリド", role: "cleanse", effect: "髪の表面を整えて、指通りをなめらかにする", avoid: "髪に吸着させるタイプの成分。地肌に付いたままだとかゆみを感じる人がいるため、頭皮が敏感な人は避けることがある。" },
   "POLYQUATERNIUM-10": { ja: "ポリクオタニウム-10", role: "cleanse", effect: "洗っている間の絡まりを防ぐ" },
 
   // ---- 紫外線
-  "ETHYLHEXYL METHOXYCINNAMATE": { ja: "メトキシケイヒ酸エチルヘキシル", role: "uv", effect: "紫外線を吸収して日焼けを防ぐ", caution: "敏感な人はまれに刺激を感じることがある" },
+  "ETHYLHEXYL METHOXYCINNAMATE": { ja: "メトキシケイヒ酸エチルヘキシル", role: "uv", effect: "紫外線を吸収して日焼けを防ぐ", caution: "敏感な人はまれに刺激を感じることがある", avoid: "紫外線を化学的に吸収するタイプ（紫外線吸収剤）。まれに接触皮膚炎の報告があり、赤ちゃんや敏感肌の人は紫外線散乱剤だけの日焼け止めを選ぶことがある。" },
 
   // ---- 品質保持・その他
-  PHENOXYETHANOL: { ja: "フェノキシエタノール", role: "preserve", effect: "細菌の繁殖を防いで、品質を保つ" },
-  "SODIUM BENZOATE": { ja: "安息香酸Na", role: "preserve", effect: "品質を保つための防腐成分" },
+  PHENOXYETHANOL: { ja: "フェノキシエタノール", role: "preserve", effect: "細菌の繁殖を防いで、品質を保つ", avoid: "パラベンの代わりに使われる防腐剤。刺激は弱いとされるが、防腐剤そのものが苦手な人や、まれに赤みが出る人が避ける対象にしている。" },
+  "SODIUM BENZOATE": { ja: "安息香酸Na", role: "preserve", effect: "品質を保つための防腐成分", avoid: "食品にも使われる防腐剤。酸性のもの（ビタミンCなど）と一緒だと刺激を感じる人がいる。" },
   "GLYCERYL CAPRYLATE": { ja: "カプリル酸グリセリル", role: "preserve", effect: "うるおいを与えながら、品質保持も助ける" },
   TOCOPHEROL: { ja: "トコフェロール（ビタミンE）", role: "preserve", effect: "油分の酸化を防いで、劣化しにくくする" },
   "CITRIC ACID": { ja: "クエン酸", role: "preserve", effect: "pH を整えて、きしみや変質を防ぐ" },
@@ -166,9 +193,9 @@ export const INGREDIENTS: Record<string, IngredientInfo> = {
   "DISODIUM EDTA": { ja: "EDTA-2Na", role: "preserve", effect: "水道水の金属イオンの影響を抑えて、品質を安定させる" },
 
   // ---- 香り・清涼感
-  FRAGRANCE: { ja: "香料", role: "fragrance", effect: "香りを付ける", caution: "香りが苦手な人・敏感な人は注意" },
-  MENTHOL: { ja: "メントール", role: "fragrance", effect: "ひんやりした清涼感を出す", caution: "刺激を感じることがある" },
-  "MENTHYL LACTATE": { ja: "乳酸メンチル", role: "fragrance", effect: "おだやかで長続きする清涼感を出す" },
+  FRAGRANCE: { ja: "香料", role: "fragrance", effect: "香りを付ける", caution: "香りが苦手な人・敏感な人は注意", avoid: "複数の香り成分をまとめて「香料」と書けるため、何が入っているか分からない。化粧品でのアレルギー（感作）の原因として報告が多く、無香料を選ぶ人が多い。" },
+  MENTHOL: { ja: "メントール", role: "fragrance", effect: "ひんやりした清涼感を出す", caution: "刺激を感じることがある", avoid: "冷たさは実際に温度が下がっているわけではなく、感覚を刺激して起きるもの。頭皮や唇が敏感な人はヒリつきを感じることがある。" },
+  "MENTHYL LACTATE": { ja: "乳酸メンチル", role: "fragrance", effect: "おだやかで長続きする清涼感を出す", avoid: "メントールよりおだやかだが、同じ清涼感の仲間。清涼感が苦手な人は一緒に避けることが多い。" },
 };
 
 /** 辞書に無い INCI は、名前のパターンから役割だけでも当てる。 */
@@ -189,6 +216,9 @@ export type ResolvedIngredient = {
   role: Role;
   effect: string;
   caution?: string;
+  avoid?: string;
+  /** この成分の説明の出典。辞書に無い成分には付けない。 */
+  sources: Source[];
   /** 全成分表示での順番（1 が最も多く入っている） */
   pos: number;
   known: boolean;
@@ -196,7 +226,13 @@ export type ResolvedIngredient = {
 
 export function resolveIngredient(inci: string, pos: number): ResolvedIngredient {
   const hit = INGREDIENTS[inci];
-  if (hit) return { inci, pos, known: true, ...hit };
+  if (hit) {
+    // 避けたい理由は刺激・感作の話なので、肌の辞典側を出典に加える。
+    const sources = hit.avoid
+      ? [SOURCES["cosmetic-ingredients"], SOURCES.hadapedia]
+      : [SOURCES["cosmetic-ingredients"]];
+    return { inci, pos, known: true, sources, ...hit };
+  }
   return {
     inci,
     pos,
@@ -204,7 +240,14 @@ export function resolveIngredient(inci: string, pos: number): ResolvedIngredient
     ja: inci,
     role: guessRole(inci),
     effect: "配合目的の情報がまだありません",
+    sources: [],
   };
+}
+
+/** 成分リスト全体で使った出典を、重複を除いて返す。 */
+export function sourcesOf(list: ResolvedIngredient[]): Source[] {
+  const ids = new Set(list.flatMap((item) => item.sources.map((source) => source.id)));
+  return [...ids].map((id) => SOURCES[id]);
 }
 
 export function resolveIngredients(list: string[]): ResolvedIngredient[] {
