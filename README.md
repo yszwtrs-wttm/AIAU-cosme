@@ -13,7 +13,7 @@ LIPS や @cosme は「何を買うか」を決めるアプリ。KAWANAI は手�
 | 手持ち登録 | `/scan`（本アカウント限定）。人気商品のチェックリストで一括登録 + zxing の連続バーコードスキャン |
 | 被り検出 | `find_duplicates_in_stash` / `find_stash_overlaps`（pgvector cosine + ΔE） |
 | 安い代替 | `find_cheaper_dupes`（類似スコア閾値 × 価格差） |
-| 口コミ信頼度 | `recompute_review_trust`。スコアと除外理由は内部で使い、UI には出さない |
+| 口コミ信頼度 | `recompute_review_trust`。除外した口コミは理由付きで閲覧でき（「除外した口コミも見る」）、投稿者は `request_review_recheck` で再判定を申し立てられる |
 | 画像から色検出 | `/color`。主要色を抽出 → Lab 変換 → `find_by_color`。色名・系統・肌トーン順で提示 |
 | 手持ちだけのメイク提案 | `/stash`（本アカウント限定）。`OPENAI_API_KEY` があれば LLM、無ければルールベース |
 | 認証 / プロフィール | `/login`（初回はメールのリンクで確認し、プロフィール作成画面でパスワードを設定。以降はメールアドレス＋パスワードでログイン）、`/settings`、`/me`、`/u/[handle]` |
