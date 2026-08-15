@@ -58,6 +58,7 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
                       category={p.category}
                       colors={p.product_colors ?? []}
                       imageUrl={p.image_url}
+                      brand={p.brands?.name}
                       size={28}
                       className="rounded-xl"
                     />
