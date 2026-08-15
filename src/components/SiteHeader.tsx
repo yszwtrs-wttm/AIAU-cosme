@@ -35,25 +35,20 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
           ))}
         </nav>
 
-        {real && profile ? (
+        {real ? (
           <Link
-            href="/me"
+            href={profile ? "/me" : "/settings"}
             className="ml-auto flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-2 py-1 text-sm md:ml-3"
           >
             <Avatar
-              name={profile.display_name}
-              hue={profile.avatar_hue}
-              avatarUrl={profile.avatar_url}
+              name={profile?.display_name ?? "?"}
+              hue={profile?.avatar_hue ?? 330}
+              avatarUrl={profile?.avatar_url}
               size="sm"
             />
-            <span className="max-w-24 truncate sm:max-w-48">{profile.display_name}</span>
-          </Link>
-        ) : real ? (
-          <Link
-            href="/settings"
-            className="ml-auto rounded-full bg-brand-600 px-3 py-1.5 text-sm font-medium text-white md:ml-3"
-          >
-            プロフィール作成
+            <span className="max-w-24 truncate sm:max-w-48">
+              {profile?.display_name ?? "名前未設定"}
+            </span>
           </Link>
         ) : (
           <Link
