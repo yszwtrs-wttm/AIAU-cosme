@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import ComparePanel, { type CompareSide } from "@/components/ComparePanel";
 import DupeRowItem from "@/components/DupeRowItem";
@@ -216,15 +217,25 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             )}
           </div>
           {shades.length > 0 && (
-            <ul className="mt-3 flex flex-wrap gap-2 text-[11px] text-ink-600">
-              {shades.map((s) => (
-                <li key={s.pos} className="flex items-center gap-1.5 rounded-full border border-ink-100 px-2 py-1">
-                  <span className="swatch inline-block h-4 w-4 rounded-full" style={{ background: s.hex }} />
-                  {s.shade_name}
-                  <span className="text-ink-400">{colorName(s.hex)}</span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="mt-3 flex flex-wrap gap-2 text-[11px] text-ink-600">
+                {shades.map((s) => (
+                  <li key={s.pos}>
+                    <Link
+                      href={`/shades/${product.id}/${s.pos}`}
+                      className="flex items-center gap-1.5 rounded-full border border-ink-100 px-2 py-1 transition hover:border-ink-400"
+                    >
+                      <span className="swatch inline-block h-4 w-4 rounded-full" style={{ background: s.hex }} />
+                      {s.shade_name}
+                      <span className="text-ink-400">{colorName(s.hex)}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1.5 text-[11px] text-ink-400">
+                色見本を選ぶと、その色に相当する他ブランドの色を色差の近い順・安い順で見られます。
+              </p>
+            </>
           )}
           <div className="mt-4">
             <StashButton productId={product.id} owned={isOwned} canUse={canUseStash} />

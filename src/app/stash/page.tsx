@@ -3,9 +3,10 @@ import BarcodeScanner from "@/components/BarcodeScanner";
 import MakeupPlan from "@/components/MakeupPlan";
 import ProductCard from "@/components/ProductCard";
 import QuickStartPicker from "@/components/QuickStartPicker";
+import ShadeSwapList from "@/components/ShadeSwapList";
 import { getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { Product } from "@/lib/types";
+import type { CheaperShadeSwap, Product } from "@/lib/types";
 
 type StashItem = { product_id: number; products: Product };
 
@@ -15,7 +16,7 @@ export default async function StashPage() {
 
   const supabase = await createClient();
 
-  const [{ data: items }, { data: popular }] = await Promise.all([
+  const [{ data: items }, { data: popular }, swapRes] = await Promise.all([
     supabase
       .from("user_items")
       .select(
@@ -30,15 +31,27 @@ export default async function StashPage() {
       .order("price_yen", { ascending: true })
       .limit(24)
       .returns<Product[]>(),
+    supabase.rpc("find_cheaper_shade_swaps", { p_limit: 8 }),
   ]);
 
   const products = (items ?? []).map((i) => i.products).filter(Boolean);
+  const swaps = (swapRes.data ?? []) as CheaperShadeSwap[];
 
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Myポーチ（{products.length}点）</h1>
 
       {products.length > 0 && <MakeupPlan products={products} />}
+
+      {swaps.length > 0 && (
+        <section className="space-y-2">
+          <h2 className="font-display text-lg font-bold">同じ色なのに安いもの</h2>
+          <p className="text-sm text-ink-600">
+            ポーチの色を CIEDE2000 の色差 ΔE で他商品のシェードと突き合わせ、色が同じで安いものだけを出しています。
+          </p>
+          <ShadeSwapList swaps={swaps} />
+        </section>
+      )}
 
       <section className="space-y-2">
         <h2 className="font-display text-lg font-bold">バーコードで登録</h2>

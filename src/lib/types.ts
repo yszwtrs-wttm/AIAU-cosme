@@ -191,6 +191,40 @@ export type ColorMatch = {
   shade_hex: string | null;
 };
 
+/** 手持ちのシェードに相当する、他商品のシェード。 */
+export type ShadeMatch = {
+  product_id: number;
+  brand: string;
+  name: string;
+  category: Category;
+  price_yen: number;
+  image_url: string | null;
+  pos: number;
+  shade_name: string;
+  shade_hex: string;
+  delta_e: number;
+  price_diff: number;
+  owned: boolean;
+};
+
+/** ポーチの色と同じ色で、もっと安い商品。 */
+export type CheaperShadeSwap = {
+  mine_product_id: number;
+  mine_label: string;
+  mine_pos: number;
+  mine_shade: string;
+  mine_hex: string;
+  mine_price: number;
+  product_id: number;
+  brand: string;
+  name: string;
+  shade_name: string;
+  shade_hex: string;
+  price_yen: number;
+  delta_e: number;
+  savings: number;
+};
+
 export type PaletteCoverage = {
   pos: number;
   shade_name: string;
