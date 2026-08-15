@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
+import ReviewImage from "@/components/ReviewImage";
 import { loadMoreFeed } from "@/app/feed/actions";
 import type { FeedCursor, FeedReview } from "@/app/feed/feed-data";
-import { publicImageUrl } from "@/lib/storage";
+import { THUMB_WIDTH } from "@/lib/storage";
 
 function FeedCard({ review }: { review: FeedReview }) {
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
@@ -15,17 +16,7 @@ function FeedCard({ review }: { review: FeedReview }) {
       {images.length > 0 && (
         <div className="flex gap-1 overflow-x-auto">
           {images.map((img) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={img.id}
-              src={publicImageUrl(img.path)}
-              alt=""
-              width={640}
-              height={384}
-              loading="lazy"
-              decoding="async"
-              className="h-40 w-full shrink-0 object-cover"
-            />
+            <ReviewImage key={img.id} path={img.path} width={THUMB_WIDTH} className="h-40 w-full" />
           ))}
         </div>
       )}
