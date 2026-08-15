@@ -148,6 +148,8 @@ export type Database = {
           is_mens: boolean
           jan: string | null
           name: string
+          price_checked_at: string
+          price_source: string
           price_yen: number
           volume: number | null
           volume_unit: string | null
@@ -165,6 +167,8 @@ export type Database = {
           is_mens?: boolean
           jan?: string | null
           name: string
+          price_checked_at?: string
+          price_source?: string
           price_yen: number
           volume?: number | null
           volume_unit?: string | null
@@ -182,6 +186,8 @@ export type Database = {
           is_mens?: boolean
           jan?: string | null
           name?: string
+          price_checked_at?: string
+          price_source?: string
           price_yen?: number
           volume?: number | null
           volume_unit?: string | null

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ProductThumb from "@/components/ProductThumb";
 import { axisDiffs } from "@/lib/compare";
+import { PRICE_DISCLAIMER, unitPriceText } from "@/lib/price";
 import type { FeelAxis, FeelValues } from "@/lib/feel";
 import type { Category, ProductColor } from "@/lib/types";
 
@@ -9,6 +10,8 @@ export type CompareSide = {
   brand: string;
   name: string;
   priceYen: number;
+  volume: number | null;
+  volumeUnit: string | null;
   category: Category;
   imageUrl: string | null;
   colors: ProductColor[];
@@ -82,6 +85,7 @@ export default function ComparePanel({
             ? "使い心地は、口コミがまだ少ないため成分からの予想を含みます。"
             : "使い心地は、使った人の口コミの平均です。"}
         </p>
+        <p className="mt-1 text-[11px] text-ink-400">{PRICE_DISCLAIMER}</p>
       </div>
     </div>
   );
@@ -128,6 +132,9 @@ function SideHead({
           )}
           <div className="mt-1 text-lg font-bold tabular-nums leading-none">
             ¥{side.priceYen.toLocaleString()}
+          </div>
+          <div className="mt-1 text-[10px] tabular-nums text-ink-400">
+            {unitPriceText(side.priceYen, side.volume, side.volumeUnit) ?? "容量未登録"}
           </div>
         </div>
       </div>

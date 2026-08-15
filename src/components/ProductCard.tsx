@@ -1,10 +1,12 @@
 import Link from "next/link";
 import ProductThumb from "@/components/ProductThumb";
+import { unitPriceText } from "@/lib/price";
 import { CATEGORY_LABEL, type Product } from "@/lib/types";
 import { colorName } from "@/lib/wording";
 
 export default function ProductCard({ product }: { product: Product }) {
   const shades = [...(product.product_colors ?? [])].sort((a, b) => a.pos - b.pos);
+  const unitPrice = unitPriceText(product.price_yen, product.volume, product.volume_unit);
 
   return (
     <Link
@@ -30,7 +32,11 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
         <div className="truncate text-sm font-bold">{product.name}</div>
         <div className="text-sm font-medium tabular-nums text-ink-600">
+          <span className="mr-1 text-[10px] font-normal text-ink-400">参考</span>
           ¥{product.price_yen.toLocaleString()}
+          <span className="ml-1.5 text-[11px] font-normal text-ink-400">
+            {unitPrice ?? "容量未登録"}
+          </span>
         </div>
         {shades.length > 0 && (
           <div className="mt-1.5 flex items-center gap-1">

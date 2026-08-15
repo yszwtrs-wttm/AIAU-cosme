@@ -4,6 +4,7 @@ import DupeRowItem from "@/components/DupeRowItem";
 import FeelChart from "@/components/FeelChart";
 import FitCard from "@/components/FitCard";
 import IngredientPanel from "@/components/IngredientPanel";
+import PriceBlock from "@/components/PriceBlock";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
@@ -44,7 +45,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     supabase
       .from("products")
       .select(
-        "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
+        "id,name,category,is_mens,price_yen,volume,volume_unit,price_source,price_checked_at,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
       )
       .eq("id", productId)
       .maybeSingle<Product>(),
@@ -113,7 +114,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     const [{ data: lowProduct }, { data: lowFeel }] = await Promise.all([
       supabase
         .from("products")
-        .select("id,name,category,price_yen,ingredients,image_url,brands(name),product_colors(pos,shade_name,hex)")
+        .select(
+          "id,name,category,price_yen,volume,volume_unit,ingredients,image_url,brands(name),product_colors(pos,shade_name,hex)",
+        )
         .eq("id", cheapestSimilar.product_id)
         .maybeSingle<
           Pick<
@@ -122,6 +125,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             | "name"
             | "category"
             | "price_yen"
+            | "volume"
+            | "volume_unit"
             | "ingredients"
             | "image_url"
             | "brands"
@@ -142,6 +147,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         brand: lowProduct.brands?.name ?? "",
         name: lowProduct.name,
         priceYen: lowProduct.price_yen,
+        volume: lowProduct.volume,
+        volumeUnit: lowProduct.volume_unit,
         category: lowProduct.category,
         imageUrl: lowProduct.image_url,
         colors: [...(lowProduct.product_colors ?? [])].sort((a, b) => a.pos - b.pos),
@@ -159,6 +166,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     brand: product.brands?.name ?? "",
     name: product.name,
     priceYen: product.price_yen,
+    volume: product.volume,
+    volumeUnit: product.volume_unit,
     category: product.category,
     imageUrl: product.image_url,
     colors: shades,
@@ -205,16 +214,13 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               避けたい成分が入っています: {avoidedIngredientLabels.join("、")}
             </p>
           )}
-          <div className="mt-1 text-lg font-bold tabular-nums">
-            ¥{product.price_yen.toLocaleString()}
-            {product.volume && (
-              <span className="ml-2 text-xs font-normal text-ink-400">
-                {product.volume}
-                {product.volume_unit} ・ ¥{Math.round(product.price_yen / product.volume).toLocaleString()}/
-                {product.volume_unit}
-              </span>
-            )}
-          </div>
+          <PriceBlock
+            priceYen={product.price_yen}
+            volume={product.volume}
+            volumeUnit={product.volume_unit}
+            priceSource={product.price_source}
+            priceCheckedAt={product.price_checked_at}
+          />
           {shades.length > 0 && (
             <ul className="mt-3 flex flex-wrap gap-2 text-[11px] text-ink-600">
               {shades.map((s) => (
