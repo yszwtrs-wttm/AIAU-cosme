@@ -173,6 +173,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             )}
           </div>
           <h1 className="font-display text-2xl font-bold">{product.name}</h1>
+          <div className="mt-1 flex items-center gap-1.5 text-sm">
+            <span className="text-amber-500">★</span>
+            <span className="font-bold tabular-nums">
+              {summary?.adjusted_rating != null ? summary.adjusted_rating.toFixed(1) : "—"}
+            </span>
+            <span className="text-xs text-ink-400">
+              {summary?.counted_count ? `（口コミ${summary.counted_count}件）` : "（口コミなし）"}
+            </span>
+          </div>
           <div className="mt-1 text-lg font-bold tabular-nums">
             ¥{product.price_yen.toLocaleString()}
             {product.volume && (
