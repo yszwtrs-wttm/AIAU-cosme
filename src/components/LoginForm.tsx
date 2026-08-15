@@ -50,9 +50,14 @@ export default function LoginForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const finishAuth = async () => {
+  // プロフィールは誰でも読めるので、自分の分だけに絞らないと遷移先を決められない。
+  const finishAuth = async (userId: string) => {
     const supabase = createClient();
-    const { data } = await supabase.from("profiles").select("handle").maybeSingle();
+    const { data } = await supabase
+      .from("profiles")
+      .select("handle")
+      .eq("user_id", userId)
+      .maybeSingle();
     router.push(data ? "/me" : "/settings");
     router.refresh();
   };
@@ -74,16 +79,16 @@ export default function LoginForm({
     const emailRedirectTo = `${window.location.origin}/auth/callback`;
 
     if (mode === "login" && !resetPassword) {
-      const { error: err } = await supabase.auth.signInWithPassword({
+      const { data, error: err } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       });
-      if (err) {
+      if (err || !data.user) {
         setBusy(false);
         setError(toJapaneseError(err));
         return;
       }
-      await finishAuth();
+      await finishAuth(data.user.id);
       setBusy(false);
       return;
     }

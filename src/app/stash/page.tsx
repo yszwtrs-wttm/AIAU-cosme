@@ -11,7 +11,7 @@ type StashItem = { product_id: number; products: Product };
 
 export default async function StashPage() {
   const user = await getMyUser();
-  if (!isRealAccount(user)) redirect("/login");
+  if (!user || !isRealAccount(user)) redirect("/login");
 
   const supabase = await createClient();
 
@@ -21,6 +21,8 @@ export default async function StashPage() {
       .select(
         "product_id, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
       )
+      // ポーチは公開設定なら誰でも読めるので、自分の分だけに絞る。
+      .eq("user_id", user.id)
       .returns<StashItem[]>(),
     supabase
       .from("products")
