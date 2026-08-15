@@ -258,6 +258,24 @@ export type Database = {
           },
         ]
       }
+      profile_share_tokens: {
+        Row: {
+          created_at: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          token?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_hue: number
@@ -296,24 +314,6 @@ export type Database = {
           skin_tone_hex?: string | null
           skin_type?: string | null
           stash_visibility?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profile_share_tokens: {
-        Row: {
-          created_at: string
-          token: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          token?: string
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          token?: string
           user_id?: string
         }
         Relationships: []
