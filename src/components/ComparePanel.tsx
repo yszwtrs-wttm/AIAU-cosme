@@ -58,12 +58,15 @@ export default function ComparePanel({
             <li key={axis.key} className="px-4 py-3">
               <div className="text-center text-xs font-bold">{axis.label}</div>
               <div className="mt-2 flex items-center gap-2">
-                <span className="w-14 shrink-0 text-right text-[10px] text-ink-400">{axis.low}</span>
-                <div className="min-w-0 flex-1 space-y-1.5">
-                  <Bar value={h} label="この商品" tone="high" lead={lead === "high"} />
-                  <Bar value={l} label="安い方" tone="low" lead={lead === "low"} />
+                <span className="w-16 shrink-0" />
+                <div className="flex min-w-0 flex-1 justify-between text-[10px] text-ink-400">
+                  <span>{axis.low}</span>
+                  <span>{axis.high}</span>
                 </div>
-                <span className="w-14 shrink-0 text-[10px] text-ink-400">{axis.high}</span>
+              </div>
+              <div className="mt-1 space-y-1.5">
+                <Bar value={h} label="この商品" tone="high" lead={lead === "high"} />
+                <Bar value={l} label="安い方" tone="low" lead={lead === "low"} />
               </div>
             </li>
           );
