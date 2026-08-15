@@ -2,7 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-sans: "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, -apple-system, sans-serif;
+  --font-display: "Hiragino Mincho ProN", "Noto Serif JP", Georgia, serif;
+}
+
 body {
-  font-family:
-    "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
+  /* 色は商品を見せるために使いたいので、背景は紙に近い無彩色にする。 */
+  background: #fdfcfc;
+}
+
+/* 色を主役にしたいので、スウォッチには内側の影で厚みを出す。 */
+.swatch {
+  box-shadow:
+    inset 0 2px 6px rgba(255, 255, 255, 0.55),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+input[type="range"] {
+  accent-color: #ef4383;
 }

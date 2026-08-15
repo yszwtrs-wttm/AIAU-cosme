@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { AlertTriangle, Camera } from "lucide-react";
 import MakeupPlan from "@/components/MakeupPlan";
 import ProductCard from "@/components/ProductCard";
 import { createClient } from "@/lib/supabase/server";
-import { deltaELabel } from "@/lib/color";
 import type { Product, StashOverlap } from "@/lib/types";
+import { colorMatchBadge, formulaMatchBadge } from "@/lib/wording";
 
 type StashItem = { product_id: number; products: Product };
 
@@ -14,7 +15,7 @@ export default async function StashPage() {
     supabase
       .from("user_items")
       .select(
-        "product_id, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name))",
+        "product_id, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
       )
       .returns<StashItem[]>(),
     supabase.rpc("find_stash_overlaps"),
@@ -22,52 +23,58 @@ export default async function StashPage() {
 
   const products = (items ?? []).map((i) => i.products).filter(Boolean);
   const overlaps = (overlapRes.data ?? []) as StashOverlap[];
-  const wasted = overlaps.reduce((sum, o) => sum + Math.min(o.a_price, o.b_price), 0);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">手持ち（{products.length}点）</h1>
-        <Link href="/scan" className="rounded-lg bg-neutral-900 px-3 py-2 text-sm text-white">
-          バーコードで追加
+        <h1 className="font-display text-2xl font-bold">ポーチ（{products.length}点）</h1>
+        <Link
+          href="/scan"
+          className="flex items-center gap-1.5 rounded-full bg-ink-900 px-4 py-2 text-sm font-bold text-white"
+        >
+          <Camera size={15} /> 追加
         </Link>
       </div>
 
       {products.length === 0 && (
-        <p className="rounded-xl border border-neutral-200 bg-white p-4 text-sm text-neutral-600">
-          まだ登録がありません。<Link href="/" className="underline">商品一覧</Link>か
-          <Link href="/scan" className="underline">バーコード登録</Link>から追加してください。
+        <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
+          まだ登録がありません。よく使う2〜3個登録すれば、調べた商品との違いを出せるようになります。
+          <Link href="/scan" className="ml-1 font-bold text-brand-600 underline">
+            登録をはじめる
+          </Link>
         </p>
       )}
 
       {overlaps.length > 0 && (
-        <section className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-4">
-          <h2 className="font-bold text-amber-900">手持ちの中で {overlaps.length} 組が実質同じです</h2>
+        <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
+          <h2 className="flex items-center gap-1.5 font-bold text-amber-900">
+            <AlertTriangle size={17} /> ポーチの中で {overlaps.length} 組がほぼ同じです
+          </h2>
           <p className="text-sm text-amber-900">
-            重複している側の合計は ¥{wasted.toLocaleString()}。次からはどちらかを買わずに済みます。
+            使い分けているならそのままで。同じ用途なら、次はどちらか1つで足ります。
           </p>
           <div className="mt-3 space-y-2">
             {overlaps.map((o) => (
               <div
                 key={`${o.a_id}-${o.b_id}`}
-                className="flex flex-wrap items-center gap-3 rounded-xl border border-amber-200 bg-white p-3 text-sm"
+                className="flex flex-wrap items-center gap-3 rounded-2xl border border-amber-200 bg-white p-3 text-sm"
               >
-                <span className="h-8 w-8 rounded border" style={{ background: o.a_hex ?? "#e5e5e5" }} />
-                <Link href={`/products/${o.a_id}`} className="underline">
+                <span className="swatch inline-block h-8 w-8 rounded-full" style={{ background: o.a_hex ?? "#e9e2e6" }} />
+                <Link href={`/products/${o.a_id}`} className="font-medium hover:text-brand-600">
                   {o.a_label}
                 </Link>
-                <span className="text-neutral-400">×</span>
-                <span className="h-8 w-8 rounded border" style={{ background: o.b_hex ?? "#e5e5e5" }} />
-                <Link href={`/products/${o.b_id}`} className="underline">
+                <span className="text-ink-400">と</span>
+                <span className="swatch inline-block h-8 w-8 rounded-full" style={{ background: o.b_hex ?? "#e9e2e6" }} />
+                <Link href={`/products/${o.b_id}`} className="font-medium hover:text-brand-600">
                   {o.b_label}
                 </Link>
-                <span className="ml-auto flex gap-2 text-xs text-neutral-600">
-                  <span className="rounded bg-neutral-100 px-1.5 py-0.5 tabular-nums">
-                    成分 {(o.ing_sim * 100).toFixed(1)}%
+                <span className="ml-auto flex gap-1.5 text-[11px]">
+                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700">
+                    {formulaMatchBadge(o.ing_sim)}
                   </span>
                   {o.delta_e !== null && (
-                    <span className="rounded bg-neutral-100 px-1.5 py-0.5 tabular-nums">
-                      ΔE {o.delta_e.toFixed(2)}・{deltaELabel(o.delta_e)}
+                    <span className="rounded-full bg-plum-100 px-2 py-0.5 text-plum-700">
+                      {colorMatchBadge(o.delta_e)}
                     </span>
                   )}
                 </span>

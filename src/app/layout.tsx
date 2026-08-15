@@ -1,44 +1,41 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Playfair_Display, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
 import AnonAuth from "@/components/AnonAuth";
+import BottomTabBar from "@/components/BottomTabBar";
+import SiteHeader from "@/components/SiteHeader";
+
+const sans = Zen_Kaku_Gothic_New({
+  subsets: ["latin"],
+  weight: ["400", "500", "700", "900"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const display = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["500", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "KAWANAI — 買わなくていい理由を、成分と色の数値で",
+  title: "KAWANAI — そのコスメ、もう持ってるかも",
   description:
-    "手持ちコスメと購入検討中の商品を、全成分ベクトルと CIELAB の色差で突き合わせて「買わなくていい」を証明するアプリ。",
+    "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
 };
-
-const NAV = [
-  { href: "/", label: "商品を探す" },
-  { href: "/scan", label: "バーコード登録" },
-  { href: "/stash", label: "手持ち" },
-  { href: "/color", label: "画像から色" },
-];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ja">
-      <body className="min-h-screen bg-neutral-50 text-neutral-900 antialiased">
+    <html lang="ja" className={`${sans.variable} ${display.variable}`}>
+      <body className="min-h-screen text-ink-900 antialiased">
         <AnonAuth />
-        <header className="sticky top-0 z-20 border-b border-neutral-200 bg-white/90 backdrop-blur">
-          <div className="mx-auto flex max-w-5xl items-center gap-6 px-4 py-3">
-            <Link href="/" className="text-lg font-bold tracking-tight">
-              KAWANAI<span className="ml-1 text-xs font-normal text-neutral-500">買わない判断</span>
-            </Link>
-            <nav className="flex flex-1 gap-4 text-sm">
-              {NAV.map((item) => (
-                <Link key={item.href} href={item.href} className="text-neutral-600 hover:text-neutral-900">
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
-        </header>
-        <main className="mx-auto max-w-5xl px-4 py-6">{children}</main>
-        <footer className="mx-auto max-w-5xl px-4 py-10 text-xs text-neutral-400">
-          デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は転載していません。
+        <SiteHeader />
+        <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">{children}</main>
+        <footer className="mx-auto max-w-5xl px-4 pb-28 text-[11px] text-ink-400 md:pb-10">
+          デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
         </footer>
+        <BottomTabBar />
       </body>
     </html>
   );

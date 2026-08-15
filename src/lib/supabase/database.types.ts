@@ -122,6 +122,13 @@ export type Database = {
             foreignKeyName: "product_colors_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_colors_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -189,6 +196,80 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          avatar_hue: number
+          bio: string | null
+          created_at: string
+          display_name: string
+          handle: string
+          skin_tone_hex: string | null
+          skin_type: string | null
+          stash_public: boolean
+          user_id: string
+        }
+        Insert: {
+          avatar_hue?: number
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          handle: string
+          skin_tone_hex?: string | null
+          skin_type?: string | null
+          stash_public?: boolean
+          user_id: string
+        }
+        Update: {
+          avatar_hue?: number
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          handle?: string
+          skin_tone_hex?: string | null
+          skin_type?: string | null
+          stash_public?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      review_images: {
+        Row: {
+          created_at: string
+          id: number
+          path: string
+          phash: string | null
+          pos: number
+          review_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          path: string
+          phash?: string | null
+          pos?: number
+          review_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          path?: string
+          phash?: string | null
+          pos?: number
+          review_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_images_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       review_investigations: {
         Row: {
           created_at: string
@@ -223,7 +304,46 @@ export type Database = {
             foreignKeyName: "review_investigations_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "review_investigations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      review_reports: {
+        Row: {
+          created_at: string
+          id: number
+          reason: string
+          review_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          reason: string
+          review_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          reason?: string
+          review_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_reports_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
             referencedColumns: ["id"]
           },
         ]
@@ -233,40 +353,55 @@ export type Database = {
           author_key: string
           author_name: string
           body: string
+          client_hash: string | null
           excluded: boolean
+          feel: Json | null
           flags: string[]
           id: number
           image_phash: string | null
+          owner_verified: boolean
           posted_at: string
           product_id: number
           rating: number
+          report_count: number
           trust_score: number
+          user_id: string | null
         }
         Insert: {
           author_key: string
           author_name: string
           body: string
+          client_hash?: string | null
           excluded?: boolean
+          feel?: Json | null
           flags?: string[]
           id?: never
           image_phash?: string | null
+          owner_verified?: boolean
           posted_at?: string
           product_id: number
           rating: number
+          report_count?: number
           trust_score?: number
+          user_id?: string | null
         }
         Update: {
           author_key?: string
           author_name?: string
           body?: string
+          client_hash?: string | null
           excluded?: boolean
+          feel?: Json | null
           flags?: string[]
           id?: never
           image_phash?: string | null
+          owner_verified?: boolean
           posted_at?: string
           product_id?: number
           rating?: number
+          report_count?: number
           trust_score?: number
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -280,8 +415,22 @@ export type Database = {
             foreignKeyName: "reviews_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_profile_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -292,6 +441,7 @@ export type Database = {
           opened_at: string | null
           product_id: number
           remaining_pct: number
+          source: string
           user_id: string
         }
         Insert: {
@@ -300,6 +450,7 @@ export type Database = {
           opened_at?: string | null
           product_id: number
           remaining_pct?: number
+          source?: string
           user_id?: string
         }
         Update: {
@@ -308,6 +459,7 @@ export type Database = {
           opened_at?: string | null
           product_id?: number
           remaining_pct?: number
+          source?: string
           user_id?: string
         }
         Relationships: [
@@ -316,6 +468,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "user_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
             referencedColumns: ["product_id"]
           },
           {
@@ -329,14 +488,55 @@ export type Database = {
       }
     }
     Views: {
+      product_feel_summary: {
+        Row: {
+          feel: Json | null
+          feel_count: number | null
+          product_id: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_rating_summary: {
         Row: {
           adjusted_rating: number | null
+          counted_count: number | null
           excluded_count: number | null
           exclusion_reasons: string[] | null
+          owner_count: number | null
           product_id: number | null
           raw_rating: number | null
           review_count: number | null
+        }
+        Relationships: []
+      }
+      product_score: {
+        Row: {
+          adjusted_rating: number | null
+          counted_count: number | null
+          product_id: number | null
+          ranked_rating: number | null
         }
         Relationships: []
       }

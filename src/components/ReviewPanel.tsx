@@ -1,29 +1,140 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { Flag, ImagePlus, Lock, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { postReview } from "@/app/actions";
-import { FLAG_LABEL, type RatingSummary, type Review } from "@/lib/types";
+import { attachReviewImages, postReview, reportReview } from "@/app/actions";
+import { axesFor } from "@/lib/feel";
+import { closenessScore } from "@/lib/fit";
+import { averageHash } from "@/lib/phash";
+import { publicImageUrl } from "@/lib/storage";
+import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
+import { SKIN_TYPE_LABEL } from "@/lib/types";
+
+type Viewer = { skinType: SkinType | null; skinToneHex: string | null };
+
+const MAX_IMAGES = 4;
 
 function Stars({ value }: { value: number }) {
-  return <span className="text-amber-500">{"★".repeat(value)}{"☆".repeat(5 - value)}</span>;
+  return (
+    <span className="text-amber-500" aria-label={`${value}点`}>
+      {"★".repeat(value)}
+      <span className="text-amber-200">{"★".repeat(5 - value)}</span>
+    </span>
+  );
+}
+
+function Avatar({ name, hue }: { name: string; hue: number }) {
+  return (
+    <span
+      className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white"
+      style={{ background: `hsl(${hue} 70% 62%)` }}
+    >
+      {name.slice(0, 1)}
+    </span>
+  );
+}
+
+function ReviewCard({ review, close }: { review: Review; close: boolean }) {
+  const [reported, setReported] = useState(false);
+  const name = review.profiles?.display_name ?? review.author_name;
+  const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
+  const skin = review.profiles?.skin_type;
+
+  return (
+    <div className="rounded-2xl border border-ink-200 bg-white p-4">
+      <div className="flex items-center gap-2">
+        <Avatar name={name} hue={review.profiles?.avatar_hue ?? 330} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-sm font-bold">
+            {review.profiles?.handle ? (
+              <Link href={`/u/${review.profiles.handle}`} className="hover:text-brand-600">
+                {name}
+              </Link>
+            ) : (
+              name
+            )}
+          </div>
+          <Stars value={review.rating} />
+        </div>
+        <button
+          type="button"
+          disabled={reported}
+          onClick={async () => {
+            await reportReview(review.id, "fake");
+            setReported(true);
+          }}
+          className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
+        >
+          <Flag size={12} /> {reported ? "報告しました" : "報告"}
+        </button>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+        {close && (
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700">
+            あなたと近い肌の人
+          </span>
+        )}
+        {skin && (
+          <span className="rounded-full bg-ink-50 px-2 py-0.5 text-ink-600">
+            {SKIN_TYPE_LABEL[skin]}
+          </span>
+        )}
+        {review.owner_verified && (
+          <span className="rounded-full bg-ink-50 px-2 py-0.5 text-ink-600">
+            この商品を登録している人
+          </span>
+        )}
+      </div>
+
+      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{review.body}</p>
+
+      {images.length > 0 && (
+        <div className="mt-3 flex gap-2 overflow-x-auto">
+          {images.map((img) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              key={img.id}
+              src={publicImageUrl(img.path)}
+              alt=""
+              className="h-28 w-28 shrink-0 rounded-2xl object-cover"
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ReviewPanel({
   productId,
+  category,
   initialReviews,
   initialSummary,
+  canPost,
+  viewer,
 }: {
   productId: number;
+  category: Category;
   initialReviews: Review[];
   initialSummary: RatingSummary | null;
+  canPost: boolean;
+  viewer: Viewer;
 }) {
+  const axes = axesFor(category);
   const [reviews, setReviews] = useState(initialReviews);
   const [summary, setSummary] = useState(initialSummary);
   const [body, setBody] = useState("");
-  const [author, setAuthor] = useState("");
   const [rating, setRating] = useState(5);
+  const [feel, setFeel] = useState<Record<string, number>>(
+    Object.fromEntries(axes.map((a) => [a.key, 50])),
+  );
+  const [files, setFiles] = useState<File[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const fileInput = useRef<HTMLInputElement>(null);
 
   // 不正判定は Postgres の trigger が走らせる。結果は Realtime で降ってくる。
   useEffect(() => {
@@ -31,10 +142,16 @@ export default function ReviewPanel({
 
     const refresh = async () => {
       const [{ data: rows }, { data: sum }] = await Promise.all([
-        supabase.from("reviews").select("*").eq("product_id", productId).order("posted_at", { ascending: false }),
+        supabase
+          .from("reviews")
+          .select(
+            "*,profiles(handle,display_name,avatar_hue,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
+          )
+          .eq("product_id", productId)
+          .order("posted_at", { ascending: false }),
         supabase.from("product_rating_summary").select("*").eq("product_id", productId).maybeSingle(),
       ]);
-      if (rows) setReviews(rows as Review[]);
+      if (rows) setReviews(rows as unknown as Review[]);
       if (sum) setSummary(sum as RatingSummary);
     };
 
@@ -52,116 +169,195 @@ export default function ReviewPanel({
     };
   }, [productId]);
 
-  const excluded = reviews.filter((r) => r.excluded);
-  const kept = reviews.filter((r) => !r.excluded);
+  // 自分と近い肌の人の声を上に出す。同じ近さなら新しい順（元の並び）。
+  const shown = reviews
+    .filter((r) => !r.excluded)
+    .map((r) => ({ review: r, score: closenessScore(viewer, r.profiles) }))
+    .sort((a, b) => b.score - a.score);
+  const rated = summary?.adjusted_rating ?? null;
+  const counted = summary?.counted_count ?? 0;
+  const hasViewerProfile = Boolean(viewer.skinType || viewer.skinToneHex);
+
+  const submit = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await postReview({ productId, rating, body, feel });
+      if (!res.ok || !res.reviewId) {
+        setError(res.error ?? "投稿できませんでした");
+        return;
+      }
+
+      if (files.length > 0) {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        const uploaded: { path: string; phash?: string | null }[] = [];
+
+        for (const file of files.slice(0, MAX_IMAGES)) {
+          const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+          const path = `${user!.id}/${res.reviewId}-${uploaded.length}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from("review-images")
+            .upload(path, file, { upsert: true });
+          if (upErr) continue;
+          uploaded.push({ path, phash: await averageHash(file) });
+        }
+
+        if (uploaded.length > 0) await attachReviewImages(res.reviewId, uploaded);
+      }
+
+      setBody("");
+      setFiles([]);
+      if (fileInput.current) fileInput.current.value = "";
+    });
+  };
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-neutral-200 bg-white p-4">
-        <div className="flex items-end gap-4">
-          <div>
-            <div className="text-xs text-neutral-500">生の評価</div>
-            <div className="text-2xl font-bold tabular-nums text-neutral-400 line-through">
-              {summary?.raw_rating?.toFixed(2) ?? "—"}
-            </div>
+      <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4">
+        <div>
+          <div className="font-display text-4xl font-bold tabular-nums">
+            {rated?.toFixed(1) ?? "—"}
           </div>
-          <div className="pb-2 text-neutral-400">→</div>
-          <div>
-            <div className="text-xs text-neutral-500">不正を除外した評価</div>
-            <div className="text-3xl font-bold tabular-nums">{summary?.adjusted_rating?.toFixed(2) ?? "—"}</div>
-          </div>
+          <div className="text-[11px] text-ink-400">5点満点</div>
         </div>
-        {summary && summary.excluded_count > 0 && (
-          <p className="mt-3 text-sm text-neutral-700">
-            {summary.review_count}件中<b>{summary.excluded_count}件</b>を総合評価から除外しています。理由：
-            {summary.exclusion_reasons.map((f) => FLAG_LABEL[f] ?? f).join(" / ")}
-          </p>
-        )}
-        <p className="mt-1 text-xs text-neutral-500">
-          削除はしていません。除外した口コミも下に残し、除外理由を開示します。
-        </p>
+        <div className="text-sm text-ink-600">
+          {summary?.review_count ? (
+            <>
+              点数に入っている口コミ {counted} 件
+              <p className="mt-0.5 text-[11px] text-ink-400">
+                宣伝目的・使い回しと判断した投稿は点数に入れていません。実際に登録している人の声は、
+                少し重く見て平均を出しています。
+              </p>
+            </>
+          ) : (
+            "まだ口コミがありません"
+          )}
+        </div>
       </div>
 
-      <form
-        className="space-y-2 rounded-xl border border-neutral-200 bg-white p-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!body.trim()) return;
-          startTransition(async () => {
-            await postReview(productId, rating, body, author);
-            setBody("");
-          });
-        }}
-      >
-        <div className="text-sm font-medium">口コミを投稿する（投稿した瞬間に判定が走ります）</div>
-        <div className="flex gap-2">
-          <input
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            placeholder="ユーザー名"
-            className="w-40 rounded-lg border border-neutral-300 px-2 py-1 text-sm"
-          />
-          <select
-            value={rating}
-            onChange={(e) => setRating(Number(e.target.value))}
-            className="rounded-lg border border-neutral-300 px-2 py-1 text-sm"
-          >
-            {[5, 4, 3, 2, 1].map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </div>
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          rows={2}
-          placeholder="本当に神コスメすぎる！朝塗ったら夜まで崩れない！みんな買って！"
-          className="w-full rounded-lg border border-neutral-300 px-2 py-1 text-sm"
-        />
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-lg bg-neutral-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+      {hasViewerProfile && shown.some((s) => s.score > 0) && (
+        <p className="text-[11px] text-ink-400">あなたと肌が近い人の口コミを上に並べています。</p>
+      )}
+
+      {canPost ? (
+        <form
+          className="space-y-3 rounded-2xl border border-ink-200 bg-white p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!body.trim()) return;
+            submit();
+          }}
         >
-          {pending ? "投稿中…" : "投稿"}
-        </button>
-      </form>
+          <div className="text-sm font-bold">使ってみた感想を書く</div>
 
-      <div className="space-y-2">
-        {kept.map((r) => (
-          <div key={r.id} className="rounded-xl border border-neutral-200 bg-white p-3">
-            <div className="flex items-center gap-2 text-xs text-neutral-500">
-              <Stars value={r.rating} />
-              <span>{r.author_name}</span>
-              <span className="tabular-nums">信頼度 {(r.trust_score * 100).toFixed(0)}%</span>
-            </div>
-            <p className="mt-1 text-sm">{r.body}</p>
+          <div className="flex items-center gap-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setRating(n)}
+                className={`text-2xl leading-none ${n <= rating ? "text-amber-500" : "text-amber-200"}`}
+                aria-label={`${n}点`}
+              >
+                ★
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
 
-      {excluded.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-neutral-600">除外された口コミ（評価には算入していません）</div>
-          {excluded.map((r) => (
-            <div key={r.id} className="rounded-xl border border-dashed border-red-200 bg-red-50/50 p-3">
-              <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                <Stars value={r.rating} />
-                <span>{r.author_name}</span>
-                <span className="tabular-nums">信頼度 {(r.trust_score * 100).toFixed(0)}%</span>
-                {r.flags.map((f) => (
-                  <span key={f} className="rounded bg-red-100 px-1.5 py-0.5 text-red-700">
-                    {FLAG_LABEL[f] ?? f}
-                  </span>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            rows={3}
+            placeholder="どんなときに使って、どう良かった（悪かった）かを書くと参考になります"
+            className="w-full rounded-2xl border border-brand-100 bg-white px-3 py-2 text-sm outline-none focus:border-brand-300"
+          />
+
+          <div className="space-y-2 rounded-2xl bg-brand-50/60 p-3">
+            <div className="text-xs font-bold text-brand-700">使い心地（任意）</div>
+            {axes.map((axis) => (
+              <label key={axis.key} className="block">
+                <span className="flex justify-between text-[11px] text-ink-400">
+                  <span>{axis.low}</span>
+                  <span className="font-bold text-ink-900">{axis.label}</span>
+                  <span>{axis.high}</span>
+                </span>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={feel[axis.key]}
+                  onChange={(e) => setFeel({ ...feel, [axis.key]: Number(e.target.value) })}
+                  className="w-full"
+                />
+              </label>
+            ))}
+          </div>
+
+          <div>
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-600">
+              <ImagePlus size={14} /> 写真を追加（{files.length}/{MAX_IMAGES}）
+              <input
+                ref={fileInput}
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) =>
+                  setFiles(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))
+                }
+              />
+            </label>
+            {files.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2 text-[11px] text-ink-600">
+                {files.map((f) => (
+                  <li
+                    key={f.name}
+                    className="flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5"
+                  >
+                    {f.name}
+                    <button
+                      type="button"
+                      onClick={() => setFiles(files.filter((x) => x !== f))}
+                      aria-label="この写真を外す"
+                    >
+                      <X size={11} />
+                    </button>
+                  </li>
                 ))}
-              </div>
-              <p className="mt-1 text-sm text-neutral-600">{r.body}</p>
-            </div>
-          ))}
+              </ul>
+            )}
+          </div>
+
+          {error && <p className="text-xs text-red-600">{error}</p>}
+
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+          >
+            {pending ? "投稿中…" : "投稿する"}
+          </button>
+        </form>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-ink-200 bg-white p-4 text-sm">
+          <Lock size={16} className="text-ink-400" />
+          <span>口コミを書くにはログインが必要です。</span>
+          <Link
+            href="/login"
+            className="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-bold text-white"
+          >
+            ログイン
+          </Link>
         </div>
       )}
+
+      <div className="space-y-2">
+        {shown.map(({ review, score }) => (
+          <ReviewCard key={review.id} review={review} close={score > 0} />
+        ))}
+      </div>
     </div>
   );
 }
