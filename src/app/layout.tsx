@@ -5,6 +5,7 @@ import AnonAuth from "@/components/AnonAuth";
 import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
 import { getMyUser, isRealAccount } from "@/lib/auth";
+import { siteUrl } from "@/lib/site";
 
 const sans = Zen_Kaku_Gothic_New({
   subsets: ["latin"],
@@ -21,6 +22,7 @@ const display = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl()),
   title: "KAWANAI — そのコスメ、もう持ってるかも",
   description:
     "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",

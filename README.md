@@ -62,6 +62,8 @@ npm run db:reset               # マイグレーション + シード投入
 npm run dev
 ```
 
+`robots.txt` / `sitemap.xml` は公開URLを絶対パスで書くので、本番では `NEXT_PUBLIC_SITE_URL` を設定する（未設定なら Vercel のドメイン、ローカルは `http://localhost:3000`）。`/sitemap.xml` は商品を DB から列挙し、1日ごとに作り直す。
+
 シードを作り直す場合は `npm run seed:gen`（`scripts/generate_seed.py` が決定論的に生成）。
 
 シードの商品・ブランド・口コミはすべて架空。実在商品のデータは使っていない。
