@@ -68,9 +68,39 @@ export type StashOverlap = {
   score: number;
 };
 
+export type Profile = {
+  user_id: string;
+  handle: string;
+  display_name: string;
+  avatar_hue: number;
+  bio: string | null;
+  skin_tone_hex: string | null;
+  skin_type: SkinType | null;
+  stash_public: boolean;
+  created_at: string;
+};
+
+export type SkinType = "dry" | "normal" | "oily" | "combination" | "sensitive";
+
+export const SKIN_TYPE_LABEL: Record<SkinType, string> = {
+  dry: "乾燥しやすい",
+  normal: "ふつう",
+  oily: "皮脂が出やすい",
+  combination: "混合（部分的にテカる）",
+  sensitive: "ゆらぎやすい",
+};
+
+export type ReviewImage = {
+  id: number;
+  review_id: number;
+  path: string;
+  pos: number;
+};
+
 export type Review = {
   id: number;
   product_id: number;
+  user_id: string | null;
   author_name: string;
   rating: number;
   body: string;
@@ -79,6 +109,15 @@ export type Review = {
   excluded: boolean;
   flags: string[];
   image_phash: string | null;
+  feel: Record<string, number> | null;
+  report_count: number;
+  /** 投稿時にポーチに登録していたか。集計の重みと表示に使う（投稿条件ではない） */
+  owner_verified: boolean;
+  profiles?: Pick<
+    Profile,
+    "handle" | "display_name" | "avatar_hue" | "skin_type" | "skin_tone_hex"
+  > | null;
+  review_images?: ReviewImage[];
 };
 
 export type RatingSummary = {
@@ -87,7 +126,19 @@ export type RatingSummary = {
   raw_rating: number | null;
   adjusted_rating: number | null;
   excluded_count: number;
+  /** 点数に入っている口コミの数 */
+  counted_count: number;
+  /** そのうち、投稿時にポーチに登録していた人の数 */
+  owner_count: number;
   exclusion_reasons: string[];
+};
+
+export type ProductScore = {
+  product_id: number;
+  counted_count: number;
+  adjusted_rating: number | null;
+  /** 件数が少ない商品を上に出さないよう補正した評価 */
+  ranked_rating: number | null;
 };
 
 export const FLAG_LABEL: Record<string, string> = {
@@ -96,6 +147,13 @@ export const FLAG_LABEL: Record<string, string> = {
   brand_bias: "同一ブランドへの偏重投稿",
   pr_boilerplate: "PR・案件の定型表現",
   image_reuse: "画像の使い回し",
+  reported: "通報が多い",
+};
+
+export type FeelSummary = {
+  product_id: number;
+  feel_count: number;
+  feel: Record<string, number> | null;
 };
 
 export type ColorMatch = {

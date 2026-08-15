@@ -1,36 +1,38 @@
 import BarcodeScanner from "@/components/BarcodeScanner";
+import QuickStartPicker from "@/components/QuickStartPicker";
 import { createClient } from "@/lib/supabase/server";
+import type { Product } from "@/lib/types";
 
 export default async function ScanPage() {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data: popular } = await supabase
     .from("products")
-    .select("jan, name, brands(name)")
-    .not("jan", "is", null)
-    .limit(3)
-    .returns<{ jan: string; name: string; brands: { name: string } | null }[]>();
+    .select(
+      "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
+    )
+    .order("price_yen", { ascending: true })
+    .limit(24)
+    .returns<Product[]>();
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <section className="border-b border-ink-200 pb-4">
+        <h1 className="font-display text-2xl font-bold">手持ちを登録する</h1>
+        <p className="mt-1.5 text-sm text-ink-600">
+          全部やらなくて大丈夫。よく使う2〜3個から始めれば、その分だけ判定が正確になります。
+        </p>
+      </section>
+
+      <QuickStartPicker products={popular ?? []} />
+
       <div>
-        <h1 className="text-xl font-bold">バーコードで手持ちを登録</h1>
-        <p className="text-sm text-neutral-600">
-          カメラが使えない環境では JAN を手入力してください。マスタに無い JAN は候補選択にフォールバックします。
+        <h2 className="font-display text-lg font-bold">バーコードで登録</h2>
+        <p className="text-sm text-ink-600">
+          リストに無いものは、パッケージのバーコードをかざしてください。続けて読み取れます。
         </p>
       </div>
 
       <BarcodeScanner />
-
-      <div className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm">
-        <div className="font-medium">デモ用の JAN</div>
-        <ul className="mt-1 space-y-0.5 text-neutral-600">
-          {(data ?? []).map((p) => (
-            <li key={p.jan}>
-              <code className="rounded bg-neutral-100 px-1">{p.jan}</code> {p.brands?.name} {p.name}
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }

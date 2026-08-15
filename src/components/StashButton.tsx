@@ -2,9 +2,18 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Check, Heart } from "lucide-react";
 import { addToStash, removeFromStash } from "@/app/actions";
 
-export default function StashButton({ productId, owned }: { productId: number; owned: boolean }) {
+export default function StashButton({
+  productId,
+  owned,
+  source = "manual",
+}: {
+  productId: number;
+  owned: boolean;
+  source?: "manual" | "scan" | "photo" | "quick";
+}) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -14,15 +23,16 @@ export default function StashButton({ productId, owned }: { productId: number; o
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
-          await (owned ? removeFromStash(productId) : addToStash(productId));
+          await (owned ? removeFromStash(productId) : addToStash(productId, source));
           router.refresh();
         })
       }
-      className={`rounded-lg px-3 py-2 text-sm font-medium disabled:opacity-50 ${
-        owned ? "border border-neutral-300 bg-white" : "bg-neutral-900 text-white"
+      className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition disabled:opacity-50 ${
+        owned ? "border border-brand-200 bg-white text-brand-600" : "bg-brand-600 text-white"
       }`}
     >
-      {pending ? "処理中…" : owned ? "手持ちから外す" : "手持ちに追加"}
+      {owned ? <Check size={15} /> : <Heart size={15} />}
+      {pending ? "処理中…" : owned ? "ポーチに入っています" : "ポーチに追加"}
     </button>
   );
 }
