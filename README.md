@@ -66,10 +66,29 @@ npm run dev
 
 シードの商品・ブランド・口コミはすべて架空。実在商品のデータは使っていない。
 
+### シードの規模
+
+`supabase/seed.sql` にコミットしてあるのはデモ用の小規模セット（商品38件）。近傍検索や信頼度スコアの挙動を数百〜数千件で見たいときは規模を上げて生成する。デモセットは常に同じ内容で先頭に入るので、シナリオはどの規模でも成立する。
+
+```bash
+python3 scripts/generate_seed.py                          # demo: 商品38 / 口コミ14
+python3 scripts/generate_seed.py --scale medium           # 商品300 / 口コミ約1,100
+python3 scripts/generate_seed.py --scale large            # 商品2,000 / 口コミ約11,400
+python3 scripts/generate_seed.py --products 800 --reviews-per-product 8
+```
+
 ## 検証
 
 ```bash
 npm run lint
 npm run typecheck
 npm run build
+```
+
+シードのシナリオ検証（被り・安い代替・サクラ除外が実際に出るか）と主要クエリの実行時間の記録。DB が起動している必要がある。
+
+```bash
+npm run smoke                  # 投入済みのシード（デモセット）で検証
+npm run smoke:large            # 大規模セットを生成・投入してから検証
+python3 scripts/smoke_scenarios.py --json smoke.json   # 実行時間を JSON で保存
 ```

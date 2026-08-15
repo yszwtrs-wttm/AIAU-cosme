@@ -10,6 +10,9 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "seed:gen": "python3 scripts/generate_seed.py > supabase/seed.sql",
+    "seed:gen:large": "python3 scripts/generate_seed.py --scale large > supabase/seed.large.sql",
+    "smoke": "python3 scripts/smoke_scenarios.py",
+    "smoke:large": "npm run seed:gen:large && python3 scripts/smoke_scenarios.py --seed-file supabase/seed.large.sql",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
