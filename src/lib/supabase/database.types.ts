@@ -698,6 +698,10 @@ export type Database = {
         Args: { delta_e: number; ing_sim: number }
         Returns: number
       }
+      feel_is_valid: {
+        Args: { f: Json }
+        Returns: boolean
+      }
       find_by_color: {
         Args: { p_category?: string; p_lab: number[]; p_limit?: number }
         Returns: {

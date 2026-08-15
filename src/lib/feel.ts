@@ -10,7 +10,25 @@
 
 import type { Category } from "./types";
 
-export type FeelAxis = { key: string; label: string; low: string; high: string };
+/** 使用感の軸名。DB の CHECK 制約（reviews_feel_valid）と同じ集合を保つ。 */
+export const FEEL_KEYS = [
+  "gloss",
+  "coverage",
+  "lasting",
+  "moist",
+  "spread",
+  "foam",
+  "smooth",
+  "scent",
+] as const;
+
+export type FeelKey = (typeof FEEL_KEYS)[number];
+
+/** 軸の値は 0..100。 */
+export const FEEL_MIN = 0;
+export const FEEL_MAX = 100;
+
+export type FeelAxis = { key: FeelKey; label: string; low: string; high: string };
 
 const MAKEUP_AXES: FeelAxis[] = [
   { key: "gloss", label: "ツヤ感", low: "マット", high: "ツヤ" },
