@@ -85,6 +85,53 @@ export type Database = {
         }
         Relationships: []
       }
+      jan_requests: {
+        Row: {
+          brand_name: string | null
+          created_at: string
+          id: number
+          image_path: string | null
+          jan: string
+          note: string | null
+          product_id: number | null
+          product_name: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          brand_name?: string | null
+          created_at?: string
+          id?: never
+          image_path?: string | null
+          jan: string
+          note?: string | null
+          product_id?: number | null
+          product_name?: string | null
+          status?: string
+          user_id?: string
+        }
+        Update: {
+          brand_name?: string | null
+          created_at?: string
+          id?: never
+          image_path?: string | null
+          jan?: string
+          note?: string | null
+          product_id?: number | null
+          product_name?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jan_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_colors: {
         Row: {
           hex: string

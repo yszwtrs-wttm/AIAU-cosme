@@ -70,6 +70,46 @@ export async function removeFromStash(productId: number): Promise<Result> {
 }
 
 /**
+ * バーコードを読めたが商品マスタに無かったときのリクエスト。
+ * JAN と分かる範囲の情報を残しておき、あとから商品として登録できるようにする。
+ * 同じ人が同じ JAN を送り直したら上書きする（写真や名前を後から足せるように）。
+ */
+export async function requestProduct(input: {
+  jan: string;
+  productName?: string;
+  brandName?: string;
+  note?: string;
+  imagePath?: string | null;
+}): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!isRealAccount(user)) {
+    return { ok: false, error: "商品リクエストにはアカウント登録が必要です" };
+  }
+
+  const jan = input.jan.trim();
+  if (!/^\d{8,14}$/.test(jan)) {
+    return { ok: false, error: "バーコードの数字を確認してください" };
+  }
+
+  const { error } = await supabase.from("jan_requests").upsert(
+    {
+      user_id: user!.id,
+      jan,
+      product_name: input.productName?.trim() || null,
+      brand_name: input.brandName?.trim() || null,
+      note: input.note?.trim() || null,
+      image_path: input.imagePath ?? null,
+    },
+    { onConflict: "user_id,jan" },
+  );
+
+  return { ok: !error, error: error?.message };
+}
+
+/**
  * 口コミ投稿。名前の手入力は廃止し、投稿者はログイン中のアカウントから決まる。
  * 書けるのは本アカウント（お試しの匿名セッションは不可）だけ。RLS でも同じ条件を掛けている。
  * 「持っているか」は自己申告で検証できないので投稿条件にはせず、集計の重みだけに使う。
