@@ -96,9 +96,21 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     const [{ data: lowProduct }, { data: lowFeel }] = await Promise.all([
       supabase
         .from("products")
-        .select("id,name,category,price_yen,ingredients,brands(name)")
+        .select("id,name,category,price_yen,ingredients,image_url,brands(name),product_colors(pos,shade_name,hex)")
         .eq("id", cheapestSimilar.product_id)
-        .maybeSingle<Pick<Product, "id" | "name" | "category" | "price_yen" | "ingredients" | "brands">>(),
+        .maybeSingle<
+          Pick<
+            Product,
+            | "id"
+            | "name"
+            | "category"
+            | "price_yen"
+            | "ingredients"
+            | "image_url"
+            | "brands"
+            | "product_colors"
+          >
+        >(),
       supabase
         .from("product_feel_summary")
         .select("*")
@@ -113,6 +125,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         brand: lowProduct.brands?.name ?? "",
         name: lowProduct.name,
         priceYen: lowProduct.price_yen,
+        category: lowProduct.category,
+        imageUrl: lowProduct.image_url,
+        colors: [...(lowProduct.product_colors ?? [])].sort((a, b) => a.pos - b.pos),
         ingredients: lowProduct.ingredients,
         measured: lowMeasured,
         reviewCount: lowFeel?.feel_count ?? 0,
@@ -128,6 +143,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     brand: product.brands?.name ?? "",
     name: product.name,
     priceYen: product.price_yen,
+    category: product.category,
+    imageUrl: product.image_url,
+    colors: shades,
     ingredients: product.ingredients,
     measured: measuredFeel,
     reviewCount: feelSummary?.feel_count ?? 0,

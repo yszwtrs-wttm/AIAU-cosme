@@ -1,12 +1,17 @@
 import Link from "next/link";
-import type { FeelAxis, FeelValues } from "@/lib/feel";
+import ProductThumb from "@/components/ProductThumb";
 import { axisDiffs, ingredientEdge, ingredientEdgeText } from "@/lib/compare";
+import type { FeelAxis, FeelValues } from "@/lib/feel";
+import type { Category, ProductColor } from "@/lib/types";
 
 export type CompareSide = {
   productId: number;
   brand: string;
   name: string;
   priceYen: number;
+  category: Category;
+  imageUrl: string | null;
+  colors: ProductColor[];
   feel: FeelValues;
   ingredients: string[];
   /** 口コミの平均が使えているか（推定なら false） */
@@ -39,7 +44,6 @@ export default function ComparePanel({
       <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-2 bg-brand-50 p-4">
         <SideHead side={high} caption="この商品" />
         <div className="flex flex-col items-center justify-center gap-1 px-1">
-          <span className="text-[11px] font-bold text-ink-400">VS</span>
           {priceDiff > 0 && (
             <span className="rounded-full bg-emerald-600 px-2 py-1 text-center text-[11px] font-bold leading-tight text-white">
               安い方が
@@ -122,6 +126,13 @@ function SideHead({
   return (
     <div className={`min-w-0 ${align === "right" ? "text-right" : ""}`}>
       <div className="text-[11px] text-ink-400">{caption}</div>
+      <ProductThumb
+        category={side.category}
+        colors={side.colors}
+        imageUrl={side.imageUrl}
+        size={72}
+        className={`my-1 rounded-xl ${align === "right" ? "ml-auto" : ""}`}
+      />
       <div className="truncate text-[11px] text-ink-400">{side.brand}</div>
       {href ? (
         <Link href={href} className="block text-sm font-bold leading-tight hover:underline">
