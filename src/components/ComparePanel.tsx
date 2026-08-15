@@ -43,9 +43,9 @@ export default function ComparePanel({
         <div className="flex flex-col items-center justify-center gap-1 px-1">
           {priceDiff > 0 && (
             <span className="rounded-full bg-emerald-600 px-2 py-1 text-center text-[11px] font-bold leading-tight text-white">
-              安い方が
+              ¥{priceDiff.toLocaleString()}
               <br />
-              ¥{priceDiff.toLocaleString()}安い
+              おトク
             </span>
           )}
         </div>
