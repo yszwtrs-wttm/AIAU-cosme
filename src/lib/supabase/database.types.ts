@@ -833,12 +833,7 @@ export type Database = {
         Returns: number
       }
       search_products: {
-        Args: {
-          p_category?: string
-          p_limit?: number
-          p_mens?: boolean
-          p_q: string
-        }
+        Args: { p_category?: string | null; p_limit?: number; p_mens?: boolean | null; p_q: string }
         Returns: {
           product_id: number
           score: number
