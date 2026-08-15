@@ -29,6 +29,19 @@ export const ROLE_LABEL: Record<Role, string> = {
   fragrance: "香り",
 };
 
+/** タブなど幅の狭い場所で使う短い名前。 */
+export const ROLE_SHORT_LABEL: Record<Role, string> = {
+  base: "ベース",
+  moisture: "うるおい",
+  active: "効果",
+  color: "色のもと",
+  texture: "質感",
+  cleanse: "洗浄・補修",
+  uv: "紫外線カット",
+  preserve: "品質保持",
+  fragrance: "香り",
+};
+
 /** 表示順。上に来るものほどユーザーの関心が高い。 */
 export const ROLE_ORDER: Role[] = [
   "active",
@@ -205,10 +218,10 @@ export function groupByRole(list: ResolvedIngredient[]): { role: Role; items: Re
 }
 
 /**
- * 成分構成を 1〜2 文にまとめる。「何でできているか」を先に読ませたいので、
+ * 成分構成を短い箇条書きにまとめる。「何でできているか」を先に読ませたいので、
  * 全成分リストの上に出す。集計だけで作れるのでルールベース。
  */
-export function summarizeIngredients(list: ResolvedIngredient[]): string {
+export function summarizeIngredientPoints(list: ResolvedIngredient[]): string[] {
   const top = list.slice(0, 6);
   const has = (role: Role) => top.some((x) => x.role === role);
   const actives = list.filter((x) => x.role === "active");
@@ -237,7 +250,9 @@ export function summarizeIngredients(list: ResolvedIngredient[]): string {
   if (noFragrance) parts.push("香料は入っていません");
 
   const cautions = list.filter((x) => x.caution).slice(0, 2);
-  const tail = cautions.length > 0 ? `気にする人向け：${cautions.map((c) => c.ja).join("・")}が入っています。` : "";
+  if (cautions.length > 0) {
+    parts.push(`気にする人向け：${cautions.map((c) => c.ja).join("・")}が入っています`);
+  }
 
-  return `${parts.join("。")}。${tail}`;
+  return parts;
 }
