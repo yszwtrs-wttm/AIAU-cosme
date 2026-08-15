@@ -71,7 +71,7 @@ export async function removeFromStash(productId: number): Promise<Result> {
 
 /**
  * 口コミ投稿。名前の手入力は廃止し、投稿者はログイン中のアカウントから決まる。
- * 書けるのは本アカウント（お試しの匿名セッションは不可）だけ。RLS でも同じ条件を掛けている。
+ * 書けるのは本アカウントだけ。RLS でも同じ条件を掛けている。
  * 「持っているか」は自己申告で検証できないので投稿条件にはせず、集計の重みだけに使う。
  */
 export async function postReview(input: {
@@ -144,7 +144,7 @@ export async function reportReview(reviewId: number, reason: ReportReason): Prom
     data: { user },
   } = await supabase.auth.getUser();
   if (!isRealAccount(user)) {
-    return { ok: false, error: "報告にはアカウント登録が必要です" };
+    return { ok: false, error: "口コミの報告にはアカウント登録が必要です" };
   }
 
   const { error } = await supabase
