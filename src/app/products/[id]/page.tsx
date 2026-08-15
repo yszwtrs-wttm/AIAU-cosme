@@ -194,17 +194,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {compareLow ? "使い心地とねだんを比べる" : "使い心地"}
         </h2>
         {compareLow ? (
-          <>
-            <ComparePanel axes={axes} high={compareHigh} low={compareLow} />
-            {cheaper.length > 1 && (
-              <div className="space-y-2">
-                <p className="pt-2 text-xs text-ink-400">ほかの似ていて安いもの</p>
-                {cheaper.slice(1).map((row) => (
-                  <DupeRowItem key={row.product_id} row={row} tone="save" />
-                ))}
-              </div>
-            )}
-          </>
+          <ComparePanel axes={axes} high={compareHigh} low={compareLow} />
         ) : (
           <FeelChart axes={axes} values={feelValues} reviewCount={feelSummary?.feel_count ?? 0} />
         )}
@@ -296,6 +286,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           }}
         />
       </section>
+
+      {compareLow && cheaper.length > 1 && (
+        <section className="space-y-2">
+          <h2 className="font-display text-lg font-bold">ほかの似ていて安いもの</h2>
+          {cheaper.slice(1).map((row) => (
+            <DupeRowItem key={row.product_id} row={row} tone="save" />
+          ))}
+        </section>
+      )}
     </div>
   );
 }
