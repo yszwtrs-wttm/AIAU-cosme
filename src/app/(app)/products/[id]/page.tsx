@@ -115,9 +115,21 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     const [{ data: lowProduct }, { data: lowFeel }] = await Promise.all([
       supabase
         .from("products")
-        .select("id,name,category,price_yen,ingredients,brands(name)")
+        .select("id,name,category,price_yen,ingredients,image_url,brands(name),product_colors(pos,shade_name,hex)")
         .eq("id", cheapestSimilar.product_id)
-        .maybeSingle<Pick<Product, "id" | "name" | "category" | "price_yen" | "ingredients" | "brands">>(),
+        .maybeSingle<
+          Pick<
+            Product,
+            | "id"
+            | "name"
+            | "category"
+            | "price_yen"
+            | "ingredients"
+            | "image_url"
+            | "brands"
+            | "product_colors"
+          >
+        >(),
       supabase
         .from("product_feel_summary")
         .select("*")
@@ -132,8 +144,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         brand: lowProduct.brands?.name ?? "",
         name: lowProduct.name,
         priceYen: lowProduct.price_yen,
-        ingredients: lowProduct.ingredients,
+        category: lowProduct.category,
+        imageUrl: lowProduct.image_url,
+        colors: [...(lowProduct.product_colors ?? [])].sort((a, b) => a.pos - b.pos),
         measured: lowMeasured,
+        reviewCount: lowFeel?.feel_count ?? 0,
         feel: lowMeasured
           ? Object.fromEntries(Object.entries(lowFeel!.feel!).map(([k, v]) => [k, Number(v)]))
           : estimateFeel(lowProduct.category, lowProduct.ingredients),
@@ -146,8 +161,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     brand: product.brands?.name ?? "",
     name: product.name,
     priceYen: product.price_yen,
-    ingredients: product.ingredients,
+    category: product.category,
+    imageUrl: product.image_url,
+    colors: shades,
     measured: measuredFeel,
+    reviewCount: feelSummary?.feel_count ?? 0,
     feel: feelValues,
   };
 
@@ -175,6 +193,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             )}
           </div>
           <h1 className="font-display text-2xl font-bold">{product.name}</h1>
+          <div className="mt-1 flex items-center gap-1.5 text-sm">
+            <span className="text-amber-500">★</span>
+            <span className="font-bold tabular-nums">
+              {summary?.adjusted_rating != null ? summary.adjusted_rating.toFixed(1) : "—"}
+            </span>
+            <span className="text-xs text-ink-400">
+              {summary?.counted_count ? `（口コミ${summary.counted_count}件）` : "（口コミなし）"}
+            </span>
+          </div>
           {avoidedIngredientLabels.length > 0 && (
             <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
               避けたい成分が入っています: {avoidedIngredientLabels.join("、")}
@@ -216,28 +243,19 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-display text-lg font-bold">使い心地</h2>
-        <FeelChart axes={axes} values={feelValues} reviewCount={feelSummary?.feel_count ?? 0} />
+        <h2 className="font-display text-lg font-bold">
+          {compareLow ? "使い心地とねだんを比べる" : "使い心地"}
+        </h2>
+        {compareLow ? (
+          <ComparePanel axes={axes} high={compareHigh} low={compareLow} />
+        ) : (
+          <FeelChart axes={axes} values={feelValues} reviewCount={feelSummary?.feel_count ?? 0} />
+        )}
       </section>
 
       {!isOwned && (
         <>
-          {compareLow && (
-            <section className="space-y-2">
-              <h2 className="font-display text-lg font-bold">似ていて安いものとの違い</h2>
-              <ComparePanel axes={axes} high={compareHigh} low={compareLow} />
-              {cheaper.length > 1 && (
-                <div className="space-y-2">
-                  {cheaper.slice(1).map((row) => (
-                    <DupeRowItem key={row.product_id} row={row} tone="save" />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
           <section className="space-y-2">
-            <h2 className="font-display text-lg font-bold">持っているものと近いか</h2>
             {topDupe ? (
               <div className="rounded-2xl border border-ink-200 bg-white p-4">
                 <p className="text-sm leading-relaxed">
@@ -306,7 +324,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       )}
 
       <section className="space-y-2">
-        <h2 className="font-display text-lg font-bold">成分でわかること</h2>
+        <h2 className="font-display text-lg font-bold">商品説明</h2>
         <IngredientPanel ingredients={product.ingredients} />
       </section>
 
@@ -324,6 +342,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           }}
         />
       </section>
+
+      {!isOwned && compareLow && cheaper.length > 1 && (
+        <section className="space-y-2">
+          <h2 className="font-display text-lg font-bold">ほかの似ていて安いもの</h2>
+          {cheaper.slice(1).map((row) => (
+            <DupeRowItem key={row.product_id} row={row} tone="save" />
+          ))}
+        </section>
+      )}
     </div>
   );
 }
