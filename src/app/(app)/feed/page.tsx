@@ -50,7 +50,7 @@ export default async function FeedPage() {
               <div className="space-y-1.5 p-4">
                 <div className="flex items-center gap-2 text-xs">
                   <Avatar
-                    name={r.profiles?.display_name ?? "?"}
+                    name={r.profiles?.display_name ?? ""}
                     hue={r.profiles?.avatar_hue ?? 330}
                     avatarUrl={r.profiles?.avatar_url}
                     size="sm"
