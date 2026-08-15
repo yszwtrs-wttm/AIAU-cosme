@@ -54,6 +54,8 @@ UI には数値を出さず、`src/lib/wording.ts` で「ほぼ同じ色」「�
 
 ## セットアップ
 
+Docker が使える場合はローカルスタックを起動する。Docker を使わない場合は [Docker なしで開発する（リモート Supabase 接続）](#docker-なしで開発するリモート-supabase-接続)へ。
+
 ```bash
 npm install
 cp .env.example .env.local     # ローカルは npx supabase status のキーを入れる
@@ -65,6 +67,64 @@ npm run dev
 シードを作り直す場合は `npm run seed:gen`（`scripts/generate_seed.py` が決定論的に生成）。
 
 シードの商品・ブランド・口コミはすべて架空。実在商品のデータは使っていない。
+
+## Docker なしで開発する（リモート Supabase 接続）
+
+Docker が使えない環境（CI / Devin のセッション / 制限のあるPC）では、ローカルスタックを起動せず、リモートの Supabase プロジェクトに `.env.local` を向ければ `npm run dev` だけで画面が動く。フロントエンドは `NEXT_PUBLIC_SUPABASE_URL` と `NEXT_PUBLIC_SUPABASE_ANON_KEY` しか見ていないので、その2つがリモートを指していればよい。
+
+### A. 開発用プロジェクトに直接つなぐ
+
+1. [Supabase ダッシュボード](https://supabase.com/dashboard) で開発用プロジェクトを作る（本番とは別プロジェクトにする）。
+2. Project Settings → API から Project URL と anon key を取得し、`.env.local` に書く。
+
+   ```bash
+   npm install
+   cp .env.example .env.local
+   # NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+   # NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+   ```
+
+3. そのプロジェクトにスキーマを適用する（初回のみ / マイグレーション追加時）。`db push` は Docker 不要。
+
+   ```bash
+   npx supabase login
+   npm run db:link -- --project-ref <project-ref>   # DB パスワードを聞かれる
+   npm run db:migrations                            # ローカルとリモートの適用状況を比較
+   npm run db:push                                  # 未適用のマイグレーションだけを順に適用
+   npm run db:push:seed                             # デモデータを入れる場合のみ（下記の注意を読む）
+   ```
+
+4. 接続とスキーマを確認して起動する。
+
+   ```bash
+   npm run check:remote   # URL/キー・主要テーブル・lab_delta_e を確認
+   npm run dev
+   ```
+
+`/login` のメール確認リンクは Authentication → URL Configuration の Site URL / Redirect URLs に `http://localhost:3000` を追加しておく。画像つき口コミとアイコンで使う Storage バケット（`review-images` / `avatars`）はマイグレーションで作られるので手作業は不要。
+
+### B. ブランチデータベース（Supabase Branching）を使う
+
+本体の開発プロジェクトを汚さずに試す場合は、プロジェクトの Branching を有効にして PR / 開発用ブランチを作る。ブランチ作成時に `supabase/migrations` が自動で適用され、`supabase/config.toml` の `[db.seed]` が有効なため `supabase/seed.sql` も投入される。
+
+1. ダッシュボードの Branches からブランチを作る（または `npx supabase branches create <name> --experimental`）。
+2. ブランチの URL と anon key を取得して `.env.local` に入れる。
+
+   ```bash
+   npx supabase branches get <name> --experimental -o env
+   ```
+
+3. `npm run check:remote && npm run dev`。
+
+ブランチはマージ / 削除で破棄されるので、壊しても本体に影響しない。マイグレーションを追加したらブランチに push（`npm run db:push`）するか、ブランチを作り直す。
+
+### どちらの手順でも壊さないための注意
+
+- **マイグレーションは必ずファイル名の昇順に適用する。** 手でダッシュボードの SQL Editor に貼らず `npm run db:push` を使う。`supabase_migrations.schema_migrations` に履歴が残り、二重適用を避けられる。既存プロジェクトで履歴がずれている場合は `npx supabase migration repair --status applied <version>` で合わせる。
+- **スキーマ変更は `supabase/migrations/` に新しいファイルを追加する。** 既存のマイグレーションを書き換えると、すでに適用済みのリモート DB に反映されず、ローカルとの差分になる。
+- **`supabase/seed.sql` は冒頭で `truncate ... restart identity cascade` を実行する。** 共有している開発プロジェクトや本番に対して `db:push:seed` / `db:reset` を実行すると商品・口コミ・ポーチのデータが消える。自分専用のプロジェクトかブランチに対してだけ流す。ユーザー（`auth.users`）とプロフィールは truncate されないため、シードを流し直すと口コミが消えたユーザーが残る点にも注意。
+- **本番プロジェクトの URL / キーを `.env.local` に入れない。** `.env.local` は `.gitignore` 済みだが、開発中の口コミ投稿や手持ち登録がそのまま本番データになる。
+- `service_role` key は使わない（アプリはブラウザから anon key で RLS 越しに読む前提）。
 
 ## 検証
 
