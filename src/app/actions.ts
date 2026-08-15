@@ -78,7 +78,7 @@ export async function updateStashUsage(input: {
     return { ok: false, error: "残量が不正です" };
   }
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("user_items")
     .update({
       opened_at: input.openedAt ?? null,
@@ -88,11 +88,18 @@ export async function updateStashUsage(input: {
       note: input.note?.trim() ? input.note.trim() : null,
     })
     .eq("product_id", input.productId)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .select("product_id");
+
+  if (error) return { ok: false, error: error.message };
+  // 自分のポーチに無い商品は更新されない。黙って成功にすると保存できたように見える。
+  if (!updated || updated.length === 0) {
+    return { ok: false, error: "自分のポーチに登録されている商品だけ記録できます" };
+  }
 
   revalidatePath("/stash");
   revalidatePath(`/products/${input.productId}`);
-  return { ok: !error, error: error?.message };
+  return { ok: true };
 }
 
 export async function removeFromStash(productId: number): Promise<Result> {

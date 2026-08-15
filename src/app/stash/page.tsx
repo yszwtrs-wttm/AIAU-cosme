@@ -13,7 +13,7 @@ type StashRow = StashUsage & { product_id: number; products: Product };
 
 export default async function StashPage() {
   const user = await getMyUser();
-  if (!isRealAccount(user)) redirect("/login");
+  if (!user || !isRealAccount(user)) redirect("/login");
 
   const supabase = await createClient();
 
@@ -23,6 +23,7 @@ export default async function StashPage() {
       .select(
         "product_id, opened_at, purchased_at, purchase_price_yen, remaining_pct, note, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
       )
+      .eq("user_id", user.id)
       .returns<StashRow[]>(),
     supabase
       .from("products")

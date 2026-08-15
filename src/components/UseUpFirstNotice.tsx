@@ -42,7 +42,7 @@ export default function UseUpFirstNotice({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs text-ink-400">{item.product.brands?.name}</span>
-                  <span className="block truncate text-sm font-bold">{item.product.name}</span>
+                  <span className="block line-clamp-2 text-sm font-bold">{item.product.name}</span>
                   <span className="block text-[11px] text-ink-600">
                     {status.label}・残り{remainingLabel(item.remaining_pct)}
                   </span>
