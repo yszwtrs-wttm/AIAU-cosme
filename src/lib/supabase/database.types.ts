@@ -85,63 +85,6 @@ export type Database = {
         }
         Relationships: []
       }
-      makeup_logs: {
-        Row: {
-          created_at: string
-          id: number
-          request: string | null
-          used_on: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: never
-          request?: string | null
-          used_on?: string
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          id?: never
-          request?: string | null
-          used_on?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      makeup_log_items: {
-        Row: {
-          log_id: number
-          pos: number
-          product_id: number
-        }
-        Insert: {
-          log_id: number
-          pos?: number
-          product_id: number
-        }
-        Update: {
-          log_id?: number
-          pos?: number
-          product_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "makeup_log_items_log_id_fkey"
-            columns: ["log_id"]
-            isOneToOne: false
-            referencedRelation: "makeup_logs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "makeup_log_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       maintenance_runs: {
         Row: {
           detail: string | null
@@ -175,6 +118,77 @@ export type Database = {
           products?: number | null
           started_at?: string
           status?: string
+        }
+        Relationships: []
+      }
+      makeup_log_items: {
+        Row: {
+          log_id: number
+          pos: number
+          product_id: number
+        }
+        Insert: {
+          log_id: number
+          pos?: number
+          product_id: number
+        }
+        Update: {
+          log_id?: number
+          pos?: number
+          product_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "makeup_log_items_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "makeup_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "makeup_log_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "makeup_log_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "makeup_log_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      makeup_logs: {
+        Row: {
+          created_at: string
+          id: number
+          request: string | null
+          used_on: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          request?: string | null
+          used_on?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          request?: string | null
+          used_on?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -853,7 +867,11 @@ export type Database = {
         Returns: number
       }
       log_makeup: {
-        Args: { p_product_ids: number[]; p_request?: string; p_used_on?: string }
+        Args: {
+          p_product_ids: number[]
+          p_request?: string
+          p_used_on?: string
+        }
         Returns: number
       }
       mod_deg: {
@@ -886,7 +904,12 @@ export type Database = {
         Returns: number
       }
       search_products: {
-        Args: { p_category?: string | null; p_limit?: number; p_mens?: boolean | null; p_q: string }
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_mens?: boolean
+          p_q: string
+        }
         Returns: {
           product_id: number
           score: number
