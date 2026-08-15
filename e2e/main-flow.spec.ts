@@ -9,13 +9,39 @@ function escapeForRegExp(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+const WORDS = [
+  "香り",
+  "伸び",
+  "色味",
+  "容器",
+  "価格",
+  "保湿",
+  "質感",
+  "重さ",
+  "落ちにくさ",
+  "塗りやすさ",
+];
+
+/** stamp から決まる、実行ごとに違う一文を作る。 */
+function randomSentence(seed: number): string {
+  const picked = WORDS.filter((_, i) => ((seed >> i) & 1) === 1);
+  const words = picked.length > 0 ? picked : WORDS.slice(0, 3);
+  return `${words.join("と")}を確かめました。`;
+}
+
 test.describe("デモ導線", () => {
   const stamp = Date.now();
   const email = `e2e-${stamp}@example.com`;
   const handle = `e2e_${stamp}`.slice(0, 20);
   const password = `e2e-password-${stamp}`;
   const displayName = "E2E テスト";
-  const reviewBody = `E2Eテストの口コミ ${stamp}`;
+  // 文体が近い口コミや満点の連投は trust 判定で除外されるので、
+  // 毎回違う文章＋4点で投稿して「除外されない口コミ」を検証する。
+  const reviewBody = [
+    `${stamp} 回目の検証メモです。`,
+    randomSentence(stamp),
+    randomSentence(stamp * 7 + 13),
+  ].join("");
 
   let page: Page;
   let pair: DupePair;
@@ -104,6 +130,8 @@ test.describe("デモ導線", () => {
 
   test("口コミを投稿すると一覧に出る", async () => {
     await page.goto(`/products/${pair.target.id}`);
+    // 満点は「バースト」判定に触れるので4点で投稿する。
+    await page.getByRole("button", { name: "4点" }).click();
     await page.getByPlaceholder(/どんなときに使って/).fill(reviewBody);
     await page.getByRole("button", { name: "投稿する" }).click();
 

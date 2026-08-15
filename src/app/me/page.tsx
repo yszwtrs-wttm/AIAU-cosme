@@ -16,12 +16,16 @@ export default async function MyPage() {
   const real = isRealAccount(user);
 
   const [{ data: stash }, { data: myReviews }] = await Promise.all([
-    supabase
-      .from("user_items")
-      .select(
-        "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
-      )
-      .returns<StashRow[]>(),
+    user
+      ? supabase
+          .from("user_items")
+          .select(
+            "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
+          )
+          // ポーチは公開設定なら誰でも読めるので、自分の分だけに絞る。
+          .eq("user_id", user.id)
+          .returns<StashRow[]>()
+      : Promise.resolve({ data: [] as StashRow[] }),
     user
       ? supabase
           .from("reviews")
