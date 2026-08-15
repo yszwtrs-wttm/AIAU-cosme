@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
-import { ImagePlus } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ImagePlus, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { extractPalette, labArray, type ExtractedColor } from "@/lib/color";
+import {
+  PALETTE_MIN_DELTA,
+  PALETTE_SAMPLE_WIDTH,
+  sampleHeight,
+  type PaletteResponse,
+} from "@/lib/palette";
 import { CATEGORY_LABEL, type ColorMatch } from "@/lib/types";
 import { colorName, colorSearchBadge, dedupeShades, hueGroup, sortBySkinTone } from "@/lib/wording";
 
@@ -24,9 +30,17 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
   const [matches, setMatches] = useState<ColorMatch[]>([]);
   const [category, setCategory] = useState("lip");
   const [loading, setLoading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [extracted, setExtracted] = useState<ExtractedColor[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previewUrlRef = useRef<string | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  // 写真を選び直したとき、古い抽出結果で上書きしないための世代番号。
+  const requestIdRef = useRef(0);
+  // Worker の返信は非同期なので、そのときのカテゴリを ref で読む。
+  const categoryRef = useRef(category);
+  categoryRef.current = category;
 
   const search = async (targetHex: string, cat: string) => {
     setLoading(true);
@@ -40,29 +54,100 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
     setLoading(false);
   };
 
-  const onFile = (file: File) => {
-    const url = URL.createObjectURL(file);
-    setPreview(url);
-    const img = new Image();
-    img.onload = () => {
-      const canvas = canvasRef.current!;
-      const w = 160;
-      const h = Math.max(1, Math.round((img.height / img.width) * w));
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0, w, h);
-      // ほぼ同じ色が並ぶと選べないので、見分けのつく色だけ残す。
-      const palette = dedupeShades(extractPalette(ctx.getImageData(0, 0, w, h).data), 4);
+  const applyPalette = useCallback(
+    (palette: ExtractedColor[], cat: string) => {
       setExtracted(palette);
+      setExtracting(false);
       const first = palette[0]?.hex;
       if (first) {
         setHex(first);
-        void search(first, category);
+        void search(first, cat);
       }
+    },
+    // search は state の setter しか閉じ込めないので依存に入れない（毎レンダー作り直されるため）。
+    [],
+  );
+
+  /** Worker + OffscreenCanvas が使えない環境向けの、これまで通りのメインスレッド処理。 */
+  const extractOnMainThread = (url: string, cat: string, id: number) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = canvasRef.current;
+      const ctx = canvas?.getContext("2d");
+      if (!canvas || !ctx) return;
+      const w = PALETTE_SAMPLE_WIDTH;
+      const h = sampleHeight(img.width, img.height);
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+      // ほぼ同じ色が並ぶと選べないので、見分けのつく色だけ残す。
+      const palette = dedupeShades(extractPalette(ctx.getImageData(0, 0, w, h).data), PALETTE_MIN_DELTA);
+      if (id !== requestIdRef.current) return;
+      applyPalette(palette, cat);
+    };
+    img.onerror = () => {
+      if (id === requestIdRef.current) setExtracting(false);
     };
     img.src = url;
   };
+
+  const getWorker = (): Worker | null => {
+    if (typeof Worker === "undefined" || typeof createImageBitmap === "undefined") return null;
+    if (typeof OffscreenCanvas === "undefined") return null;
+    if (workerRef.current) return workerRef.current;
+    try {
+      const worker = new Worker(new URL("../lib/palette.worker.ts", import.meta.url));
+      worker.addEventListener("message", (event: MessageEvent<PaletteResponse>) => {
+        const res = event.data;
+        if (res.id !== requestIdRef.current) return;
+        if ("error" in res) {
+          setExtracting(false);
+          return;
+        }
+        applyPalette(res.palette, categoryRef.current);
+      });
+      workerRef.current = worker;
+      return worker;
+    } catch {
+      return null;
+    }
+  };
+
+  const onFile = async (file: File) => {
+    const url = URL.createObjectURL(file);
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = url;
+    setPreview(url);
+    setExtracting(true);
+    const id = ++requestIdRef.current;
+
+    const worker = getWorker();
+    if (!worker) {
+      extractOnMainThread(url, category, id);
+      return;
+    }
+    try {
+      const bitmap = await createImageBitmap(file);
+      if (id !== requestIdRef.current) {
+        bitmap.close();
+        return;
+      }
+      worker.postMessage({ id, bitmap }, [bitmap]);
+    } catch {
+      extractOnMainThread(url, category, id);
+    }
+  };
+
+  // 選び直しとアンマウントで objectURL を解放しないとメモリが積み上がる。
+  useEffect(
+    () => () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      previewUrlRef.current = null;
+      workerRef.current?.terminate();
+      workerRef.current = null;
+    },
+    [],
+  );
 
   // ファンデは「なりたい色」より肌の色に近いほうが正解なので、並べ替える。
   const shown =
@@ -87,12 +172,20 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void onFile(file);
+            }}
           />
         </label>
         {preview && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preview} alt="選んだ写真" className="mt-3 max-h-48 rounded-2xl" />
+        )}
+        {extracting && (
+          <p className="mt-3 flex items-center gap-1.5 text-sm text-ink-400">
+            <Loader2 size={14} className="animate-spin" /> 写真の色を調べています…
+          </p>
         )}
         <canvas ref={canvasRef} className="hidden" />
       </section>
