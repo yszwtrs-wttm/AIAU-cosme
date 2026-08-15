@@ -42,6 +42,16 @@ HEX → CIELAB に変換し、CIEDE2000 を Postgres 関数 `lab_delta_e` で計
 
 UI には数値を出さず、`src/lib/wording.ts` で「ほぼ同じ色」「かなり近い」などの日本語に置き換える。成分の cosine 類似度も同様に「中身ほぼ同じ」などにする。
 
+### しきい値の管理
+
+「似ている」の定義は `src/lib/thresholds.json` の 1 箇所だけに置く。
+
+- TS 側（`src/lib/thresholds.ts`）: `deltaETier` / `formulaSimTier` が段階を返し、`wording.ts` と `color.ts` はその段階をキーに文言を引く。文言側にしきい値は書かない。
+- SQL 側: `npm run thresholds:sql` で `supabase/migrations/20260819000100_thresholds.sql` を生成する。`dupe_score` と `find_palette_coverage` の既定値は `threshold('delta_e.close')` のように参照する。
+- 生成物が JSON とずれていないかは `npm run thresholds:check`、文言と段階の対応は `npm run test`（`src/lib/thresholds.test.ts`）で固定している。
+
+しきい値を変えるときは JSON を直して `npm run thresholds:sql` を実行する。生成される SQL はすべて `create or replace` なので、既に適用済みの環境では生成結果を新しいタイムスタンプのマイグレーションとして置いてもよい。
+
 ## 口コミの不正検出
 
 削除はしない。疑わしい口コミは理由付きで残したまま、総合評価から外す。
@@ -71,5 +81,7 @@ npm run dev
 ```bash
 npm run lint
 npm run typecheck
+npm run test
+npm run thresholds:check
 npm run build
 ```
