@@ -25,6 +25,18 @@ export function colorMatchBadge(dE: number): string {
 }
 
 /**
+ * 写真から探すときのバッジ。撮影した色は照明やカメラでずれるため、
+ * ここでは「別の色」と言い切らず、近い順に並んでいることが伝わる言葉にする。
+ */
+export function colorSearchBadge(dE: number): string {
+  if (dE < 2) return "ほぼ同じ色";
+  if (dE < 5) return "かなり近い";
+  if (dE < 10) return "少し違う";
+  if (dE < 20) return "やや離れた色";
+  return "写真の色とは離れた色";
+}
+
+/**
  * 「どう違うのか」を方向で説明する。数値より親切なのはこれ。
  * base から target への差を、明るさ・赤み/青み・黄み の言葉にする。
  */

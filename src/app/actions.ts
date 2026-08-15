@@ -46,7 +46,14 @@ export async function addManyToStash(
 
 export async function removeFromStash(productId: number): Promise<Result> {
   const supabase = await createClient();
-  const { error } = await supabase.from("user_items").delete().eq("product_id", productId);
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return { ok: false, error: "セッションがありません" };
+
+  const { error } = await supabase
+    .from("user_items")
+    .delete()
+    .eq("product_id", productId)
+    .eq("user_id", userData.user.id);
 
   revalidatePath("/stash");
   revalidatePath(`/products/${productId}`);

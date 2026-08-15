@@ -6,7 +6,7 @@ import { ImagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { extractPalette, labArray, type ExtractedColor } from "@/lib/color";
 import { CATEGORY_LABEL, type ColorMatch } from "@/lib/types";
-import { colorMatchBadge, colorName, dedupeShades, hueGroup, sortBySkinTone } from "@/lib/wording";
+import { colorName, colorSearchBadge, dedupeShades, hueGroup, sortBySkinTone } from "@/lib/wording";
 
 const CATEGORIES = [
   { value: "lip", label: "リップ" },
@@ -164,8 +164,12 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
             </div>
           )}
 
+          <p className="text-[11px] text-ink-400">
+            写真の色に近い順に並んでいます。写真の色は照明やカメラで変わるので、目安として使ってください。
+          </p>
+
           <div className="grid gap-2 sm:grid-cols-2">
-            {shown.map((m) => (
+            {shown.map((m, i) => (
               <Link
                 key={`${m.product_id}-${m.shade_name ?? ""}`}
                 href={`/products/${m.product_id}`}
@@ -183,8 +187,15 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                     {m.name}
                     {m.shade_name && <span className="text-ink-400"> / {m.shade_name}</span>}
                   </span>
-                  <span className="mt-1 inline-block rounded-full bg-plum-100 px-2 py-0.5 text-[11px] text-plum-700">
-                    {colorMatchBadge(m.delta_e)}
+                  <span className="mt-1 flex flex-wrap gap-1.5 text-[11px]">
+                    {i === 0 && (
+                      <span className="rounded-full bg-brand-100 px-2 py-0.5 text-brand-700">
+                        この中でいちばん近い
+                      </span>
+                    )}
+                    <span className="rounded-full bg-plum-100 px-2 py-0.5 text-plum-700">
+                      {colorSearchBadge(m.delta_e)}
+                    </span>
                   </span>
                 </span>
                 <span className="text-sm font-medium tabular-nums">¥{m.price_yen.toLocaleString()}</span>

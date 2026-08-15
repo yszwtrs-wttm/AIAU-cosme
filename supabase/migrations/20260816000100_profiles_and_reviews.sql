@@ -28,6 +28,16 @@ create policy "own profile updatable" on profiles for update using (auth.uid() =
 alter table user_items add column if not exists source text not null default 'manual'
   check (source in ('manual', 'scan', 'photo', 'quick'));
 
+-- 公開設定にしている人のポーチは、ユーザーページで誰でも見られる。
+drop policy if exists "public stash readable" on user_items;
+create policy "public stash readable" on user_items
+  for select using (
+    exists (
+      select 1 from profiles p
+      where p.user_id = user_items.user_id and p.stash_public
+    )
+  );
+
 -- ---------------------------------------------------------------- reviews
 alter table reviews add column if not exists user_id uuid references auth.users(id) on delete cascade;
 -- 使用感。0..100 の軸を jsonb で持つ（カテゴリごとに軸名が変わるため列にしない）。
@@ -260,20 +270,31 @@ create trigger reviews_fill_author before insert on reviews
 for each row execute function trg_reviews_fill_author();
 
 -- ---------------------------------------------------------------- 使用感の集計
+-- feel_count は「使用感を書いた人数」。軸ごとの平均と分けて数えないと、
+-- 1件の口コミが軸の数だけ二重に数えられる。
 create or replace view product_feel_summary as
+with axis_avg as (
+  select r.product_id, f.key, avg((f.value)::numeric) as avg_value
+  from reviews r
+  cross join lateral jsonb_each_text(coalesce(r.feel, '{}'::jsonb)) f(key, value)
+  where r.excluded = false and f.value ~ '^[0-9.]+$'
+  group by r.product_id, f.key
+),
+review_count as (
+  select product_id, count(*) as feel_count
+  from reviews
+  where excluded = false and feel is not null and feel <> '{}'::jsonb
+  group by product_id
+)
 select
-  r.product_id,
-  count(*) filter (where r.feel is not null) as feel_count,
-  jsonb_object_agg(k.key, k.avg_value) as feel
-from reviews r
-cross join lateral (
-  select f.key, avg((f.value)::numeric) as avg_value
-  from jsonb_each_text(coalesce(r.feel, '{}'::jsonb)) f(key, value)
-  where f.value ~ '^[0-9.]+$'
-  group by f.key
-) k
-where r.excluded = false
-group by r.product_id;
+  c.product_id,
+  c.feel_count,
+  (
+    select jsonb_object_agg(a.key, a.avg_value)
+    from axis_avg a
+    where a.product_id = c.product_id
+  ) as feel
+from review_count c;
 
 -- ---------------------------------------------------------------- 買わなかった金額
 create table if not exists skipped_purchases (

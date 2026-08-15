@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import ProductCard from "@/components/ProductCard";
 import { createClient } from "@/lib/supabase/server";
 import { publicImageUrl } from "@/lib/storage";
-import { SKIN_TYPE_LABEL, type Profile, type Review } from "@/lib/types";
+import { SKIN_TYPE_LABEL, type Product, type Profile, type Review } from "@/lib/types";
 
 type PublicReview = Review & { products: { id: number; name: string; brands: { name: string } | null } | null };
+type StashRow = { products: Product | null };
 
 export default async function UserPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
@@ -18,13 +20,26 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
 
   if (!profile) notFound();
 
-  const { data: reviews } = await supabase
-    .from("reviews")
-    .select("*,review_images(id,review_id,path,pos),products(id,name,brands(name))")
-    .eq("user_id", profile.user_id)
-    .eq("excluded", false)
-    .order("posted_at", { ascending: false })
-    .returns<PublicReview[]>();
+  const [{ data: reviews }, stashRes] = await Promise.all([
+    supabase
+      .from("reviews")
+      .select("*,review_images(id,review_id,path,pos),products(id,name,brands(name))")
+      .eq("user_id", profile.user_id)
+      .eq("excluded", false)
+      .order("posted_at", { ascending: false })
+      .returns<PublicReview[]>(),
+    profile.stash_public
+      ? supabase
+          .from("user_items")
+          .select(
+            "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
+          )
+          .eq("user_id", profile.user_id)
+          .returns<StashRow[]>()
+      : Promise.resolve({ data: [] as StashRow[] }),
+  ]);
+
+  const stash = (stashRes.data ?? []).map((r) => r.products).filter((p): p is Product => Boolean(p));
 
   return (
     <div className="space-y-6">
@@ -57,6 +72,23 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
           </div>
         </div>
       </section>
+
+      {profile.stash_public && (
+        <section className="space-y-3">
+          <h2 className="font-display text-lg font-bold">公開しているポーチ（{stash.length}点）</h2>
+          {stash.length === 0 ? (
+            <p className="rounded-3xl border border-white bg-white/85 p-5 text-sm text-ink-600 shadow-card">
+              まだ登録がありません。
+            </p>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {stash.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="font-display text-lg font-bold">投稿した口コミ</h2>
