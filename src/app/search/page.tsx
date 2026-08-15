@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
+import ProductRequestForm from "@/components/ProductRequestForm";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
@@ -132,6 +133,54 @@ export default async function SearchPage({
     );
   });
 
+  // 0件のときは必ず次の行動を出す。絞り込みを1タップで外すリンクと、
+  // 表記ゆれ向けの「もしかして」（trgm 類似度）、それでも無ければ追加リクエスト。
+  const recoveries: { label: string; href: string }[] = [];
+  if (products.length === 0) {
+    if (params.category) {
+      const label = CATEGORY_LABEL[params.category as Category] ?? params.category;
+      recoveries.push({
+        label: `カテゴリ「${label}」を外す`,
+        href: filterHref({ q: params.q, mens: params.mens, sort }),
+      });
+    }
+    if (params.mens === "1") {
+      recoveries.push({
+        label: "メンズ絞り込みを外す",
+        href: filterHref({ q: params.q, category: params.category, sort }),
+      });
+    }
+    if (params.q) {
+      recoveries.push({
+        label: `キーワード「${params.q}」を外す`,
+        href: filterHref({ category: params.category, mens: params.mens, sort }),
+      });
+    }
+    if (recoveries.length > 1) {
+      recoveries.push({ label: "すべての条件を外して全商品を見る", href: filterHref({ sort }) });
+    }
+  }
+
+  let suggestions: Product[] = [];
+  if (products.length === 0 && params.q) {
+    const { data: similar } = await supabase.rpc("suggest_products", {
+      p_q: params.q,
+      p_limit: 6,
+    });
+    const ids = (similar ?? []).map((row) => row.product_id);
+    if (ids.length > 0) {
+      const { data: suggested } = await supabase
+        .from("products")
+        .select(PRODUCT_SELECT)
+        .in("id", ids)
+        .returns<Product[]>();
+      const order = new Map(ids.map((id, index) => [id, index]));
+      suggestions = [...(suggested ?? [])].sort(
+        (a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0),
+      );
+    }
+  }
+
   const description =
     sort === "new"
       ? "新しく登録された商品から表示しています。"
@@ -235,11 +284,46 @@ export default async function SearchPage({
           商品を取得できませんでした: {error.message}
         </p>
       )}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {products.length === 0 && !error ? (
+        <section className="space-y-5 rounded-2xl border border-ink-200 bg-white p-5">
+          <div>
+            <h2 className="font-display text-lg font-bold">条件に合う商品がありませんでした</h2>
+            <p className="mt-1 text-sm text-ink-600">条件をゆるめるか、下から探し直せます。</p>
+          </div>
+
+          {recoveries.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {recoveries.map((recovery) => (
+                <Link key={recovery.href} href={recovery.href} className={`${CHIP} ${CHIP_OFF}`}>
+                  {recovery.label}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {suggestions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-sm font-bold">もしかして</p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {suggestions.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-2 border-t border-ink-200 pt-4">
+            <p className="text-sm font-bold">探している商品がまだ無いときは</p>
+            <ProductRequestForm defaultKeyword={params.q ?? ""} />
+          </div>
+        </section>
+      ) : (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -134,6 +134,30 @@ export type Database = {
           },
         ]
       }
+      product_requests: {
+        Row: {
+          created_at: string
+          id: number
+          keyword: string
+          note: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          keyword: string
+          note?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          keyword?: string
+          note?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           brand_id: number
@@ -764,6 +788,13 @@ export type Database = {
       show_limit: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      suggest_products: {
+        Args: { p_limit?: number; p_q: string }
+        Returns: {
+          product_id: number
+          sim: number
+        }[]
       }
       show_trgm: {
         Args: { "": string }
