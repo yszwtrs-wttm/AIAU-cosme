@@ -66,15 +66,6 @@ export default function ComparePanel({
                 <Bar value={h} label="この商品" tone="high" lead={lead === "high"} />
                 <Bar value={l} label="安い方" tone="low" lead={lead === "low"} />
               </div>
-              <div className="mt-1.5 text-right text-[11px] font-bold">
-                {lead === null ? (
-                  <span className="text-ink-400">ほぼ同じ</span>
-                ) : (
-                  <span className={lead === "high" ? "text-brand-700" : "text-emerald-700"}>
-                    {lead === "high" ? "この商品" : "安い方"}が{axis.high}寄り
-                  </span>
-                )}
-              </div>
             </li>
           );
         })}
