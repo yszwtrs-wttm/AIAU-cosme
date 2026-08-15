@@ -6,6 +6,7 @@ import {
   Heart,
   Images,
   Palette,
+  ScanLine,
   Search,
   ShieldCheck,
   Sparkles,
@@ -198,6 +199,23 @@ function PersonalizedHome({
         </p>
       </section>
 
+      <Link
+        href="/store"
+        prefetch
+        className="flex items-center gap-3 rounded-2xl bg-ink-900 p-5 text-white"
+      >
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10">
+          <ScanLine size={20} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-bold">店頭モードでかざす</span>
+          <span className="mt-0.5 block text-xs text-white/70">
+            棚の前でバーコードをかざすと、持ってる / 似てるを全画面で即答します。
+          </span>
+        </span>
+        <ArrowRight size={18} className="shrink-0" />
+      </Link>
+
       {hasSkinInfo ? (
         <section className="space-y-3">
           <div className="flex items-end justify-between gap-3">
@@ -251,6 +269,7 @@ function PersonalizedHome({
         <div className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="text-sm font-bold">すぐ使える機能</div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <QuickLink href="/store" icon={<ScanLine size={15} />} label="店頭モード" />
             <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />
             <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
             <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />

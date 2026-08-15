@@ -7,6 +7,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
   const profile = real ? await getMyProfile() : null;
   const navLinks = real
     ? [
+        { href: "/store", label: "店頭モード" },
         { href: "/search", label: "商品を探す" },
         { href: "/feed", label: "みんなの投稿" },
         { href: "/stash", label: "Myポーチ" },
