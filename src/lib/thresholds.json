@@ -1,0 +1,30 @@
+{
+  "delta_e": {
+    "identical": 1,
+    "indistinguishable": 2,
+    "close": 5,
+    "noticeable": 10,
+    "far": 20
+  },
+  "shade": {
+    "dedupe_delta_e": 2,
+    "palette_extract_min_delta_e": 12
+  },
+  "palette_coverage": {
+    "max_delta_e": 5
+  },
+  "skin_tone": {
+    "shade_match_delta_e": 6
+  },
+  "dupe_score": {
+    "delta_e_zero": 10,
+    "ingredient_weight": 0.6,
+    "color_weight": 0.4
+  },
+  "formula_sim": {
+    "same": 0.95,
+    "very_close": 0.85,
+    "close": 0.7,
+    "partial": 0.5
+  }
+}

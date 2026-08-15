@@ -6,6 +6,7 @@
  */
 
 import { deltaE } from "./color";
+import { DELTA_E, SKIN_TONE } from "./thresholds";
 import type { Product, ProductColor, Profile, SkinType } from "./types";
 
 export type FitVerdict = "good" | "caution" | "unknown";
@@ -110,7 +111,7 @@ export function judgeFit(product: Product, profile: Profile | null): Fit {
     const gap = deltaE(profile.skin_tone_hex, shade.hex);
     if (product.category === "foundation" || product.category === "bb") {
       reasons.push(
-        gap < 6
+        gap < SKIN_TONE.shade_match_delta_e
           ? { text: `肌の色に近いのは「${shade.shade_name}」です`, tone: "plus" }
           : {
               text: `いちばん近いのは「${shade.shade_name}」ですが、肌の色とは少し離れています`,
@@ -168,8 +169,8 @@ export function closenessScore(
   if (viewer.skinType && author.skin_type === viewer.skinType) score += 2;
   if (viewer.skinToneHex && author.skin_tone_hex) {
     const d = deltaE(viewer.skinToneHex, author.skin_tone_hex);
-    if (d < 5) score += 2;
-    else if (d < 10) score += 1;
+    if (d < DELTA_E.close) score += 2;
+    else if (d < DELTA_E.noticeable) score += 1;
   }
   return score;
 }

@@ -3,25 +3,57 @@
  *
  * ΔE・cosine 類似度・信頼度スコアは判定には使うが、画面には出さない。
  * 出すのは「見分けがつきません」「中身はほぼ同じです」といった言葉と、色の見本。
+ *
+ * しきい値自体は持たず、`thresholds.ts` の段階（tier）をキーに文言を引く。
+ * こうしておけば、しきい値を変えても表示と判定がずれない。
  */
 
 import { deltaE, hexToLab } from "./color";
+import {
+  deltaETier,
+  formulaSimTier,
+  SHADE,
+  type DeltaETier,
+  type FormulaSimTier,
+} from "./thresholds";
+
+export type ColorMatchTone = "same" | "close" | "near" | "diff";
+
+const COLOR_MATCH_TEXT: Record<DeltaETier, { title: string; tone: ColorMatchTone }> = {
+  identical: { title: "見分けがつきません", tone: "same" },
+  indistinguishable: { title: "並べても違いは分かりにくい色です", tone: "same" },
+  close: { title: "かなり近い色です（塗ればほぼ同じ）", tone: "close" },
+  noticeable: { title: "少し違う色です", tone: "near" },
+  far: { title: "別の色です", tone: "diff" },
+  distant: { title: "別の色です", tone: "diff" },
+};
+
+const COLOR_MATCH_BADGE: Record<DeltaETier, string> = {
+  identical: "ほぼ同じ色",
+  indistinguishable: "ほぼ同じ色",
+  close: "かなり近い",
+  noticeable: "少し違う",
+  far: "別の色",
+  distant: "別の色",
+};
+
+const COLOR_SEARCH_BADGE: Record<DeltaETier, string> = {
+  identical: "ほぼ同じ色",
+  indistinguishable: "ほぼ同じ色",
+  close: "かなり近い",
+  noticeable: "少し違う",
+  far: "やや離れた色",
+  distant: "写真の色とは離れた色",
+};
 
 /** 色の近さ。ΔE(CIEDE2000) を言葉に置き換える。 */
-export function colorMatchText(dE: number): { title: string; tone: "same" | "close" | "near" | "diff" } {
-  if (dE < 1) return { title: "見分けがつきません", tone: "same" };
-  if (dE < 2) return { title: "並べても違いは分かりにくい色です", tone: "same" };
-  if (dE < 5) return { title: "かなり近い色です（塗ればほぼ同じ）", tone: "close" };
-  if (dE < 10) return { title: "少し違う色です", tone: "near" };
-  return { title: "別の色です", tone: "diff" };
+export function colorMatchText(dE: number): { title: string; tone: ColorMatchTone } {
+  return COLOR_MATCH_TEXT[deltaETier(dE)];
 }
 
 /** 短いバッジ用。 */
 export function colorMatchBadge(dE: number): string {
-  if (dE < 2) return "ほぼ同じ色";
-  if (dE < 5) return "かなり近い";
-  if (dE < 10) return "少し違う";
-  return "別の色";
+  return COLOR_MATCH_BADGE[deltaETier(dE)];
 }
 
 /**
@@ -29,11 +61,7 @@ export function colorMatchBadge(dE: number): string {
  * ここでは「別の色」と言い切らず、近い順に並んでいることが伝わる言葉にする。
  */
 export function colorSearchBadge(dE: number): string {
-  if (dE < 2) return "ほぼ同じ色";
-  if (dE < 5) return "かなり近い";
-  if (dE < 10) return "少し違う";
-  if (dE < 20) return "やや離れた色";
-  return "写真の色とは離れた色";
+  return COLOR_SEARCH_BADGE[deltaETier(dE)];
 }
 
 /**
@@ -58,20 +86,29 @@ export function colorDifferenceText(baseHex: string, targetHex: string): string 
   return `${parts.join("・")}色です`;
 }
 
+const FORMULA_MATCH_TEXT: Record<FormulaSimTier, string> = {
+  same: "中身はほとんど同じ処方です",
+  very_close: "中身はかなり似た処方です",
+  close: "似た処方です",
+  partial: "一部の成分が共通しています",
+  different: "処方は違います",
+};
+
+const FORMULA_MATCH_BADGE: Record<FormulaSimTier, string> = {
+  same: "中身ほぼ同じ",
+  very_close: "中身かなり似てる",
+  close: "中身似てる",
+  partial: "中身は違う",
+  different: "中身は違う",
+};
+
 /** 処方の近さ。cosine 類似度を言葉に置き換える。 */
 export function formulaMatchText(sim: number): string {
-  if (sim >= 0.95) return "中身はほとんど同じ処方です";
-  if (sim >= 0.85) return "中身はかなり似た処方です";
-  if (sim >= 0.7) return "似た処方です";
-  if (sim >= 0.5) return "一部の成分が共通しています";
-  return "処方は違います";
+  return FORMULA_MATCH_TEXT[formulaSimTier(sim)];
 }
 
 export function formulaMatchBadge(sim: number): string {
-  if (sim >= 0.95) return "中身ほぼ同じ";
-  if (sim >= 0.85) return "中身かなり似てる";
-  if (sim >= 0.7) return "中身似てる";
-  return "中身は違う";
+  return FORMULA_MATCH_BADGE[formulaSimTier(sim)];
 }
 
 /**
@@ -126,7 +163,10 @@ export function hueGroup(hex: string): HueGroup {
 }
 
 /** ほぼ同じ色は 1 つにまとめる。棚の前で迷う数を減らすため。 */
-export function dedupeShades<T extends { hex: string }>(shades: T[], minDelta = 2): T[] {
+export function dedupeShades<T extends { hex: string }>(
+  shades: T[],
+  minDelta = SHADE.dedupe_delta_e,
+): T[] {
   const kept: T[] = [];
   for (const s of shades) {
     if (kept.some((k) => deltaE(k.hex, s.hex) < minDelta)) continue;

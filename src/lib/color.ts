@@ -1,5 +1,7 @@
 import { converter, differenceCiede2000, formatHex } from "culori";
 
+import { deltaETier, SHADE, type DeltaETier } from "./thresholds";
+
 const toLab = converter("lab");
 const diff = differenceCiede2000();
 
@@ -20,13 +22,18 @@ export function deltaE(hexA: string, hexB: string): number {
   return diff(hexA, hexB);
 }
 
-/** ΔE の意味を日本語に落とす。CIEDE2000 の一般的な解釈に沿った区切り。 */
+const DELTA_E_LABEL: Record<DeltaETier, string> = {
+  identical: "肉眼では区別できない",
+  indistinguishable: "並べてもほぼ分からない",
+  close: "似ている（単体では見分けにくい）",
+  noticeable: "違いが分かる",
+  far: "別の色",
+  distant: "別の色",
+};
+
+/** ΔE の意味を日本語に落とす。区切りは `thresholds.json` の一箇所だけで決める。 */
 export function deltaELabel(dE: number): string {
-  if (dE < 1) return "肉眼では区別できない";
-  if (dE < 2) return "並べてもほぼ分からない";
-  if (dE < 5) return "似ている（単体では見分けにくい）";
-  if (dE < 10) return "違いが分かる";
-  return "別の色";
+  return DELTA_E_LABEL[deltaETier(dE)];
 }
 
 export function rgbToHex(r: number, g: number, b: number): string {
@@ -98,7 +105,7 @@ export type ExtractedColor = { hex: string; share: number };
 export function extractPalette(
   data: Uint8ClampedArray,
   maxColors = 6,
-  minDelta = 12,
+  minDelta = SHADE.palette_extract_min_delta_e,
   filter: ColorFilter = DEFAULT_FILTER,
 ): ExtractedColor[] {
   const found = pickColors(data, maxColors, minDelta, filter);
