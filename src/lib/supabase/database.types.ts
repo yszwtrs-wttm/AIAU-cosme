@@ -270,6 +270,8 @@ export type Database = {
           id: number
           path: string
           phash: string | null
+          phash_algo: string | null
+          phash_bits: string | null
           pos: number
           review_id: number
           user_id: string
@@ -279,6 +281,7 @@ export type Database = {
           id?: never
           path: string
           phash?: string | null
+          phash_algo?: string | null
           pos?: number
           review_id: number
           user_id?: string
@@ -288,6 +291,7 @@ export type Database = {
           id?: never
           path?: string
           phash?: string | null
+          phash_algo?: string | null
           pos?: number
           review_id?: number
           user_id?: string
@@ -391,6 +395,8 @@ export type Database = {
           flags: string[]
           id: number
           image_phash: string | null
+          image_phash_algo: string | null
+          image_phash_bits: string | null
           owner_verified: boolean
           posted_at: string
           product_id: number
@@ -409,6 +415,7 @@ export type Database = {
           flags?: string[]
           id?: never
           image_phash?: string | null
+          image_phash_algo?: string | null
           owner_verified?: boolean
           posted_at?: string
           product_id: number
@@ -427,6 +434,7 @@ export type Database = {
           flags?: string[]
           id?: never
           image_phash?: string | null
+          image_phash_algo?: string | null
           owner_verified?: boolean
           posted_at?: string
           product_id?: number
@@ -743,6 +751,18 @@ export type Database = {
       }
       mod_deg: {
         Args: { x: number }
+        Returns: number
+      }
+      phash_distance: {
+        Args: { a: string; b: string }
+        Returns: number
+      }
+      phash_hex_to_bits: {
+        Args: { p_hex: string }
+        Returns: string
+      }
+      phash_reuse_threshold: {
+        Args: { p_algo: string }
         Returns: number
       }
       products_min_delta_e: {

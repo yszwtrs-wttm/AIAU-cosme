@@ -8,7 +8,7 @@ import { attachReviewImages, postReview, reportReview } from "@/app/actions";
 import Avatar from "@/components/Avatar";
 import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
-import { averageHash } from "@/lib/phash";
+import { PHASH_ALGO, perceptualHash } from "@/lib/phash";
 import { publicImageUrl } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
@@ -187,7 +187,7 @@ export default function ReviewPanel({
         const {
           data: { user },
         } = await supabase.auth.getUser();
-        const uploaded: { path: string; phash?: string | null }[] = [];
+        const uploaded: { path: string; phash?: string | null; phashAlgo?: string }[] = [];
 
         for (const file of files.slice(0, MAX_IMAGES)) {
           const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
@@ -196,7 +196,7 @@ export default function ReviewPanel({
             .from("review-images")
             .upload(path, file, { upsert: true });
           if (upErr) continue;
-          uploaded.push({ path, phash: await averageHash(file) });
+          uploaded.push({ path, phash: await perceptualHash(file), phashAlgo: PHASH_ALGO });
         }
 
         if (uploaded.length > 0) await attachReviewImages(res.reviewId, uploaded);

@@ -46,7 +46,16 @@ UI には数値を出さず、`src/lib/wording.ts` で「ほぼ同じ色」「�
 
 削除はしない。疑わしい口コミは理由付きで残したまま、総合評価から外す。
 
-- 文体の類似クラスタ / 投稿バースト / 同一ブランドへの偏重 / PR定型文 / 画像 pHash の使い回し
+- 文体の類似クラスタ / 投稿バースト / 同一ブランドへの偏重 / PR定型文 / 画像の使い回し
+
+画像の使い回しは pHash(DCT) で判定する。`src/lib/phash.ts` が 32x32 のグレースケール → 2次元 DCT-II → 低周波 8x8 を中央値で二値化して 64bit のハッシュを作り、Postgres 側は `bit(64)` の生成列（`reviews.image_phash_bits`）同士のハミング距離を `phash_distance` で数える。距離が 10 以内なら同じ写真とみなすので、リサイズ・トリミング・明度差があっても拾える。
+
+average hash 時代のハッシュは pHash と比較できないため、世代を `image_phash_algo`（`ahash_v1` / `phash_dct_v1`）に持ち、同じ世代同士だけ比較する。既存画像を pHash に揃える場合は Storage の画像から再計算する。
+
+```bash
+python3 scripts/rehash_review_images.py            # 差分の確認だけ
+python3 scripts/rehash_review_images.py --apply    # 書き戻す（信頼度は trigger で再計算）
+```
 
 投稿ゲート: 匿名セッションは不可（本アカウント必須）、ポーチに登録済みの商品のみ、1日5件・同一ブランド1日2件・1商品1件まで。通報3件で総合評価から除外（削除はしない）。
 
