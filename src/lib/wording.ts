@@ -58,6 +58,24 @@ export function colorDifferenceText(baseHex: string, targetHex: string): string 
   return `${parts.join("・")}色です`;
 }
 
+/**
+ * 集計から外した理由。断定せず「何が見つかったか」だけを書く。
+ * サクラだと決めつける言い方（「サクラです」「不正です」）はここに置かない。
+ */
+const EXCLUDE_REASON_TEXT: Record<string, string> = {
+  similar_text: "同じような文面の投稿が、この商品に複数見つかりました",
+  burst: "短い間に高い点数の投稿がまとまって入っていました",
+  brand_bias: "同じ投稿者が、同じブランドに高い点数を続けて付けていました",
+  pr_boilerplate: "提供・PR・モニターに関する言葉が含まれていました",
+  image_reuse: "同じ写真がほかの投稿でも使われていました",
+  reported: "ほかの人からの報告が重なりました",
+};
+
+/** 除外理由の日本語。未知のフラグは無理に説明しない。 */
+export function excludeReasonText(flag: string): string {
+  return EXCLUDE_REASON_TEXT[flag] ?? "内容の確認が必要な点が見つかりました";
+}
+
 /** 処方の近さ。cosine 類似度を言葉に置き換える。 */
 export function formulaMatchText(sim: number): string {
   if (sim >= 0.95) return "中身はほとんど同じ処方です";
