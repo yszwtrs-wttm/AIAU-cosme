@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { saveProfile } from "@/app/actions";
 import Avatar from "@/components/Avatar";
 import SkinToneCapture from "@/components/SkinToneCapture";
+import { shrinkImage } from "@/lib/image";
 import { createClient } from "@/lib/supabase/client";
 import {
   PERSONAL_COLOR_LABEL,
@@ -94,11 +95,12 @@ export default function ProfileForm({
       return;
     }
 
-    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const shrunk = await shrinkImage(file, { maxEdge: 512 });
+    const extension = shrunk.name.split(".").pop()?.toLowerCase() ?? "jpg";
     const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
     const { error: uploadError } = await supabase.storage
       .from("avatars")
-      .upload(path, file, { upsert: false });
+      .upload(path, shrunk, { upsert: false, contentType: shrunk.type });
     if (uploadError) {
       setAvatarBusy(false);
       setError("アイコン画像をアップロードできませんでした");
