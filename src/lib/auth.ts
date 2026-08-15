@@ -4,13 +4,13 @@ import { createClient } from "./supabase/server";
 import type { Profile } from "./types";
 
 /**
- * お試し利用（匿名セッション）と本アカウントの区別。
- * 口コミ投稿など「書く操作」は本アカウントだけに許す。
+ * 「書く操作」を許す本アカウントかどうか。閲覧は RLS で公開しているので
+ * 訪問者に匿名セッションは発行せず、未ログインのまま閲覧させる。
+ * 過去の訪問で発行された匿名セッションが Cookie に残っている場合があるので、
+ * 匿名セッションは本アカウントとして扱わない。
  */
 export function isRealAccount(user: User | null): boolean {
-  if (!user) return false;
-  if (user.is_anonymous) return false;
-  return Boolean(user.email || user.phone || (user.identities ?? []).length > 0);
+  return Boolean(user && !user.is_anonymous);
 }
 
 /**
