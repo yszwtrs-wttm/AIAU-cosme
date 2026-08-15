@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import ProductCard from "@/components/ProductCard";
 import { createClient } from "@/lib/supabase/server";
+import { COPY } from "@/lib/copy";
 import { publicImageUrl } from "@/lib/storage";
 import {
   PERSONAL_COLOR_LABEL,
@@ -87,7 +88,7 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
 
       {profile.stash_public && (
         <section className="space-y-3">
-          <h2 className="font-display text-lg font-bold">公開しているポーチ（{stash.length}点）</h2>
+          <h2 className="font-display text-lg font-bold">{COPY.publicPouchWithCount(stash.length)}</h2>
           {stash.length === 0 ? (
             <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
               まだ登録がありません。

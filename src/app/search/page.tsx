@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
+import { TERMS } from "@/lib/copy";
 import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABEL, type Category, type Product, type ProductScore } from "@/lib/types";
@@ -142,7 +143,7 @@ export default async function SearchPage({
           : sort === "rating"
             ? "信用できる口コミの評価が高い順に表示しています。"
             : hasPersonalizationMaterial
-              ? "肌情報・避けたい成分・ポーチをもとに、あなた向けに並べています。"
+              ? `肌情報・避けたい成分・${TERMS.pouch}をもとに、あなた向けに並べています。`
               : "信用できる口コミの評価が高い順に表示しています。";
 
   return (

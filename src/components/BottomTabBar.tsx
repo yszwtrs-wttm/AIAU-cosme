@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart, Home, Images, Search, UserRound } from "lucide-react";
+import { TERMS } from "@/lib/copy";
 
 const TABS = [
   { href: "/", label: "ホーム", icon: Home },
   { href: "/search", label: "探す", icon: Search },
   { href: "/feed", label: "投稿", icon: Images },
-  { href: "/stash", label: "Myポーチ", icon: Heart },
-  { href: "/me", label: "マイpage", icon: UserRound },
+  { href: "/stash", label: TERMS.pouch, icon: Heart },
+  { href: "/me", label: TERMS.myPage, icon: UserRound },
 ];
 const GUEST_TABS = [
   { href: "/search", label: "探す", icon: Search },

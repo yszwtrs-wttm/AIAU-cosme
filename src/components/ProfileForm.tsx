@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveProfile } from "@/app/actions";
 import Avatar from "@/components/Avatar";
+import { TERMS } from "@/lib/copy";
 import { createClient } from "@/lib/supabase/client";
 import {
   PERSONAL_COLOR_LABEL,
@@ -356,7 +357,7 @@ export default function ProfileForm({
           checked={stashPublic}
           onChange={(e) => setStashPublic(e.target.checked)}
         />
-        ポーチの中身を、ユーザーページで公開する
+        {TERMS.pouch}の中身を、ユーザーページで公開する
       </label>
 
       {error && <p className="text-xs text-red-600">{error}</p>}

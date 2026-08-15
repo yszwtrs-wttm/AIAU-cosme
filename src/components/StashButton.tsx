@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Heart } from "lucide-react";
 import { addToStash, removeFromStash } from "@/app/actions";
+import { COPY } from "@/lib/copy";
 
 export default function StashButton({
   productId,
@@ -26,7 +27,7 @@ export default function StashButton({
         href="/login"
         className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white"
       >
-        ログインしてポーチに追加
+        {COPY.loginToAddToPouch}
       </Link>
     );
   }
@@ -46,7 +47,7 @@ export default function StashButton({
       }`}
     >
       {owned ? <Check size={15} /> : <Heart size={15} />}
-      {pending ? "処理中…" : owned ? "ポーチに入っています" : "ポーチに追加"}
+      {pending ? "処理中…" : owned ? COPY.inPouch : COPY.addToPouch}
     </button>
   );
 }
