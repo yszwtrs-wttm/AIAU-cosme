@@ -61,15 +61,6 @@ export default function LoginForm({ anonymous }: { anonymous: boolean }) {
     router.refresh();
   };
 
-  const signInWithGoogle = async () => {
-    const supabase = createClient();
-    const { error: err } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (err) setError(err.message);
-  };
-
   return (
     <div className="space-y-4 rounded-2xl border border-ink-200 bg-white p-5">
       {step === "email" ? (
@@ -130,20 +121,6 @@ export default function LoginForm({ anonymous }: { anonymous: boolean }) {
           </button>
         </form>
       )}
-
-      <div className="flex items-center gap-2 text-[11px] text-ink-400">
-        <span className="h-px flex-1 bg-brand-100" />
-        または
-        <span className="h-px flex-1 bg-brand-100" />
-      </div>
-
-      <button
-        type="button"
-        onClick={() => void signInWithGoogle()}
-        className="w-full rounded-full border border-brand-200 bg-white px-4 py-2.5 text-sm font-bold text-ink-900"
-      >
-        Google で続ける
-      </button>
 
       {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
