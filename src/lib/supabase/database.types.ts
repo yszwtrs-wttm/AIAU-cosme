@@ -586,6 +586,27 @@ export type Database = {
         Args: { delta_e: number; ing_sim: number }
         Returns: number
       }
+      find_allergen_free_alternatives: {
+        Args: {
+          p_limit?: number
+          p_min_score?: number
+          p_product_id: number
+        }
+        Returns: {
+          brand: string
+          category: string
+          color_hex: string
+          delta_e: number
+          image_url: string
+          ing_sim: number
+          name: string
+          owned: boolean
+          price_diff: number
+          price_yen: number
+          product_id: number
+          score: number
+        }[]
+      }
       find_by_color: {
         Args: { p_category?: string; p_lab: number[]; p_limit?: number }
         Returns: {
@@ -643,6 +664,19 @@ export type Database = {
           pos: number
           shade_hex: string
           shade_name: string
+        }[]
+      }
+      find_stash_allergen_hits: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          brand: string
+          category: string
+          color_hex: string
+          hit_ingredients: string[]
+          image_url: string
+          name: string
+          price_yen: number
+          product_id: number
         }[]
       }
       find_stash_overlaps: {
