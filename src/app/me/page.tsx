@@ -85,7 +85,7 @@ export default async function MyPage() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">ポーチの中身</h2>
-          <Link href="/scan" className="text-xs font-bold text-brand-600">
+          <Link href="/stash" className="text-xs font-bold text-brand-600">
             追加する
           </Link>
         </div>

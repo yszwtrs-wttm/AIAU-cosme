@@ -8,7 +8,6 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
   const navLinks = real
     ? [
         { href: "/search", label: "探す" },
-        { href: "/scan", label: "手持ちを登録" },
         { href: "/stash", label: "ポーチ" },
         { href: "/feed", label: "みんなの投稿" },
       ]

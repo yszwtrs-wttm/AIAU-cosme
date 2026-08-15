@@ -261,7 +261,7 @@ function PersonalizedHome({
         <div className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="text-sm font-bold">すぐ使える機能</div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-            <QuickLink href="/scan" icon={<Camera size={15} />} label="手持ちを登録" />
+            <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />
             <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
             <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
             <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />

@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { AlertTriangle, Camera } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { redirect } from "next/navigation";
+import BarcodeScanner from "@/components/BarcodeScanner";
 import MakeupPlan from "@/components/MakeupPlan";
 import ProductCard from "@/components/ProductCard";
+import QuickStartPicker from "@/components/QuickStartPicker";
 import { getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Product, StashOverlap } from "@/lib/types";
@@ -16,7 +18,7 @@ export default async function StashPage() {
 
   const supabase = await createClient();
 
-  const [{ data: items }, overlapRes] = await Promise.all([
+  const [{ data: items }, overlapRes, { data: popular }] = await Promise.all([
     supabase
       .from("user_items")
       .select(
@@ -24,6 +26,14 @@ export default async function StashPage() {
       )
       .returns<StashItem[]>(),
     supabase.rpc("find_stash_overlaps"),
+    supabase
+      .from("products")
+      .select(
+        "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
+      )
+      .order("price_yen", { ascending: true })
+      .limit(24)
+      .returns<Product[]>(),
   ]);
 
   const products = (items ?? []).map((i) => i.products).filter(Boolean);
@@ -31,22 +41,25 @@ export default async function StashPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">ポーチ（{products.length}点）</h1>
-        <Link
-          href="/scan"
-          className="flex items-center gap-1.5 rounded-full bg-ink-900 px-4 py-2 text-sm font-bold text-white"
-        >
-          <Camera size={15} /> 追加
-        </Link>
-      </div>
+      <h1 className="font-display text-2xl font-bold">ポーチ（{products.length}点）</h1>
+
+      <section className="space-y-2">
+        <h2 className="font-display text-lg font-bold">バーコードで登録</h2>
+        <p className="text-sm text-ink-600">
+          リストに無いものは、パッケージのバーコードをかざしてください。続けて読み取れます。
+        </p>
+        <BarcodeScanner />
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-display text-lg font-bold">リストから選んで登録</h2>
+        <QuickStartPicker products={popular ?? []} />
+      </section>
 
       {products.length === 0 && (
         <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
           まだ登録がありません。よく使う2〜3個登録すれば、調べた商品との違いを出せるようになります。
-          <Link href="/scan" className="ml-1 font-bold text-brand-600 underline">
-            登録をはじめる
-          </Link>
+          このページのバーコード登録か、リストから登録をはじめてみてください。
         </p>
       )}
 
