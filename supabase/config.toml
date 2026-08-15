@@ -314,6 +314,11 @@ deno_version = 1
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# メイク提案の LLM 経路。JWT 必須（関数内でさらに匿名セッションを弾く）。
+[functions.makeup-plan]
+enabled = true
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327

@@ -69,9 +69,10 @@ export default function MakeupPlan({ products }: { products: Product[] }) {
             ))}
           </ol>
           <p className="text-sm text-emerald-700">{plan.note}</p>
-          <p className="text-xs text-neutral-400">
-            生成: {plan.source === "llm" ? "LLM" : "ルールベース（OPENAI_API_KEY 未設定時のフォールバック）"}
-          </p>
+          {plan.notice && (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">{plan.notice}</p>
+          )}
+          <p className="text-xs text-neutral-400">生成: {plan.source === "llm" ? "AI" : "ルールベース"}</p>
         </div>
       )}
     </section>
