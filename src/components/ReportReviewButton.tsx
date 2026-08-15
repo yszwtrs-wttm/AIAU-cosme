@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Flag, Undo2 } from "lucide-react";
 import { reportReview, undoReportReview } from "@/app/actions";
+import { useToast } from "@/components/Toast";
+import { japaneseError } from "@/lib/errors";
 import { REPORT_REASON_LABEL, type ReportReason } from "@/lib/types";
 
 /** 送信直後に「取り消す」を強調しておく秒数。過ぎても取り消し自体はできる。 */
@@ -26,6 +28,7 @@ export default function ReportReviewButton({
   const [error, setError] = useState<string | null>(null);
   const [reported, setReported] = useState(alreadyReported);
   const [undoLeft, setUndoLeft] = useState(0);
+  const showToast = useToast();
 
   useEffect(() => {
     setReported(alreadyReported);
@@ -55,11 +58,17 @@ export default function ReportReviewButton({
   const send = async () => {
     setBusy(true);
     setError(null);
-    const res = await reportReview(reviewId, reason);
-    setBusy(false);
-    if (!res.ok) {
-      setError(res.error ?? "報告できませんでした");
+    try {
+      const res = await reportReview(reviewId, reason);
+      if (!res.ok) {
+        setError(japaneseError(res.error, "報告できませんでした"));
+        return;
+      }
+    } catch (e) {
+      setError(japaneseError(e, "報告できませんでした"));
       return;
+    } finally {
+      setBusy(false);
     }
 
     close();
@@ -69,9 +78,19 @@ export default function ReportReviewButton({
 
   const undo = async () => {
     setBusy(true);
-    const res = await undoReportReview(reviewId);
-    setBusy(false);
-    if (!res.ok) return;
+    try {
+      const res = await undoReportReview(reviewId);
+      if (!res.ok) {
+        showToast(japaneseError(res.error, "取り消せませんでした"));
+        return;
+      }
+    } catch (e) {
+      showToast(japaneseError(e, "取り消せませんでした"));
+      return;
+    } finally {
+      setBusy(false);
+    }
+
     setReported(false);
     setUndoLeft(0);
   };
