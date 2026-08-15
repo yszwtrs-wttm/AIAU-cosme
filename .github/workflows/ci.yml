@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-anon-key-for-build
+
+  demo-smoke:
+    # デモで見せる導線（被り / 安い代替 / 色カバレッジ / サクラ除外）が
+    # シード投入直後に必ず発火することを確かめる。
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: seed.sql が generate_seed.py と一致しているか
+        run: |
+          python3 scripts/generate_seed.py > /tmp/seed.sql
+          diff -u supabase/seed.sql /tmp/seed.sql
+      - name: Supabase を起動
+        run: npx supabase start
+      - name: マイグレーション + シード投入
+        run: npx supabase db reset
+      - name: デモ導線のスモーク
+        run: npm run smoke:demo

@@ -219,3 +219,43 @@ select refresh_ingredient_idf();
 
 -- 不正判定を初期化
 select recompute_review_trust(id) from products;
+
+-- ---------------------------------------------------------------- デモ用アカウント
+-- 審査員に見せる導線を固定する。ログインは demo@kawanai.test / kawanai-demo。
+--   被り        : /products/2
+--   安い代替    : /products/13
+--   色カバレッジ: /products/36
+--   サクラ除外  : /products/15
+--   ポーチ      : /stash
+delete from auth.users where id = 'd0000000-0000-4000-8000-000000000001';
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, created_at, updated_at,
+  raw_app_meta_data, raw_user_meta_data, is_anonymous,
+  -- GoTrue は token 系の列を NULL で読めないので空文字で埋める。
+  confirmation_token, recovery_token, email_change_token_new, email_change,
+  email_change_token_current, phone_change, phone_change_token, reauthentication_token
+) values (
+  '00000000-0000-0000-0000-000000000000', 'd0000000-0000-4000-8000-000000000001', 'authenticated', 'authenticated',
+  'demo@kawanai.test', extensions.crypt('kawanai-demo', extensions.gen_salt('bf')),
+  now(), now(), now(),
+  '{"provider": "email", "providers": ["email"]}'::jsonb, '{}'::jsonb, false,
+  '', '', '', '', '', '', '', ''
+);
+
+insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+values (
+  'd0000000-0000-4000-8000-000000000001', 'd0000000-0000-4000-8000-000000000001',
+  jsonb_build_object('sub', 'd0000000-0000-4000-8000-000000000001', 'email', 'demo@kawanai.test', 'email_verified', true),
+  'email', now(), now(), now()
+);
+
+insert into profiles (user_id, handle, display_name, avatar_hue, bio, skin_tone_hex, skin_type, personal_color, stash_public) values
+  ('d0000000-0000-4000-8000-000000000001', 'kawanai_demo', 'デモ用アカウント', 340, '審査用のデモアカウント。ポーチに5点入っています。', '#E8C4A2', 'combination', 'autumn', true);
+
+insert into user_items (user_id, product_id, source, remaining_pct) values
+  ('d0000000-0000-4000-8000-000000000001', 1, 'quick', 80),
+  ('d0000000-0000-4000-8000-000000000001', 10, 'quick', 80),
+  ('d0000000-0000-4000-8000-000000000001', 13, 'quick', 80),
+  ('d0000000-0000-4000-8000-000000000001', 35, 'quick', 80),
+  ('d0000000-0000-4000-8000-000000000001', 23, 'quick', 80);
