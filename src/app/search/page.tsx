@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
+import RecentlyViewed from "@/components/RecentlyViewed";
+import SearchMemory from "@/components/SearchMemory";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
@@ -29,7 +31,7 @@ function parseSort(value?: string): Sort {
     : "recommended";
 }
 
-function filterHref({
+function filterQuery({
   q,
   category,
   mens,
@@ -45,7 +47,11 @@ function filterHref({
   if (category) params.set("category", category);
   if (mens === "1") params.set("mens", "1");
   if (sort && sort !== "recommended") params.set("sort", sort);
-  const query = params.toString();
+  return params.toString();
+}
+
+function filterHref(filters: Parameters<typeof filterQuery>[0]) {
+  const query = filterQuery(filters);
   return query ? `/search?${query}` : "/search";
 }
 
@@ -147,6 +153,14 @@ export default async function SearchPage({
 
   return (
     <div className="space-y-6">
+      <SearchMemory
+        query={filterQuery({
+          q: params.q,
+          category: params.category,
+          mens: params.mens,
+          sort,
+        })}
+      />
       <section className="space-y-4 border-b border-ink-200 pb-5">
         <div>
           <h1 className="font-display text-2xl font-bold">商品を探す</h1>
@@ -228,6 +242,8 @@ export default async function SearchPage({
           </Link>
         </p>
       )}
+
+      <RecentlyViewed />
 
       {params.q && <p className="text-sm text-ink-600">「{params.q}」の検索結果：{products.length}件</p>}
       {error && (

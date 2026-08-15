@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Heart, Home, Images, Search, UserRound } from "lucide-react";
+import { readSearchQuery } from "@/lib/browsing";
 
 const TABS = [
   { href: "/", label: "ホーム", icon: Home },
@@ -23,7 +25,18 @@ const GUEST_TABS = [
  */
 export default function BottomTabBar({ isRealAccount }: { isRealAccount: boolean }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const tabs = isRealAccount ? TABS : GUEST_TABS;
+  // 探すタブは直近の絞り込みに戻す。一覧にいる間は今の絞り込みがそのまま直近。
+  const currentQuery = pathname === "/search" ? searchParams.toString() : null;
+  const [storedQuery, setStoredQuery] = useState("");
+
+  useEffect(() => {
+    setStoredQuery(readSearchQuery());
+  }, [pathname, searchParams]);
+
+  const query = currentQuery ?? storedQuery;
+  const searchHref = query ? `/search?${query}` : "/search";
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
@@ -33,7 +46,7 @@ export default function BottomTabBar({ isRealAccount }: { isRealAccount: boolean
           return (
             <li key={href} className="min-w-0 flex-1">
               <Link
-                href={href}
+                href={href === "/search" ? searchHref : href}
                 prefetch
                 className={`flex flex-col items-center gap-0.5 px-1 py-2.5 text-[10px] ${
                   active ? "text-brand-600" : "text-ink-400"
