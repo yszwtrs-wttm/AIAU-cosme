@@ -20,10 +20,6 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
-const display = {
-  variable: "--font-display",
-};
-
 export const metadata: Metadata = {
   title: "KAWANAI — そのコスメ、もう持ってるかも",
   description:
@@ -35,7 +31,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const real = isRealAccount(user);
 
   return (
-    <html lang="ja" className={`${sans.variable} ${mono.variable} ${display.variable}`}>
+    <html lang="ja" className={`${sans.variable} ${mono.variable}`}>
       <body className="min-h-screen text-ink-900 antialiased">
         <AnonAuth />
         <SiteHeader isRealAccount={real} />
