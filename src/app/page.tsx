@@ -1,8 +1,18 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { ArrowRight, CircleDollarSign, Search, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Camera,
+  CircleDollarSign,
+  Heart,
+  Images,
+  Palette,
+  Search,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import { getMyUser, isRealAccount } from "@/lib/auth";
+import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
+import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
 import type { Product, ProductScore } from "@/lib/types";
 
@@ -29,7 +39,34 @@ export default async function Home() {
     return <LandingPage products={await getRankedProducts(supabase)} />;
   }
 
-  redirect("/search");
+  const [{ data: products }, { data: scores }, { count: stashCount }, profile] =
+    await Promise.all([
+      supabase.from("products").select(PRODUCT_SELECT).returns<Product[]>(),
+      supabase.from("product_score").select("*").returns<ProductScore[]>(),
+      supabase.from("user_items").select("product_id", { count: "exact", head: true }),
+      getMyProfile(),
+    ]);
+
+  const rank = new Map((scores ?? []).map((score) => [score.product_id, score.ranked_rating ?? 0]));
+  const rankedProducts = [...(products ?? [])].sort(
+    (a, b) => (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0),
+  );
+  const hasSkinInfo = Boolean(profile?.skin_type || profile?.skin_tone_hex);
+  const suggestions = hasSkinInfo
+    ? rankedProducts
+        .map((product) => ({ product, fit: judgeFit(product, profile) }))
+        .filter(({ fit }) => fit.verdict === "good")
+        .slice(0, 4)
+    : [];
+
+  return (
+    <PersonalizedHome
+      displayName={profile?.display_name ?? "あなた"}
+      hasSkinInfo={hasSkinInfo}
+      suggestions={suggestions}
+      stashCount={stashCount ?? 0}
+    />
+  );
 }
 
 function LandingPage({ products }: { products: Product[] }) {
@@ -133,5 +170,106 @@ function FeatureCard({
       <h3 className="font-bold">{title}</h3>
       <p className="mt-1.5 text-sm leading-relaxed text-ink-600">{text}</p>
     </div>
+  );
+}
+
+function PersonalizedHome({
+  displayName,
+  hasSkinInfo,
+  suggestions,
+  stashCount,
+}: {
+  displayName: string;
+  hasSkinInfo: boolean;
+  suggestions: { product: Product; fit: ReturnType<typeof judgeFit> }[];
+  stashCount: number;
+}) {
+  return (
+    <div className="space-y-8">
+      <section className="border-b border-ink-200 pb-6">
+        <p className="text-sm text-ink-500">こんにちは、{displayName}さん</p>
+        <h1 className="mt-1 font-display text-3xl font-bold leading-tight sm:text-4xl">
+          今日の「買わない」を
+          <br />
+          見つけよう。
+        </h1>
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-600">
+          手持ちと肌情報をもとに、あなたに必要なものだけを探せます。
+        </p>
+      </section>
+
+      {hasSkinInfo ? (
+        <section className="space-y-3">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-lg font-bold">あなたに合いそうなもの</h2>
+              <p className="text-xs text-ink-400">登録した肌の状態・肌の色と、成分表・色番号から選んでいます。</p>
+            </div>
+            <Link href="/search" className="shrink-0 text-xs font-bold text-brand-600">
+              商品を探す
+            </Link>
+          </div>
+          {suggestions.length > 0 ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              {suggestions.map(({ product, fit }) => (
+                <div key={product.id} className="space-y-1.5">
+                  <ProductCard product={product} />
+                  <p className="px-1 text-xs text-ink-600">
+                    {fit.reasons.find((reason) => reason.tone === "plus")?.text ?? fit.headline}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-ink-200 bg-white p-4 text-sm text-ink-600">
+              条件に合う商品をまだ見つけられませんでした。検索から気になる商品を探してみてください。
+            </p>
+          )}
+        </section>
+      ) : (
+        <section className="rounded-2xl border border-ink-200 bg-white p-5">
+          <p className="font-bold">肌の状態と肌の色を登録すると、合いそうなものを出せます</p>
+          <p className="mt-1 text-xs text-ink-600">
+            登録は2項目だけです。手持ちのコスメが0件でも判定できます。
+          </p>
+          <Link href="/settings" className="mt-3 inline-block text-sm font-bold text-brand-600">
+            肌情報を登録する <ArrowRight className="inline" size={14} />
+          </Link>
+        </section>
+      )}
+
+      <section className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-ink-200 bg-white p-5">
+          <div className="flex items-center gap-2 text-sm font-bold">
+            <Heart size={17} className="text-brand-600" /> Myポーチの状況
+          </div>
+          <p className="mt-3 font-display text-3xl font-bold tabular-nums">{stashCount}点</p>
+          <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
+            Myポーチを見る <ArrowRight className="inline" size={14} />
+          </Link>
+        </div>
+        <div className="rounded-2xl border border-ink-200 bg-white p-5">
+          <div className="text-sm font-bold">すぐ使える機能</div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />
+            <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
+            <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
+            <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function QuickLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-1.5 rounded-xl border border-ink-200 px-2.5 py-2 text-xs font-bold text-ink-700"
+    >
+      {icon}
+      {label}
+    </Link>
   );
 }

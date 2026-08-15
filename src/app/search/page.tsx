@@ -60,7 +60,6 @@ export default async function SearchPage({
   const user = await getMyUser();
   const realUser = user && isRealAccount(user) ? user : null;
   const real = Boolean(realUser);
-  const showSuggestions = real && !params.q && !params.category && params.mens !== "1";
 
   let query = supabase.from("products").select(PRODUCT_SELECT);
   if (params.category) query = query.eq("category", params.category);
@@ -79,7 +78,7 @@ export default async function SearchPage({
   ] = await Promise.all([
     query.returns<Product[]>(),
     supabase.from("product_score").select("*").returns<ProductScore[]>(),
-    real && (sort === "recommended" || showSuggestions) ? getMyProfile() : Promise.resolve(null),
+    sort === "recommended" && real ? getMyProfile() : Promise.resolve(null),
     sort === "recommended" && realUser
       ? supabase.from("profile_allergens").select("ingredient_id").eq("user_id", realUser.id)
       : Promise.resolve({ data: null }),
@@ -98,14 +97,6 @@ export default async function SearchPage({
   const ownedIds = new Set((ownedRows ?? []).map((row) => row.product_id));
   const hasSkinInfo = Boolean(profile?.skin_type || profile?.skin_tone_hex);
   const hasPersonalizationMaterial = hasSkinInfo || avoidedInci.size > 0 || ownedIds.size > 0;
-  const suggestions =
-    showSuggestions && hasSkinInfo
-      ? [...(data ?? [])]
-          .sort((a, b) => (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0) || b.id - a.id)
-          .map((product) => ({ product, fit: judgeFit(product, profile) }))
-          .filter(({ fit }) => fit.verdict === "good")
-          .slice(0, 4)
-      : [];
   const recommendationScores =
     sort === "recommended"
       ? new Map(
@@ -161,26 +152,6 @@ export default async function SearchPage({
           <h1 className="font-display text-2xl font-bold">商品を探す</h1>
           <p className="mt-1 text-sm text-ink-600">{description}</p>
         </div>
-        {suggestions.length > 0 && (
-          <section className="space-y-3">
-            <div>
-              <h2 className="font-display text-lg font-bold">あなたに合いそうなもの</h2>
-              <p className="text-xs text-ink-400">
-                登録した肌の状態・肌の色と、成分表・色番号から選んでいます。
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {suggestions.map(({ product, fit }) => (
-                <div key={product.id} className="space-y-1.5">
-                  <ProductCard product={product} />
-                  <p className="px-1 text-xs text-ink-600">
-                    {fit.reasons.find((reason) => reason.tone === "plus")?.text ?? fit.headline}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
         <form method="get" className="flex gap-2">
           <label className="relative min-w-0 flex-1">
             <Search
