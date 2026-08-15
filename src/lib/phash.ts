@@ -2,10 +2,15 @@
  * 写真の使い回し検出に使う average hash（64bit を 16 進 16 文字で表す）。
  * ブラウザ側で計算して保存し、判定は Postgres 側の既存ロジックに任せる。
  */
-export async function averageHash(file: File): Promise<string | null> {
+export async function averageHash(file: Blob): Promise<string | null> {
   if (typeof document === "undefined") return null;
 
-  const bitmap = await createImageBitmap(file);
+  let bitmap: ImageBitmap;
+  try {
+    bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch {
+    return null;
+  }
   const canvas = document.createElement("canvas");
   canvas.width = 8;
   canvas.height = 8;

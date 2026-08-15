@@ -11,7 +11,7 @@ import { japaneseError } from "@/lib/errors";
 import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
 import ReviewImage from "@/components/ReviewImage";
-import { shrinkImage } from "@/lib/image";
+import { IMAGE_ACCEPT, shrinkImage, validateImageFile } from "@/lib/image";
 import { averageHash } from "@/lib/phash";
 import { THUMB_WIDTH } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
@@ -141,6 +141,8 @@ export default function ReviewPanel({
   );
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [failed, setFailed] = useState<{ reviewId: number; files: File[] } | null>(null);
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
   const showToast = useToast();
@@ -187,8 +189,66 @@ export default function ReviewPanel({
   const counted = summary?.counted_count ?? 0;
   const hasViewerProfile = Boolean(viewer.skinType || viewer.skinToneHex);
 
+  const pickFiles = (picked: File[]) => {
+    const accepted: File[] = [];
+    const messages: string[] = [];
+    for (const file of picked) {
+      const message = validateImageFile(file);
+      if (message) messages.push(message);
+      else accepted.push(file);
+    }
+    setError(messages.length > 0 ? messages.join(" / ") : null);
+    setFiles(accepted.slice(0, MAX_IMAGES));
+    if (fileInput.current) fileInput.current.value = "";
+  };
+
+  /** 縮小してから上げる。失敗した写真は返して再試行できるようにする。 */
+  const uploadImages = async (reviewId: number, targets: File[]): Promise<File[]> => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return targets;
+
+    const uploaded: { path: string; phash?: string | null }[] = [];
+    const rejected: File[] = [];
+    setProgress({ done: 0, total: targets.length });
+
+    for (const [index, file] of targets.entries()) {
+      try {
+        const shrunk = await shrinkImage(file);
+        const ext = shrunk.name.split(".").pop()?.toLowerCase() ?? "jpg";
+        const path = `${user.id}/${reviewId}-${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("review-images")
+          .upload(path, shrunk, { contentType: shrunk.type, upsert: true });
+        if (upErr) rejected.push(file);
+        else uploaded.push({ path, phash: await averageHash(shrunk) });
+      } catch {
+        rejected.push(file);
+      }
+      setProgress({ done: index + 1, total: targets.length });
+    }
+
+    // 口コミ本文は保存できているので、写真だけ失敗したことを伝える。
+    if (uploaded.length > 0) {
+      const attached = await attachReviewImages(reviewId, uploaded);
+      if (!attached.ok) {
+        setProgress(null);
+        showToast(japaneseError(attached.error, "口コミは投稿できましたが、写真を上げられませんでした"));
+        return targets;
+      }
+    }
+    setProgress(null);
+    if (rejected.length > 0) {
+      showToast("口コミは投稿できましたが、一部の写真を上げられませんでした");
+    }
+    return rejected;
+  };
+
   const submit = () => {
     setError(null);
+    setFailed(null);
     startTransition(async () => {
       let res: Awaited<ReturnType<typeof postReview>>;
       try {
@@ -202,44 +262,30 @@ export default function ReviewPanel({
         return;
       }
 
-      if (files.length > 0) {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        const uploaded: { path: string; phash?: string | null }[] = [];
-
-        const targets = files.slice(0, MAX_IMAGES);
-
-        for (const original of targets) {
-          const file = await shrinkImage(original);
-          const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-          const path = `${user!.id}/${res.reviewId}-${uploaded.length}.${ext}`;
-          const { error: upErr } = await supabase.storage
-            .from("review-images")
-            .upload(path, file, { upsert: true, contentType: file.type });
-          if (upErr) continue;
-          uploaded.push({ path, phash: await averageHash(file) });
-        }
-
-        const attached: { ok: boolean; error?: string } =
-          uploaded.length > 0 ? await attachReviewImages(res.reviewId, uploaded) : { ok: true };
-
-        // 口コミ本文は保存できているので、写真だけ失敗したことを伝える。
-        if (!attached.ok || uploaded.length < targets.length) {
-          showToast(
-            japaneseError(
-              attached.ok ? null : attached.error,
-              "口コミは投稿できましたが、写真を上げられませんでした",
-            ),
-          );
-        }
-      }
+      const rejected = files.length > 0 ? await uploadImages(res.reviewId, files) : [];
 
       showToast("口コミを投稿しました", "success");
       setBody("");
       setFiles([]);
       if (fileInput.current) fileInput.current.value = "";
+      if (rejected.length > 0) {
+        setFailed({ reviewId: res.reviewId, files: rejected });
+        setError(`${rejected.length}枚の写真をアップロードできませんでした`);
+      }
+    });
+  };
+
+  const retryUpload = () => {
+    if (!failed) return;
+    setError(null);
+    const target = failed;
+    setFailed(null);
+    startTransition(async () => {
+      const rejected = await uploadImages(target.reviewId, target.files);
+      if (rejected.length > 0) {
+        setFailed({ reviewId: target.reviewId, files: rejected });
+        setError(`${rejected.length}枚の写真をアップロードできませんでした`);
+      }
     });
   };
 
@@ -331,19 +377,17 @@ export default function ReviewPanel({
               <input
                 ref={fileInput}
                 type="file"
-                accept="image/*"
+                accept={IMAGE_ACCEPT}
                 multiple
                 className="hidden"
-                onChange={(e) =>
-                  setFiles(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))
-                }
+                onChange={(e) => pickFiles(Array.from(e.target.files ?? []))}
               />
             </label>
             {files.length > 0 && (
               <ul className="mt-2 flex flex-wrap gap-2 text-[11px] text-ink-600">
                 {files.map((f) => (
                   <li
-                    key={f.name}
+                    key={`${f.name}-${f.lastModified}-${f.size}`}
                     className="flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5"
                   >
                     {f.name}
@@ -360,7 +404,31 @@ export default function ReviewPanel({
             )}
           </div>
 
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          <p className="text-[11px] text-ink-400">
+            JPEG / PNG / WebP / HEIC、1枚12MBまで。大きい写真は自動で縮小して上げます。
+          </p>
+
+          {progress && (
+            <p className="text-xs text-ink-600">
+              写真をアップロード中… {progress.done}/{progress.total}
+            </p>
+          )}
+
+          {error && (
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs text-red-600">{error}</p>
+              {failed && (
+                <button
+                  type="button"
+                  onClick={retryUpload}
+                  disabled={pending}
+                  className="rounded-full border border-brand-200 px-2.5 py-1 text-[11px] font-bold text-brand-600 disabled:opacity-50"
+                >
+                  写真を再試行
+                </button>
+              )}
+            </div>
+          )}
 
           <button
             type="submit"

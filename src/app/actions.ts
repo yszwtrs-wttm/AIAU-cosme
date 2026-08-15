@@ -118,13 +118,23 @@ export async function attachReviewImages(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "セッションがありません" };
 
+  // 再試行で追加する場合があるので、既にある写真の後ろに並べる。
+  const { data: last } = await supabase
+    .from("review_images")
+    .select("pos")
+    .eq("review_id", reviewId)
+    .order("pos", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const offset = last ? last.pos + 1 : 0;
+
   const { error } = await supabase.from("review_images").insert(
-    images.map((img, pos) => ({
+    images.map((img, index) => ({
       review_id: reviewId,
       user_id: user.id,
       path: img.path,
       phash: img.phash ?? null,
-      pos,
+      pos: offset + index,
     })),
   );
 
