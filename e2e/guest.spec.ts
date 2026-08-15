@@ -11,7 +11,7 @@ test.describe("未ログインの閲覧", () => {
     await page.getByRole("link", { name: /ログインせずに探す/ }).click();
     await expect(page.getByRole("heading", { name: "商品を探す" })).toBeVisible();
 
-    await page.getByPlaceholder("商品名で探す").fill(product.name);
+    await page.getByPlaceholder(/商品名.*で探す/).fill(product.name);
     await page.getByRole("button", { name: "検索" }).click();
 
     const card = page.locator('a[href^="/products/"]').first();
