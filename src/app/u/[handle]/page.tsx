@@ -106,7 +106,7 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
       <section className="space-y-3">
         <h2 className="font-display text-lg font-bold">投稿した口コミ</h2>
         {(reviews ?? []).length === 0 ? (
-            <p className="rounded-xl border border-ink-200 bg-ink-0 p-5 text-sm text-ink-600">
+          <p className="rounded-xl border border-ink-200 bg-ink-0 p-5 text-sm text-ink-600">
             まだ投稿がありません。
           </p>
         ) : (
