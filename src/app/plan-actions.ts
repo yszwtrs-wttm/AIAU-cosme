@@ -1,5 +1,6 @@
 "use server";
 
+import { loadDemoPouch } from "@/lib/demo";
 import { buildRulePlan, type Plan } from "@/lib/makeup";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
@@ -18,7 +19,19 @@ export async function generateMakeupPlan(request: string): Promise<Plan> {
     )
     .returns<{ products: Product }[]>();
 
-  const products = (data ?? []).map((r) => r.products).filter(Boolean);
+  return planFor((data ?? []).map((r) => r.products).filter(Boolean), request);
+}
+
+/**
+ * サンプルポーチ版。ログイン不要で試せるようにするためのもので、
+ * 候補はサーバー側で決めたデモの5点に固定する（クライアントからは中身を指定できない）。
+ */
+export async function generateDemoMakeupPlan(request: string): Promise<Plan> {
+  const { products } = await loadDemoPouch();
+  return planFor(products, request);
+}
+
+async function planFor(products: Product[], request: string): Promise<Plan> {
   const fallback = buildRulePlan(products, request);
 
   const apiKey = process.env.OPENAI_API_KEY;

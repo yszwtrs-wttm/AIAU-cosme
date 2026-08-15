@@ -3,6 +3,7 @@ import {
   ArrowRight,
   Camera,
   CircleDollarSign,
+  FlaskConical,
   Heart,
   Images,
   Palette,
@@ -103,7 +104,16 @@ function LandingPage({ products }: { products: Product[] }) {
             >
               ログインせずに探す <Search size={16} />
             </Link>
+            <Link
+              href="/demo"
+              className="flex items-center gap-1.5 rounded-full border border-brand-600 bg-white px-5 py-3 text-sm font-bold text-brand-600"
+            >
+              <FlaskConical size={15} /> サンプルのポーチで試す
+            </Link>
           </div>
+          <p className="mt-3 text-xs text-ink-500">
+            サンプルのポーチなら、ログインなしで被り検出をそのまま見られます。
+          </p>
         </div>
       </section>
 
@@ -121,7 +131,7 @@ function LandingPage({ products }: { products: Product[] }) {
           <FeatureCard
             icon={<CircleDollarSign size={20} />}
             title="似たものを見つける"
-            text="手持ちとの被りや、似ていてもっと手頃なものを見つけられます。"
+            text="手持ちとの被りや、似ていてもっと手頃なものを見つけられます。サンプルのポーチですぐに試せます。"
           />
           <FeatureCard
             icon={<ShieldCheck size={20} />}
