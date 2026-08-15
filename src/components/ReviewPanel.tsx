@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Flag, ImagePlus, Lock, X } from "lucide-react";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+import { REVIEW_SELECT, REVIEWS_PAGE_SIZE } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/client";
 import { attachReviewImages, postReview, reportReview } from "@/app/actions";
 import Avatar from "@/components/Avatar";
@@ -14,6 +16,9 @@ import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
 
 type Viewer = { skinType: SkinType | null; skinToneHex: string | null };
+
+/** Realtime のペイロードに載る列。関連（profiles / review_images）は含まれない。 */
+type ReviewRow = Omit<Review, "profiles" | "review_images">;
 
 const MAX_IMAGES = 4;
 
@@ -121,6 +126,10 @@ export default function ReviewPanel({
   const axes = axesFor(category);
   const [reviews, setReviews] = useState(initialReviews);
   const [summary, setSummary] = useState(initialSummary);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const pageRef = useRef(1);
+  const reviewsRef = useRef(reviews);
+  reviewsRef.current = reviews;
   const [body, setBody] = useState("");
   const [rating, setRating] = useState(5);
   const [feel, setFeel] = useState<Record<string, number>>(
@@ -131,31 +140,54 @@ export default function ReviewPanel({
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
 
-  // 不正判定は Postgres の trigger が走らせる。結果は Realtime で降ってくる。
+  // 不正判定は Postgres の trigger が走らせる。結果は Realtime の差分で降ってくる。
   useEffect(() => {
     const supabase = createClient();
 
-    const refresh = async () => {
-      const [{ data: rows }, { data: sum }] = await Promise.all([
-        supabase
-          .from("reviews")
-          .select(
-            "*,profiles(handle,display_name,avatar_hue,avatar_url,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
-          )
-          .eq("product_id", productId)
-          .order("posted_at", { ascending: false }),
-        supabase.from("product_rating_summary").select("*").eq("product_id", productId).maybeSingle(),
-      ]);
-      if (rows) setReviews(rows as unknown as Review[]);
+    const refreshSummary = async () => {
+      const { data: sum } = await supabase
+        .from("product_rating_summary")
+        .select("*")
+        .eq("product_id", productId)
+        .maybeSingle();
       if (sum) setSummary(sum as RatingSummary);
+    };
+
+    const apply = async (payload: RealtimePostgresChangesPayload<ReviewRow>) => {
+      if (payload.eventType === "DELETE") {
+        const removedId = (payload.old as Partial<ReviewRow>).id;
+        if (removedId != null) setReviews((prev) => prev.filter((r) => r.id !== removedId));
+      } else {
+        const row = payload.new;
+        const known = reviewsRef.current.some((r) => r.id === row.id);
+        if (row.excluded) {
+          setReviews((prev) => prev.filter((r) => r.id !== row.id));
+        } else if (known) {
+          setReviews((prev) => prev.map((r) => (r.id === row.id ? { ...r, ...row } : r)));
+        } else {
+          // 新しい口コミだけ、関連ごと1件取りに行く。
+          const { data } = await supabase
+            .from("reviews")
+            .select(REVIEW_SELECT)
+            .eq("id", row.id)
+            .maybeSingle();
+          if (data) {
+            const added = data as unknown as Review;
+            setReviews((prev) =>
+              prev.some((r) => r.id === added.id) ? prev : [added, ...prev],
+            );
+          }
+        }
+      }
+      await refreshSummary();
     };
 
     const channel = supabase
       .channel(`reviews-${productId}`)
-      .on(
+      .on<ReviewRow>(
         "postgres_changes",
         { event: "*", schema: "public", table: "reviews", filter: `product_id=eq.${productId}` },
-        refresh,
+        apply,
       )
       .subscribe();
 
@@ -164,13 +196,35 @@ export default function ReviewPanel({
     };
   }, [productId]);
 
+  const loadMore = async () => {
+    setLoadingMore(true);
+    const supabase = createClient();
+    const from = pageRef.current * REVIEWS_PAGE_SIZE;
+    const { data } = await supabase
+      .from("reviews")
+      .select(REVIEW_SELECT)
+      .eq("product_id", productId)
+      .eq("excluded", false)
+      .order("posted_at", { ascending: false })
+      .range(from, from + REVIEWS_PAGE_SIZE - 1);
+    const rows = (data ?? []) as unknown as Review[];
+    pageRef.current += 1;
+    setReviews((prev) => {
+      const seen = new Set(prev.map((r) => r.id));
+      return [...prev, ...rows.filter((r) => !seen.has(r.id))];
+    });
+    setLoadingMore(false);
+  };
+
   // 自分と近い肌の人の声を上に出す。同じ近さなら新しい順（元の並び）。
   const shown = reviews
-    .filter((r) => !r.excluded)
     .map((r) => ({ review: r, score: closenessScore(viewer, r.profiles) }))
     .sort((a, b) => b.score - a.score);
   const rated = summary?.adjusted_rating ?? null;
   const counted = summary?.counted_count ?? 0;
+  const excluded = summary?.excluded_count ?? 0;
+  // 一覧に出すのは除外していない口コミだけ。その総数は counted_count と同じ。
+  const hasMore = reviews.length < counted;
   const hasViewerProfile = Boolean(viewer.skinType || viewer.skinToneHex);
 
   const submit = () => {
@@ -222,7 +276,8 @@ export default function ReviewPanel({
             <>
               点数に入っている口コミ {counted} 件
               <p className="mt-0.5 text-[11px] text-ink-400">
-                宣伝目的・使い回しと判断した投稿は点数に入れていません。実際に登録している人の声は、
+                宣伝目的・使い回しと判断した投稿{excluded > 0 ? ` ${excluded} 件` : ""}
+                は点数に入れず、一覧にも出していません。実際に登録している人の声は、
                 少し重く見て平均を出しています。
               </p>
             </>
@@ -352,6 +407,16 @@ export default function ReviewPanel({
         {shown.map(({ review, score }) => (
           <ReviewCard key={review.id} review={review} close={score > 0} />
         ))}
+        {hasMore && (
+          <button
+            type="button"
+            onClick={loadMore}
+            disabled={loadingMore}
+            className="w-full rounded-full border border-brand-200 bg-white px-4 py-2 text-sm font-bold text-brand-600 disabled:opacity-50"
+          >
+            {loadingMore ? "読み込み中…" : "もっと見る"}
+          </button>
+        )}
       </div>
     </div>
   );
