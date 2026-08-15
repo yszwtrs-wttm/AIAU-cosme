@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Flag, Undo2 } from "lucide-react";
 import { reportReview, undoReportReview } from "@/app/actions";
 import { REPORT_REASON_LABEL, type ReportReason } from "@/lib/types";
@@ -37,14 +37,20 @@ export default function ReportReviewButton({
     return () => clearTimeout(timer);
   }, [undoLeft]);
 
+  const close = useCallback(() => {
+    setOpen(false);
+    setReason("ad");
+    setError(null);
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, close]);
 
   const send = async () => {
     setBusy(true);
@@ -56,7 +62,7 @@ export default function ReportReviewButton({
       return;
     }
 
-    setOpen(false);
+    close();
     setReported(true);
     setUndoLeft(UNDO_SECONDS);
   };
@@ -102,7 +108,7 @@ export default function ReportReviewButton({
       {open && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/40 p-4 sm:items-center"
-          onClick={() => setOpen(false)}
+          onClick={close}
         >
           <div
             role="dialog"
@@ -147,7 +153,7 @@ export default function ReportReviewButton({
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
-                    onClick={() => setOpen(false)}
+                    onClick={close}
                     className="rounded-full border border-ink-200 px-3 py-1.5 text-xs font-bold text-ink-600"
                   >
                     やめる
@@ -168,7 +174,7 @@ export default function ReportReviewButton({
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
-                    onClick={() => setOpen(false)}
+                    onClick={close}
                     className="rounded-full border border-ink-200 px-3 py-1.5 text-xs font-bold text-ink-600"
                   >
                     やめる
