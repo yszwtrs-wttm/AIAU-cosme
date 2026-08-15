@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import ProductCard from "@/components/ProductCard";
 import { createClient } from "@/lib/supabase/server";
-import { publicImageUrl } from "@/lib/storage";
+import ReviewImage from "@/components/ReviewImage";
+import { THUMB_WIDTH } from "@/lib/storage";
 import { colorName } from "@/lib/wording";
 import {
   PERSONAL_COLOR_LABEL,
@@ -126,14 +127,14 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
                 {(r.review_images ?? []).length > 0 && (
                   <div className="mt-2 flex gap-2 overflow-x-auto">
                     {(r.review_images ?? []).map((img, i) => (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      <ReviewImage
                         key={img.id}
-                        src={publicImageUrl(img.path)}
+                        path={img.path}
+                        width={THUMB_WIDTH}
                         alt={`${profile.display_name}さんの口コミの写真 ${i + 1}枚目：${
                           r.products?.name ?? ""
                         }`}
-                        className="h-24 w-24 shrink-0 rounded-2xl object-cover"
+                        className="h-24 w-24 overflow-hidden rounded-2xl"
                       />
                     ))}
                   </div>
