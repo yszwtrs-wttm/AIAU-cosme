@@ -293,7 +293,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   </span>
                   <span className="ml-2 text-ink-600">は、持っているコスメでほぼ同じ色が作れます</span>
                 </div>
-                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {coverage.map((c) => (
                     <li key={c.pos} className="flex items-center gap-2 rounded-xl bg-ink-50 p-2 text-xs">
                       <span className="swatch inline-block h-6 w-6 shrink-0 rounded-full" style={{ background: c.shade_hex }} />

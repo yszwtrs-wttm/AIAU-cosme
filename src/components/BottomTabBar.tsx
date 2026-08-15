@@ -26,16 +26,16 @@ export default function BottomTabBar({ isRealAccount }: { isRealAccount: boolean
   const tabs = isRealAccount ? TABS : GUEST_TABS;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-ink-0/95 backdrop-blur md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-ink-0/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
       <ul className="mx-auto flex max-w-5xl">
         {tabs.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
-            <li key={href} className="flex-1">
+            <li key={href} className="min-w-0 flex-1">
               <Link
                 href={href}
                 prefetch
-                className={`flex flex-col items-center gap-0.5 py-2.5 text-[10px] ${
+                className={`flex flex-col items-center gap-0.5 px-1 py-2.5 text-[10px] ${
                   active ? "text-brand-600" : "text-ink-500"
                 }`}
               >
@@ -46,7 +46,7 @@ export default function BottomTabBar({ isRealAccount }: { isRealAccount: boolean
                 >
                   <Icon size={17} />
                 </span>
-                {label}
+                <span className="w-full truncate text-center">{label}</span>
               </Link>
             </li>
           );

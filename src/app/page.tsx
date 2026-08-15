@@ -109,7 +109,7 @@ function LandingPage({ products }: { products: Product[] }) {
           <h2 className="font-display text-2xl font-bold">買う前に、3つの視点で確認</h2>
           <p className="mt-1 text-sm text-ink-600">「買わない」も含めて、自分で選べます。</p>
         </div>
-        <div className="grid gap-x-8 gap-y-5 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-5 sm:grid-cols-3">
           <FeatureCard
             index="01"
             title="自分に合うか判定"
@@ -139,7 +139,7 @@ function LandingPage({ products }: { products: Product[] }) {
               すべて見る <ArrowRight className="inline" size={14} />
             </Link>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {products.slice(0, 4).map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -205,7 +205,7 @@ function PersonalizedHome({
             </Link>
           </div>
           {suggestions.length > 0 ? (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {suggestions.map(({ product, fit }) => (
                 <div key={product.id} className="space-y-1.5">
                   <ProductCard product={product} />
@@ -233,7 +233,7 @@ function PersonalizedHome({
         </section>
       )}
 
-      <section className="grid gap-3 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-ink-200 bg-ink-0 p-5">
           <div className="flex items-center gap-2 text-sm font-bold">
             <Heart size={17} className="text-brand-600" /> Myポーチの状況

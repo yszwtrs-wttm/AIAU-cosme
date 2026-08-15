@@ -77,7 +77,7 @@ export default async function MyPage() {
         {real && <LogoutButton />}
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-ink-200 bg-ink-0 p-4">
           <div className="text-xs font-bold text-ink-500">Myポーチの数</div>
           <div className="mt-1 font-mono text-3xl font-semibold tabular-nums">{items.length}</div>
@@ -103,7 +103,7 @@ export default async function MyPage() {
             まだ登録がありません。よく使うものを2〜3個登録すると、調べた商品との違いを出せるようになります。
           </p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {items.slice(0, 4).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

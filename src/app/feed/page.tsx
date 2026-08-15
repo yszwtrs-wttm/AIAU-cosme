@@ -29,7 +29,7 @@ export default async function FeedPage() {
         <h1 className="font-display text-2xl font-bold">みんなの投稿</h1>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {(reviews ?? []).map((r) => {
           const images = [...(r.review_images ?? [])].sort((a, b) => a.pos - b.pos);
           return (
