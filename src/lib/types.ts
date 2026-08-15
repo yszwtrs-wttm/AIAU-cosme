@@ -142,6 +142,15 @@ export type Review = {
   review_images?: ReviewImage[];
 };
 
+export type ReportReason = "ad" | "image_reuse" | "irrelevant" | "other";
+
+export const REPORT_REASON_LABEL: Record<ReportReason, string> = {
+  ad: "宣伝目的",
+  image_reuse: "写真の使い回し",
+  irrelevant: "商品と無関係",
+  other: "その他",
+};
+
 export type RatingSummary = {
   product_id: number;
   review_count: number;

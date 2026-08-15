@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
-import type { PersonalColor, SkinType } from "@/lib/types";
+import { REPORT_REASON_LABEL, type PersonalColor, type ReportReason, type SkinType } from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
 
@@ -132,9 +132,45 @@ export async function attachReviewImages(
   return { ok: !error, error: error?.message };
 }
 
-export async function reportReview(reviewId: number, reason: string): Promise<Result> {
+/**
+ * 口コミの通報。理由は選択式で、同じ人が同じ口コミを二重に通報できない（DB の unique 制約）。
+ * 押し間違えは undoReportReview で取り消せる。
+ */
+export async function reportReview(reviewId: number, reason: ReportReason): Promise<Result> {
+  if (!(reason in REPORT_REASON_LABEL)) return { ok: false, error: "理由を選んでください" };
+
   const supabase = await createClient();
-  const { error } = await supabase.from("review_reports").insert({ review_id: reviewId, reason });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!isRealAccount(user)) {
+    return { ok: false, error: "報告にはアカウント登録が必要です" };
+  }
+
+  const { error } = await supabase
+    .from("review_reports")
+    .insert({ review_id: reviewId, user_id: user!.id, reason });
+
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "この口コミはすでに報告しています" };
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+export async function undoReportReview(reviewId: number): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "セッションがありません" };
+
+  const { error } = await supabase
+    .from("review_reports")
+    .delete()
+    .eq("review_id", reviewId)
+    .eq("user_id", user.id);
+
   return { ok: !error, error: error?.message };
 }
 
