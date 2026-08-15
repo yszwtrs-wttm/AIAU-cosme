@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { AlertTriangle, Camera } from "lucide-react";
+import { redirect } from "next/navigation";
 import MakeupPlan from "@/components/MakeupPlan";
 import ProductCard from "@/components/ProductCard";
+import { getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Product, StashOverlap } from "@/lib/types";
 import { colorMatchBadge, formulaMatchBadge } from "@/lib/wording";
@@ -9,6 +11,9 @@ import { colorMatchBadge, formulaMatchBadge } from "@/lib/wording";
 type StashItem = { product_id: number; products: Product };
 
 export default async function StashPage() {
+  const user = await getMyUser();
+  if (!isRealAccount(user)) redirect("/login");
+
   const supabase = await createClient();
 
   const [{ data: items }, overlapRes] = await Promise.all([

@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { Sparkles, UserRound } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { getMyProfile, isRealAccount } from "@/lib/auth";
+import { getMyProfile } from "@/lib/auth";
 
-export default async function SiteHeader() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const profile = user ? await getMyProfile() : null;
-  const real = isRealAccount(user);
+export default async function SiteHeader({ isRealAccount: real }: { isRealAccount: boolean }) {
+  const profile = real ? await getMyProfile() : null;
+  const navLinks = real
+    ? [
+        { href: "/search", label: "探す" },
+        { href: "/scan", label: "手持ちを登録" },
+        { href: "/stash", label: "ポーチ" },
+        { href: "/feed", label: "みんなの投稿" },
+      ]
+    : [
+        { href: "/search", label: "探す" },
+        { href: "/feed", label: "みんなの投稿" },
+      ];
 
   return (
     <header className="sticky top-0 z-20 border-b border-ink-200 bg-white/90 backdrop-blur">
@@ -23,10 +28,11 @@ export default async function SiteHeader() {
         </Link>
 
         <nav className="ml-auto hidden items-center gap-4 text-sm text-ink-600 md:flex">
-          <Link href="/" className="hover:text-brand-600">探す</Link>
-          <Link href="/scan" className="hover:text-brand-600">手持ちを登録</Link>
-          <Link href="/stash" className="hover:text-brand-600">ポーチ</Link>
-          <Link href="/feed" className="hover:text-brand-600">みんなの投稿</Link>
+          {navLinks.map(({ href, label }) => (
+            <Link key={href} href={href} className="hover:text-brand-600">
+              {label}
+            </Link>
+          ))}
         </nav>
 
         {real && profile ? (
