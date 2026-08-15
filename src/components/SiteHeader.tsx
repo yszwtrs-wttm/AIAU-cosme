@@ -7,12 +7,12 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
   const profile = real ? await getMyProfile() : null;
   const navLinks = real
     ? [
-        { href: "/search", label: "探す" },
+        { href: "/search", label: "商品を探す" },
         { href: "/feed", label: "みんなの投稿" },
         { href: "/stash", label: "Myポーチ" },
       ]
     : [
-        { href: "/search", label: "探す" },
+        { href: "/search", label: "商品を探す" },
         { href: "/feed", label: "みんなの投稿" },
       ];
 
@@ -46,7 +46,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
               avatarUrl={profile.avatar_url}
               size="sm"
             />
-            <span className="max-w-24 truncate">{profile.display_name}</span>
+            <span className="max-w-24 truncate sm:max-w-48">{profile.display_name}</span>
           </Link>
         ) : real ? (
           <Link

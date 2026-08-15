@@ -49,7 +49,6 @@ export default async function MyPage() {
           <div className="text-xs text-ink-400">
             {profile ? `@${profile.handle}` : "ログインすると、口コミが書けてポーチを引き継げます"}
           </div>
-          {user?.email && <div className="mt-1 text-[11px] text-ink-400">{user.email}</div>}
           {profile?.personal_color && (
             <div className="mt-1 text-xs text-brand-700">
               {profile.personal_color === "spring" && "イエベ春"}
@@ -85,9 +84,10 @@ export default async function MyPage() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">Myポーチの中身</h2>
-          <Link href="/stash" className="text-xs font-bold text-brand-600">
-            追加する
-          </Link>
+          <div className="flex items-center gap-3 text-xs font-bold text-brand-600">
+            {items.length > 4 && <Link href="/stash">すべて見る</Link>}
+            <Link href="/stash">追加する</Link>
+          </div>
         </div>
         {items.length === 0 ? (
           <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
@@ -95,7 +95,7 @@ export default async function MyPage() {
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {items.map((p) => (
+            {items.slice(0, 4).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>

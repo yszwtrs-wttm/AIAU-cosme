@@ -48,10 +48,7 @@ export default async function StashPage() {
         <BarcodeScanner />
       </section>
 
-      <section className="space-y-2">
-        <h2 className="font-display text-lg font-bold">リストから選んで登録</h2>
-        <QuickStartPicker products={popular ?? []} />
-      </section>
+      <QuickStartPicker products={popular ?? []} />
 
       {products.length === 0 && (
         <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
