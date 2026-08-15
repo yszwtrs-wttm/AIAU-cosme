@@ -39,12 +39,11 @@ export default async function Home() {
     return <LandingPage products={await getRankedProducts(supabase)} />;
   }
 
-  const [{ data: products }, { data: scores }, { count: stashCount }, overlapRes, profile] =
+  const [{ data: products }, { data: scores }, { count: stashCount }, profile] =
     await Promise.all([
       supabase.from("products").select(PRODUCT_SELECT).returns<Product[]>(),
       supabase.from("product_score").select("*").returns<ProductScore[]>(),
       supabase.from("user_items").select("product_id", { count: "exact", head: true }),
-      supabase.rpc("find_stash_overlaps"),
       getMyProfile(),
     ]);
 
@@ -59,7 +58,6 @@ export default async function Home() {
         .filter(({ fit }) => fit.verdict === "good")
         .slice(0, 4)
     : [];
-  const overlapCount = Array.isArray(overlapRes.data) ? overlapRes.data.length : 0;
 
   return (
     <PersonalizedHome
@@ -67,7 +65,6 @@ export default async function Home() {
       hasSkinInfo={hasSkinInfo}
       suggestions={suggestions}
       stashCount={stashCount ?? 0}
-      overlapCount={overlapCount}
     />
   );
 }
@@ -181,13 +178,11 @@ function PersonalizedHome({
   hasSkinInfo,
   suggestions,
   stashCount,
-  overlapCount,
 }: {
   displayName: string;
   hasSkinInfo: boolean;
   suggestions: { product: Product; fit: ReturnType<typeof judgeFit> }[];
   stashCount: number;
-  overlapCount: number;
 }) {
   return (
     <div className="space-y-8">
@@ -249,13 +244,8 @@ function PersonalizedHome({
             <Heart size={17} className="text-brand-600" /> ポーチの状況
           </div>
           <p className="mt-3 font-display text-3xl font-bold tabular-nums">{stashCount}点</p>
-          {overlapCount > 0 ? (
-            <p className="mt-1 text-sm text-amber-700">{overlapCount}組の似たものがあります。</p>
-          ) : (
-            <p className="mt-1 text-sm text-ink-600">手持ちとの違いを見ながら探せます。</p>
-          )}
           <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
-            {overlapCount > 0 ? "被りを確認する" : "ポーチを見る"} <ArrowRight className="inline" size={14} />
+            ポーチを見る <ArrowRight className="inline" size={14} />
           </Link>
         </div>
         <div className="rounded-2xl border border-ink-200 bg-white p-5">
