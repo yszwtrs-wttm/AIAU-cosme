@@ -65,7 +65,6 @@ export default function StashButton({
       className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed ${
         shownOwned ? "border border-brand-200 bg-ink-0 text-brand-600" : "bg-brand-600 text-ink-0"
       }`}
-      }`}
     >
       {shownOwned ? <Check size={15} /> : <Heart size={15} />}
       {shownOwned ? "ポーチに入っています" : "ポーチに追加"}
