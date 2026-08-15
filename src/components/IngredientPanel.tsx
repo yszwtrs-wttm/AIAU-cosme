@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, FlaskConical } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import {
   ROLE_LABEL,
   ROLE_SHORT_LABEL,
@@ -25,10 +25,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
   return (
     <div className="space-y-3">
       <div className="rounded-2xl bg-brand-soft p-4">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-brand-700">
-          <FlaskConical size={14} /> この商品は何でできている？
-        </div>
-        <ul className="mt-1.5 space-y-1 text-sm leading-relaxed">
+        <ul className="space-y-1 text-sm leading-relaxed">
           {summarizeIngredientPoints(resolved).map((point) => (
             <li key={point} className="flex gap-1.5">
               <span className="text-brand-600">・</span>
