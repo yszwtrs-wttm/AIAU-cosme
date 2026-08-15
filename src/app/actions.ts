@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
+import { reportSupabaseError } from "@/lib/observability";
 import type { PersonalColor, SkinType } from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
@@ -27,7 +28,8 @@ export async function addToStash(
 
   revalidatePath("/stash");
   revalidatePath(`/products/${productId}`);
-  return { ok: !error, error: error?.message };
+  if (error) return { ok: false, error: reportSupabaseError("addToStash", error, { productId, source }) };
+  return { ok: true };
 }
 
 export async function addManyToStash(
@@ -47,7 +49,10 @@ export async function addManyToStash(
   );
 
   revalidatePath("/stash");
-  return { ok: !error, error: error?.message };
+  if (error) {
+    return { ok: false, error: reportSupabaseError("addManyToStash", error, { count: productIds.length }) };
+  }
+  return { ok: true };
 }
 
 export async function removeFromStash(productId: number): Promise<Result> {
@@ -66,7 +71,8 @@ export async function removeFromStash(productId: number): Promise<Result> {
 
   revalidatePath("/stash");
   revalidatePath(`/products/${productId}`);
-  return { ok: !error, error: error?.message };
+  if (error) return { ok: false, error: reportSupabaseError("removeFromStash", error, { productId }) };
+  return { ok: true };
 }
 
 /**
@@ -105,7 +111,10 @@ export async function postReview(input: {
 
   revalidatePath(`/products/${input.productId}`);
   revalidatePath("/feed");
-  return { ok: !error, error: error?.message, reviewId: data?.id };
+  if (error) {
+    return { ok: false, error: reportSupabaseError("postReview", error, { productId: input.productId }) };
+  }
+  return { ok: true, reviewId: data?.id };
 }
 
 export async function attachReviewImages(
@@ -129,13 +138,20 @@ export async function attachReviewImages(
   );
 
   revalidatePath("/feed");
-  return { ok: !error, error: error?.message };
+  if (error) {
+    return {
+      ok: false,
+      error: reportSupabaseError("attachReviewImages", error, { reviewId, count: images.length }),
+    };
+  }
+  return { ok: true };
 }
 
 export async function reportReview(reviewId: number, reason: string): Promise<Result> {
   const supabase = await createClient();
   const { error } = await supabase.from("review_reports").insert({ review_id: reviewId, reason });
-  return { ok: !error, error: error?.message };
+  if (error) return { ok: false, error: reportSupabaseError("reportReview", error, { reviewId }) };
+  return { ok: true };
 }
 
 export async function saveProfile(input: {
@@ -173,14 +189,21 @@ export async function saveProfile(input: {
     avatar_url: input.avatarUrl ?? null,
   });
 
-  if (error) return { ok: false, error: error.message };
+  if (error) {
+    return {
+      ok: false,
+      error: reportSupabaseError("saveProfile", error, {}, "そのユーザーIDは他の人が使っています"),
+    };
+  }
 
   const selectedIds = [...new Set(input.allergenIds ?? [])];
   const { data: existingAllergens, error: allergenReadError } = await supabase
     .from("profile_allergens")
     .select("ingredient_id")
     .eq("user_id", user.id);
-  if (allergenReadError) return { ok: false, error: allergenReadError.message };
+  if (allergenReadError) {
+    return { ok: false, error: reportSupabaseError("saveProfile.readAllergens", allergenReadError) };
+  }
 
   const existingIds = new Set((existingAllergens ?? []).map((row) => row.ingredient_id));
   const selectedSet = new Set(selectedIds);
@@ -193,13 +216,17 @@ export async function saveProfile(input: {
       .delete()
       .eq("user_id", user.id)
       .in("ingredient_id", removedIds);
-    if (removeError) return { ok: false, error: removeError.message };
+    if (removeError) {
+      return { ok: false, error: reportSupabaseError("saveProfile.removeAllergens", removeError) };
+    }
   }
   if (addedIds.length > 0) {
     const { error: addError } = await supabase.from("profile_allergens").insert(
       addedIds.map((ingredient_id) => ({ user_id: user.id, ingredient_id })),
     );
-    if (addError) return { ok: false, error: addError.message };
+    if (addError) {
+      return { ok: false, error: reportSupabaseError("saveProfile.addAllergens", addError) };
+    }
   }
 
   revalidatePath("/me");

@@ -4,6 +4,7 @@ import "./globals.css";
 import AnonAuth from "@/components/AnonAuth";
 import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
+import WebVitals from "@/components/WebVitals";
 import { getMyUser, isRealAccount } from "@/lib/auth";
 
 const sans = Zen_Kaku_Gothic_New({
@@ -40,6 +41,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="ja" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen text-ink-900 antialiased">
+        <WebVitals />
         <AnonAuth />
         <SiteHeader isRealAccount={real} />
         <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">{children}</main>

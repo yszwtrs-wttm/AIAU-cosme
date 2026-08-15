@@ -1,6 +1,7 @@
 "use server";
 
 import { buildRulePlan, type Plan } from "@/lib/makeup";
+import { captureError } from "@/lib/observability";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
 
@@ -11,12 +12,14 @@ import type { Product } from "@/lib/types";
  */
 export async function generateMakeupPlan(request: string): Promise<Plan> {
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error: stashError } = await supabase
     .from("user_items")
     .select(
       "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name))",
     )
     .returns<{ products: Product }[]>();
+
+  if (stashError) captureError("generateMakeupPlan.stash", stashError);
 
   const products = (data ?? []).map((r) => r.products).filter(Boolean);
   const fallback = buildRulePlan(products, request);
@@ -46,12 +49,19 @@ export async function generateMakeupPlan(request: string): Promise<Plan> {
         ],
       }),
     });
-    if (!res.ok) return fallback;
+    if (!res.ok) {
+      captureError("generateMakeupPlan.openai", new Error(`OpenAI が ${res.status} を返しました`), {
+        status: res.status,
+      });
+      return fallback;
+    }
     const json = await res.json();
     const parsed = JSON.parse(json.choices[0].message.content) as Omit<Plan, "source">;
     if (!Array.isArray(parsed.steps) || parsed.steps.length === 0) return fallback;
     return { ...parsed, source: "llm" };
-  } catch {
+  } catch (e) {
+    // ここで落としてもルールベースの手順を返せるので、画面は壊さずログだけ送る。
+    captureError("generateMakeupPlan", e);
     return fallback;
   }
 }

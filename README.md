@@ -66,6 +66,13 @@ npm run dev
 
 シードの商品・ブランド・口コミはすべて架空。実在商品のデータは使っていない。
 
+## エラー監視と計測
+
+- 例外の送り先は `src/lib/observability.ts` に集約。`NEXT_PUBLIC_SENTRY_DSN` があれば Sentry に送り、無くても標準出力に JSON 1行で出す（Vercel の Runtime Logs / Observability から検索できる）。
+- Server Component / Server Action / Route Handler の例外は `src/instrumentation.ts` の `onRequestError`、クライアントの例外は `src/instrumentation-client.ts` と `src/app/global-error.tsx` で拾う。
+- Supabase のエラーは `reportSupabaseError` を通す。詳細はログにだけ送り、UI には短い日本語を返す（トリガーが `raise exception` で出す日本語メッセージはそのまま表示）。
+- LCP / INP / CLS / TTFB / FCP は `src/components/WebVitals.tsx`（`useReportWebVitals`）が `/api/vitals` に送り、パスつきでログに記録する。
+
 ## 検証
 
 ```bash

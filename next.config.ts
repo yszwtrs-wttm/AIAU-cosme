@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -11,4 +12,19 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Sentry の組織情報とトークンが揃っているときだけソースマップを送る。
+ * 揃っていない環境（ローカル・フォークからのビルド）では素の設定でビルドする。
+ */
+const { SENTRY_ORG, SENTRY_PROJECT, SENTRY_AUTH_TOKEN } = process.env;
+
+export default SENTRY_ORG && SENTRY_PROJECT && SENTRY_AUTH_TOKEN
+  ? withSentryConfig(nextConfig, {
+      org: SENTRY_ORG,
+      project: SENTRY_PROJECT,
+      authToken: SENTRY_AUTH_TOKEN,
+      silent: true,
+      widenClientFileUpload: true,
+      disableLogger: true,
+    })
+  : nextConfig;
