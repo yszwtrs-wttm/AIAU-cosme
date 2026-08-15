@@ -15,8 +15,7 @@ export default async function LoginPage() {
       <section className="border-b border-ink-200 pb-4">
         <h1 className="font-display text-2xl font-bold">ログイン / アカウントを作る</h1>
         <p className="mt-2 text-sm text-ink-600">
-          ログインすると、手持ちのポーチを使えて、別の端末でも見られます。口コミも書けるようになります。
-          すでに匿名で登録した手持ちがあれば、そのまま引き継がれます。
+          ログインすると、手持ちの登録とポーチが使えて、別の端末でも見られます。口コミも書けるようになります。
         </p>
       </section>
 
