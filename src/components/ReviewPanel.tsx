@@ -10,9 +10,10 @@ import { useToast } from "@/components/Toast";
 import { japaneseError } from "@/lib/errors";
 import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
-import { IMAGE_ACCEPT, prepareImageForUpload, validateImageFile } from "@/lib/image";
+import ReviewImage from "@/components/ReviewImage";
+import { IMAGE_ACCEPT, shrinkImage, validateImageFile } from "@/lib/image";
 import { averageHash } from "@/lib/phash";
-import { publicImageUrl } from "@/lib/storage";
+import { THUMB_WIDTH } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
 
@@ -102,12 +103,11 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
       {images.length > 0 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {images.map((img) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <ReviewImage
               key={img.id}
-              src={publicImageUrl(img.path)}
-              alt=""
-              className="h-28 w-28 shrink-0 rounded-2xl object-cover"
+              path={img.path}
+              width={THUMB_WIDTH}
+              className="h-28 w-28 overflow-hidden rounded-2xl"
             />
           ))}
         </div>
@@ -216,13 +216,14 @@ export default function ReviewPanel({
 
     for (const [index, file] of targets.entries()) {
       try {
-        const prepared = await prepareImageForUpload(file);
-        const path = `${user.id}/${reviewId}-${crypto.randomUUID()}.${prepared.ext}`;
+        const shrunk = await shrinkImage(file);
+        const ext = shrunk.name.split(".").pop()?.toLowerCase() ?? "jpg";
+        const path = `${user.id}/${reviewId}-${crypto.randomUUID()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("review-images")
-          .upload(path, prepared.blob, { contentType: prepared.contentType, upsert: true });
+          .upload(path, shrunk, { contentType: shrunk.type, upsert: true });
         if (upErr) rejected.push(file);
-        else uploaded.push({ path, phash: await averageHash(prepared.blob) });
+        else uploaded.push({ path, phash: await averageHash(shrunk) });
       } catch {
         rejected.push(file);
       }

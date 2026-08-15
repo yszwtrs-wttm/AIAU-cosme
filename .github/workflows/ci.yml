@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+
+  db-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # gen types typescript --local は DB に直接つなぐので、Postgres 以外は起動しない
+      - name: Start local Supabase (database only)
+        run: >
+          npx supabase start
+          -x edge-runtime,gotrue,imgproxy,kong,logflare,mailpit,postgres-meta,postgrest,realtime,storage-api,studio,supavisor,vector
+
+      - name: Regenerate database types
+        run: npm run db:types
+
+      - name: Check database.types.ts is up to date
+        run: |
+          if ! git diff --exit-code -- src/lib/supabase/database.types.ts; then
+            echo "::error file=src/lib/supabase/database.types.ts::supabase/migrations と型定義がずれています。npm run db:types を実行して結果をコミットしてください。"
+            exit 1
+          fi
+
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop --no-backup
