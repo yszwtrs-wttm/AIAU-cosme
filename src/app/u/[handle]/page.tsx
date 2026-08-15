@@ -93,7 +93,7 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
               まだ登録がありません。
             </p>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {stash.map((p) => (
                 <ProductCard key={p.id} product={p} />
               ))}
