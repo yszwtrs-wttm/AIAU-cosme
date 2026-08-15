@@ -8,6 +8,7 @@
  * の 2 系統を同じ軸で扱う。
  */
 
+import { canonicalIngredientList } from "./ingredients";
 import type { Category } from "./types";
 
 export type FeelAxis = { key: string; label: string; low: string; high: string };
@@ -54,7 +55,7 @@ const clamp = (v: number) => Math.max(5, Math.min(95, Math.round(v)));
  * 画面では必ず「成分からの推定」と明記して出す。
  */
 export function estimateFeel(category: Category, ingredients: string[]): FeelValues {
-  const list = ingredients.map((x) => x.toUpperCase());
+  const list = canonicalIngredientList(ingredients);
 
   if (category === "shampoo" || category === "treatment") {
     const strongSurf = has(list, /LAURETH SULFATE|LAURYL SULFATE/);

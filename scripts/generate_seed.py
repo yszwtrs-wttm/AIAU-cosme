@@ -356,6 +356,38 @@ SAKURA_REVIEWS = [
     ("brand_fan_1", 5, "何度もリピートしています。文句なしの品質。", None),
 ]
 
+# --- 表記ゆれ ----------------------------------------------------------------
+# 全成分表示の出どころによっては日本語表示名や慣用名で書かれている。
+# 別名辞書（ingredient_aliases）が効いていれば、書き方が違っても同じ成分として扱われ、
+# 安い代替の判定が崩れない。それをデモデータでも再現しておく。
+JA_NOTATION = {
+    "WATER": "精製水",
+    "GLYCERIN": "グリセリン",
+    "BUTYLENE GLYCOL": "BG",
+    "TOCOPHEROL": "ビタミンE",
+    "SQUALANE": "スクワラン",
+    "MICA": "マイカ",
+    "TITANIUM DIOXIDE": "酸化チタン",
+    "PHENOXYETHANOL": "フェノキシエタノール",
+    "HYDROGENATED POLYISOBUTENE": "水添ポリイソブテン",
+    "CI 77491": "酸化鉄（赤）",
+    "DIMETHICONE": "ジメチコン",
+}
+MIXED_NOTATION_PRODUCTS = ("メルティリップ", "カバーリキッド")
+
+# 辞書に無い成分。管理画面（unresolved_ingredients）で拾って辞書を育てる対象になる。
+UNKNOWN_INGREDIENTS = {
+    "デイリーティント": "ツバキ種子油",
+    "デイリークッション": "CI 77007",
+}
+
+for p in products:
+    if p["name"].startswith(MIXED_NOTATION_PRODUCTS):
+        p["ingredients"] = [JA_NOTATION.get(i, i) for i in p["ingredients"]]
+    for prefix, unknown in UNKNOWN_INGREDIENTS.items():
+        if p["name"].startswith(prefix):
+            p["ingredients"] = p["ingredients"] + [unknown]
+
 lines = []
 w = lines.append
 w("-- 自動生成: python3 scripts/generate_seed.py > supabase/seed.sql")
@@ -412,6 +444,9 @@ normal_ref = "(select p.id from products p join brands b on b.id = p.brand_id wh
 rows.append("  (%s, 'mikan_88', 'mikan_88', 4, '値段の割にちゃんと隠れる。崩れ方は値段なり。', null, now() - interval '10 days')" % normal_ref)
 rows.append("  (%s, 'nagi_r', 'nagi_r', 4, '高いやつと並べても正直違いが分からなかった。', null, now() - interval '5 days')" % normal_ref)
 w(",\n".join(rows) + ";")
+w("")
+w("-- 別名辞書を投入（成分マスタの truncate で消えるため、シードのたびに入れ直す）")
+w("select seed_ingredient_aliases();")
 w("")
 w("-- IDF を数え直して成分ベクトルを再生成")
 w("select refresh_ingredient_idf();")

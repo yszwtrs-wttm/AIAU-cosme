@@ -52,6 +52,41 @@ export type Database = {
         }
         Relationships: []
       }
+      ingredient_aliases: {
+        Row: {
+          alias: string
+          alias_norm: string | null
+          created_at: string
+          id: number
+          ingredient_id: number
+          kind: string
+        }
+        Insert: {
+          alias: string
+          alias_norm?: string | null
+          created_at?: string
+          id?: never
+          ingredient_id: number
+          kind?: string
+        }
+        Update: {
+          alias?: string
+          alias_norm?: string | null
+          created_at?: string
+          id?: never
+          ingredient_id?: number
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_aliases_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ingredients_master: {
         Row: {
           df: number
@@ -596,6 +631,17 @@ export type Database = {
         }
         Relationships: []
       }
+      ingredient_normalization_status: {
+        Row: {
+          alias_count: number | null
+          common_alias_count: number | null
+          distinct_ingredient_names: number | null
+          ingredient_count: number | null
+          resolved_names: number | null
+          unresolved_names: number | null
+        }
+        Relationships: []
+      }
       product_feel_summary: {
         Row: {
           feel: Json | null
@@ -683,6 +729,16 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      unresolved_ingredients: {
+        Row: {
+          name: string | null
+          product_count: number | null
+          sample_products: string[] | null
+          suggested_alias: string | null
+          suggested_similarity: number | null
+        }
+        Relationships: []
       }
     }
     Functions: {
@@ -857,6 +913,10 @@ export type Database = {
         Args: { x: number }
         Returns: number
       }
+      normalize_ingredient_name: {
+        Args: { p_name: string }
+        Returns: string
+      }
       products_min_delta_e: {
         Args: { p_a: number; p_b: number }
         Returns: number
@@ -871,6 +931,21 @@ export type Database = {
       }
       refresh_ingredient_idf_logged: {
         Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      resolve_ingredient: {
+        Args: { p_name: string }
+        Returns: {
+          inci: string
+          ingredient_id: number
+          input: string
+          matched_alias: string
+          matched_kind: string
+          name_ja: string
+        }[]
+      }
+      resolve_ingredient_id: {
+        Args: { p_min_similarity?: number; p_name: string }
         Returns: number
       }
       search_products: {
@@ -913,6 +988,10 @@ export type Database = {
           volume: number
           volume_unit: string
         }[]
+      }
+      seed_ingredient_aliases: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       set_limit: {
         Args: { "": number }
