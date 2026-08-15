@@ -101,6 +101,54 @@ export function extractPalette(
     .map((p) => ({ hex: p.hex, share: p.n / total }));
 }
 
+/**
+ * 自撮りから肌の色を推定する。
+ *
+ * 髪・服・背景を拾わないよう中央付近だけを見て、そこから肌になり得る画素
+ * （赤 > 緑 > 青 で、彩度と明るさが人の肌の範囲）だけを残し、中央値を取る。
+ * 平均だとハイライトや影に引かれるので中央値にする。
+ */
+export function skinToneFromImageData(
+  data: Uint8ClampedArray,
+  width: number,
+  height: number,
+): string | null {
+  const x0 = Math.floor(width * 0.25);
+  const x1 = Math.ceil(width * 0.75);
+  const y0 = Math.floor(height * 0.2);
+  const y1 = Math.ceil(height * 0.8);
+
+  const reds: number[] = [];
+  const greens: number[] = [];
+  const blues: number[] = [];
+
+  for (let y = y0; y < y1; y += 1) {
+    for (let x = x0; x < x1; x += 1) {
+      const i = (y * width + x) * 4;
+      const [r, g, b, a] = [data[i], data[i + 1], data[i + 2], data[i + 3]];
+      if (a < 200) continue;
+      if (!(r > g && g > b)) continue;
+      const max = r;
+      const min = b;
+      const sat = (max - min) / max;
+      if (sat < 0.1 || sat > 0.62) continue;
+      if (r < 60 || r > 250) continue;
+      reds.push(r);
+      greens.push(g);
+      blues.push(b);
+    }
+  }
+
+  if (reds.length < 200) return null;
+
+  const median = (xs: number[]) => {
+    const sorted = [...xs].sort((p, q) => p - q);
+    return sorted[Math.floor(sorted.length / 2)];
+  };
+
+  return rgbToHex(median(reds), median(greens), median(blues));
+}
+
 /** 画像の主要色（最頻の1色）。 */
 export function dominantColorFromImageData(data: Uint8ClampedArray): string {
   const [best] = collectBuckets(data);

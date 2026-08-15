@@ -138,6 +138,56 @@ export async function reportReview(reviewId: number, reason: string): Promise<Re
   return { ok: !error, error: error?.message };
 }
 
+/**
+ * 手持ちからの診断（`src/lib/diagnose.ts`）の提案を、ユーザーが確定したときだけ反映する。
+ * 送られてきた項目だけを更新し、指定のない項目には触らない。
+ */
+export async function applyDiagnosis(input: {
+  personalColor?: PersonalColor;
+  skinType?: SkinType;
+  skinToneHex?: string;
+}): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "診断結果の反映にはアカウント登録が必要です" };
+  }
+
+  const patch: {
+    personal_color?: PersonalColor;
+    skin_type?: SkinType;
+    skin_tone_hex?: string;
+  } = {};
+  if (input.personalColor) patch.personal_color = input.personalColor;
+  if (input.skinType) patch.skin_type = input.skinType;
+  if (input.skinToneHex) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(input.skinToneHex)) {
+      return { ok: false, error: "肌の色を読み取れませんでした" };
+    }
+    patch.skin_tone_hex = input.skinToneHex.toLowerCase();
+  }
+  if (Object.keys(patch).length === 0) return { ok: false, error: "反映する項目がありません" };
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .update(patch)
+    .eq("user_id", user.id)
+    .select("user_id")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: error.message };
+  if (!data) {
+    return { ok: false, error: "先にプロフィールを作成してください" };
+  }
+
+  revalidatePath("/me");
+  revalidatePath("/settings");
+  revalidatePath("/stash");
+  return { ok: true };
+}
+
 export async function saveProfile(input: {
   handle: string;
   displayName: string;
