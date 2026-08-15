@@ -273,6 +273,8 @@ export type Database = {
           created_at: string
           display_name: string
           handle: string
+          onboarding_done_at: string | null
+          onboarding_step: number
           personal_color: string | null
           skin_tone_hex: string | null
           skin_type: string | null
@@ -286,6 +288,8 @@ export type Database = {
           created_at?: string
           display_name: string
           handle: string
+          onboarding_done_at?: string | null
+          onboarding_step?: number
           personal_color?: string | null
           skin_tone_hex?: string | null
           skin_type?: string | null
@@ -299,6 +303,8 @@ export type Database = {
           created_at?: string
           display_name?: string
           handle?: string
+          onboarding_done_at?: string | null
+          onboarding_step?: number
           personal_color?: string | null
           skin_tone_hex?: string | null
           skin_type?: string | null
