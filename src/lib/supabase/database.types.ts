@@ -832,6 +832,18 @@ export type Database = {
         Args: { p_min_similarity?: number; p_name: string }
         Returns: number
       }
+      search_products: {
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_mens?: boolean
+          p_q: string
+        }
+        Returns: {
+          product_id: number
+          score: number
+        }[]
+      }
       seed_ingredient_aliases: {
         Args: Record<PropertyKey, never>
         Returns: number
