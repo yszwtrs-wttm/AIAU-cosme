@@ -3,11 +3,10 @@ import BarcodeScanner from "@/components/BarcodeScanner";
 import MakeupPlan from "@/components/MakeupPlan";
 import ProductCard from "@/components/ProductCard";
 import QuickStartPicker from "@/components/QuickStartPicker";
+import UsagePanel from "@/components/UsagePanel";
 import { getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { Product } from "@/lib/types";
-
-type StashItem = { product_id: number; products: Product };
+import type { MakeupLogEntry, Product, StashUsage } from "@/lib/types";
 
 export default async function StashPage() {
   const user = await getMyUser();
@@ -15,13 +14,13 @@ export default async function StashPage() {
 
   const supabase = await createClient();
 
-  const [{ data: items }, { data: popular }] = await Promise.all([
+  const [{ data: items }, { data: popular }, { data: logs }] = await Promise.all([
     supabase
       .from("user_items")
       .select(
-        "product_id, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
+        "product_id, use_count, last_used_on, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
       )
-      .returns<StashItem[]>(),
+      .returns<StashUsage[]>(),
     supabase
       .from("products")
       .select(
@@ -30,15 +29,27 @@ export default async function StashPage() {
       .order("price_yen", { ascending: true })
       .limit(24)
       .returns<Product[]>(),
+    supabase
+      .from("makeup_logs")
+      .select("id, used_on, request, makeup_log_items(pos, products(id,name,brands(name)))")
+      .order("used_on", { ascending: false })
+      .order("id", { ascending: false })
+      .limit(5)
+      .returns<MakeupLogEntry[]>(),
   ]);
 
-  const products = (items ?? []).map((i) => i.products).filter(Boolean);
+  const stash = (items ?? []).filter((i) => i.products);
+  const products = stash.map((i) => i.products);
 
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Myポーチ（{products.length}点）</h1>
 
       {products.length > 0 && <MakeupPlan products={products} />}
+
+      {(products.length > 0 || (logs ?? []).length > 0) && (
+        <UsagePanel items={stash} logs={logs ?? []} />
+      )}
 
       <section className="space-y-2">
         <h2 className="font-display text-lg font-bold">バーコードで登録</h2>

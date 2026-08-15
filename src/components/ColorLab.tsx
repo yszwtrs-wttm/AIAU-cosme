@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { extractPalette, labArray, type ExtractedColor } from "@/lib/color";
-import { CATEGORY_LABEL, type ColorMatch } from "@/lib/types";
+import { CATEGORY_LABEL, type ColorMatch, type FrequentColor } from "@/lib/types";
 import { colorName, colorSearchBadge, dedupeShades, hueGroup, sortBySkinTone } from "@/lib/wording";
 
 const CATEGORIES = [
@@ -19,7 +19,13 @@ const CATEGORIES = [
  * 写真を選ぶ → 色を選ぶ → 近いコスメを見る、の3ステップ。
  * HEX や ΔE は画面に出さず、色見本と言葉だけで選べるようにする。
  */
-export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null }) {
+export default function ColorLab({
+  skinToneHex,
+  frequentColors = [],
+}: {
+  skinToneHex?: string | null;
+  frequentColors?: FrequentColor[];
+}) {
   const [hex, setHex] = useState<string | null>(null);
   const [matches, setMatches] = useState<ColorMatch[]>([]);
   const [category, setCategory] = useState("lip");
@@ -76,6 +82,39 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
 
   return (
     <div className="space-y-4">
+      {frequentColors.length > 0 && (
+        <section className="rounded-2xl border border-ink-200 bg-white p-5">
+          <div className="text-xs font-bold text-brand-600">記録から ／ よく使う色</div>
+          <p className="mt-1 text-sm text-ink-600">
+            メイク記録で使った回数が多い色です。押すとその色から探せます。
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {frequentColors.map((c) => (
+              <button
+                key={c.product_id}
+                type="button"
+                onClick={() => {
+                  setHex(c.color_hex);
+                  void search(c.color_hex, category);
+                }}
+                className={`flex items-center gap-2 rounded-2xl border bg-white px-2.5 py-2 text-[11px] ${
+                  hex?.toLowerCase() === c.color_hex.toLowerCase() ? "border-brand-400" : "border-brand-100"
+                }`}
+              >
+                <span
+                  className="swatch inline-block h-8 w-8 rounded-full"
+                  style={{ background: c.color_hex }}
+                />
+                <span className="text-left">
+                  <span className="block font-bold">{colorName(c.color_hex)}</span>
+                  <span className="text-ink-400">{c.use_count}回使った</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className="rounded-2xl border border-ink-200 bg-white p-5">
         <div className="text-xs font-bold text-brand-600">STEP 1 ／ 写真を選ぶ</div>
         <p className="mt-1 text-sm text-ink-600">

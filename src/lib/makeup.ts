@@ -1,7 +1,7 @@
 import { hexToLab } from "./color";
 import { CATEGORY_LABEL, type Product } from "./types";
 
-export type PlanStep = { order: number; product: string; reason: string };
+export type PlanStep = { order: number; product: string; reason: string; product_id?: number };
 export type Plan = { headline: string; steps: PlanStep[]; note: string; source: "llm" | "rule" };
 
 type Mood = { key: string; label: string; match: (lab: { l: number; a: number; b: number }) => number };
@@ -30,6 +30,7 @@ export function buildRulePlan(products: Product[], request: string): Plan {
     steps.push({
       order: steps.length + 1,
       product: `${cheapest.brands?.name} ${cheapest.name}`,
+      product_id: cheapest.id,
       reason: "ベースは手持ちの中で一番減りが早くて良いものを薄く。",
     });
   }
@@ -42,6 +43,7 @@ export function buildRulePlan(products: Product[], request: string): Plan {
     steps.push({
       order: steps.length + 1,
       product: `${best.brands?.name} ${best.name}`,
+      product_id: best.id,
       reason: `${mood.key}見えの条件（${mood.label}）に、手持ちの中で色が一番近い。`,
     });
     if (scored.length > 1) {
@@ -49,6 +51,7 @@ export function buildRulePlan(products: Product[], request: string): Plan {
       steps.push({
         order: steps.length + 1,
         product: `${second.brands?.name} ${second.name}`,
+        product_id: second.id,
         reason: "内側に重ねてグラデーションにすると、同じ手持ちで印象を変えられる。",
       });
     }
@@ -59,6 +62,7 @@ export function buildRulePlan(products: Product[], request: string): Plan {
     steps.push({
       order: steps.length + 1,
       product: `${hair[0].brands?.name} ${hair[0].name}`,
+      product_id: hair[0].id,
       reason: "前日の夜はこれで整えておくと、当日のセットが早い。",
     });
   }
