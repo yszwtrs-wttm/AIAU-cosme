@@ -10,7 +10,7 @@ import type { MakeupLogEntry, Product, StashUsage } from "@/lib/types";
 
 export default async function StashPage() {
   const user = await getMyUser();
-  if (!isRealAccount(user)) redirect("/login");
+  if (!user || !isRealAccount(user)) redirect("/login");
 
   const supabase = await createClient();
 
@@ -20,6 +20,8 @@ export default async function StashPage() {
       .select(
         "product_id, use_count, last_used_on, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
       )
+      // 公開ポーチは他人の行も読めるので、自分の手持ちだけに絞る。
+      .eq("user_id", user.id)
       .returns<StashUsage[]>(),
     supabase
       .from("products")

@@ -26,11 +26,16 @@ function attachProductIds(steps: PlanStep[], products: Product[]): PlanStep[] {
  */
 export async function generateMakeupPlan(request: string): Promise<Plan> {
   const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return buildRulePlan([], request);
+
   const { data } = await supabase
     .from("user_items")
     .select(
       "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name))",
     )
+    // 公開ポーチは他人の行も読めるので、提案の候補は自分の手持ちだけに絞る。
+    .eq("user_id", userData.user.id)
     .returns<{ products: Product }[]>();
 
   const products = (data ?? []).map((r) => r.products).filter(Boolean);
