@@ -3,7 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
-import type { PersonalColor, SkinType } from "@/lib/types";
+import type {
+  DupeRow,
+  PaletteCoverage,
+  PassReason,
+  PersonalColor,
+  Product,
+  SkinType,
+} from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
 
@@ -66,6 +73,98 @@ export async function removeFromStash(productId: number): Promise<Result> {
 
   revalidatePath("/stash");
   revalidatePath(`/products/${productId}`);
+  return { ok: !error, error: error?.message };
+}
+
+/**
+ * 見送り記録。買わないと決めた時点の根拠（手持ちのどれと被ったか・成分の cosine・ΔE・
+ * パレットの重複数）を一緒に保存する。あとで価格や手持ちが変わっても、記録した数値で説明できる。
+ * 判定は Postgres 側の関数に任せ、ここでは結果を写すだけにする。
+ */
+export async function recordPass(
+  productId: number,
+): Promise<Result & { shareId?: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!isRealAccount(user)) {
+    return { ok: false, error: "見送り記録にはアカウント登録が必要です" };
+  }
+
+  const [{ data: product }, dupeRes, cheaperRes, coverageRes] = await Promise.all([
+    supabase
+      .from("products")
+      .select("id,price_yen")
+      .eq("id", productId)
+      .maybeSingle<Pick<Product, "id" | "price_yen">>(),
+    supabase.rpc("find_duplicates_in_stash", { p_product_id: productId }),
+    supabase.rpc("find_cheaper_dupes", { p_product_id: productId, p_limit: 1 }),
+    supabase.rpc("find_palette_coverage", { p_product_id: productId }),
+  ]);
+
+  if (!product) return { ok: false, error: "商品が見つかりません" };
+
+  const dupe = ((dupeRes.data ?? []) as DupeRow[])[0] ?? null;
+  const alt = ((cheaperRes.data ?? []) as DupeRow[])[0] ?? null;
+  const coverage = (coverageRes.data ?? []) as PaletteCoverage[];
+  const covered = coverage.filter((c) => c.owned_product_id !== null).length;
+  const paletteTotal = coverage.length > 1 ? coverage.length : null;
+
+  const reason: PassReason = dupe
+    ? "dupe"
+    : paletteTotal && covered / paletteTotal >= 0.5
+      ? "palette"
+      : alt
+        ? "price"
+        : "other";
+
+  const { data, error } = await supabase
+    .from("passes")
+    .upsert(
+      {
+        user_id: user!.id,
+        product_id: productId,
+        reason,
+        price_yen: product.price_yen,
+        owned_product_id: dupe?.product_id ?? null,
+        owned_label: dupe ? `${dupe.brand} ${dupe.name}` : null,
+        ing_sim: dupe?.ing_sim ?? null,
+        delta_e: dupe?.delta_e ?? null,
+        palette_total: paletteTotal,
+        palette_covered: paletteTotal ? covered : null,
+        alt_product_id: alt?.product_id ?? null,
+        alt_label: alt ? `${alt.brand} ${alt.name}` : null,
+        alt_price_yen: alt?.price_yen ?? null,
+      },
+      { onConflict: "user_id,product_id" },
+    )
+    .select("share_id")
+    .maybeSingle();
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath(`/products/${productId}`);
+  revalidatePath("/me");
+  return { ok: true, shareId: data?.share_id };
+}
+
+export async function removePass(productId: number): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "セッションがありません" };
+
+  const { error } = await supabase
+    .from("passes")
+    .delete()
+    .eq("product_id", productId)
+    .eq("user_id", user.id);
+
+  revalidatePath(`/products/${productId}`);
+  revalidatePath("/me");
   return { ok: !error, error: error?.message };
 }
 

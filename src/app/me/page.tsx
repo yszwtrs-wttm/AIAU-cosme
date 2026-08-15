@@ -5,7 +5,8 @@ import LogoutButton from "@/components/LogoutButton";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import type { Product, Review } from "@/lib/types";
+import { yen } from "@/lib/pass";
+import type { Pass, Product, Review } from "@/lib/types";
 
 type StashRow = { products: Product | null };
 
@@ -15,7 +16,7 @@ export default async function MyPage() {
   const profile = await getMyProfile();
   const real = isRealAccount(user);
 
-  const [{ data: stash }, { data: myReviews }] = await Promise.all([
+  const [{ data: stash }, { data: myReviews }, { data: passes }] = await Promise.all([
     supabase
       .from("user_items")
       .select(
@@ -30,6 +31,14 @@ export default async function MyPage() {
           .order("posted_at", { ascending: false })
           .returns<Review[]>()
       : Promise.resolve({ data: [] as Review[] }),
+    user
+      ? supabase
+          .from("passes")
+          .select("*,products!passes_product_id_fkey(name,brands(name))")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .returns<Pass[]>()
+      : Promise.resolve({ data: [] as Pass[] }),
   ]);
 
   const items = (stash ?? []).map((r) => r.products).filter((p): p is Product => Boolean(p));
@@ -83,6 +92,12 @@ export default async function MyPage() {
           <div className="mt-1 font-display text-3xl font-bold tabular-nums">{items.length}</div>
         </div>
         <div className="rounded-2xl border border-ink-200 bg-white p-4">
+          <div className="text-xs font-bold text-ink-400">見送った商品</div>
+          <div className="mt-1 font-display text-3xl font-bold tabular-nums">
+            {(passes ?? []).length}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-ink-200 bg-white p-4">
           <div className="text-xs font-bold text-ink-400">書いた口コミ</div>
           <div className="mt-1 font-display text-3xl font-bold tabular-nums">
             {(myReviews ?? []).length}
@@ -110,6 +125,39 @@ export default async function MyPage() {
           </div>
         )}
       </section>
+
+      {(passes ?? []).length > 0 && (
+        <section className="space-y-3">
+          <h2 className="font-display text-lg font-bold">見送った記録</h2>
+          <ul className="space-y-2">
+            {(passes ?? []).map((p) => (
+              <li
+                key={p.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-ink-200 bg-white p-4"
+              >
+                <div className="min-w-0">
+                  <div className="text-xs text-ink-400">{p.products?.brands?.name}</div>
+                  <Link
+                    href={`/products/${p.product_id}`}
+                    className="text-sm font-bold hover:text-brand-600"
+                  >
+                    {p.products?.name}
+                  </Link>
+                  <div className="text-xs text-ink-600">
+                    買わずに済んだ {yen(p.price_yen)}
+                  </div>
+                </div>
+                <Link
+                  href={`/pass/${p.share_id}`}
+                  className="rounded-full border border-brand-200 px-3 py-1.5 text-xs font-bold text-brand-600"
+                >
+                  シェア画像を見る
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {(myReviews ?? []).length > 0 && (
         <section className="space-y-3">
