@@ -4,6 +4,7 @@ import "./globals.css";
 import AnonAuth from "@/components/AnonAuth";
 import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
+import ToastProvider from "@/components/Toast";
 import { getMyUser, isRealAccount } from "@/lib/auth";
 
 const sans = Zen_Kaku_Gothic_New({
@@ -40,24 +41,26 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="ja" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen text-ink-900 antialiased">
-        <AnonAuth />
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
-        >
-          本文に移動
-        </a>
-        <SiteHeader isRealAccount={real} />
-        <main id="main" className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">
-          {children}
-        </main>
-        <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-28 text-[11px] text-ink-400 md:pb-10">
-          <p>
-            デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
-          </p>
-          <p>© {new Date().getFullYear()} Team Cosme. All rights reserved.</p>
-        </footer>
-        <BottomTabBar isRealAccount={real} />
+        <ToastProvider>
+          <AnonAuth />
+          <a
+            href="#main"
+            className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
+          >
+            本文に移動
+          </a>
+          <SiteHeader isRealAccount={real} />
+          <main id="main" className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">
+            {children}
+          </main>
+          <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-28 text-[11px] text-ink-400 md:pb-10">
+            <p>
+              デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
+            </p>
+            <p>© {new Date().getFullYear()} Team Cosme. All rights reserved.</p>
+          </footer>
+          <BottomTabBar isRealAccount={real} />
+        </ToastProvider>
       </body>
     </html>
   );
