@@ -8,8 +8,10 @@ import { attachReviewImages, postReview, reportReview } from "@/app/actions";
 import Avatar from "@/components/Avatar";
 import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
+import ReviewImage from "@/components/ReviewImage";
+import { shrinkImage } from "@/lib/image";
 import { averageHash } from "@/lib/phash";
-import { publicImageUrl } from "@/lib/storage";
+import { THUMB_WIDTH } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
 
@@ -89,12 +91,11 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
       {images.length > 0 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {images.map((img) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <ReviewImage
               key={img.id}
-              src={publicImageUrl(img.path)}
-              alt=""
-              className="h-28 w-28 shrink-0 rounded-2xl object-cover"
+              path={img.path}
+              width={THUMB_WIDTH}
+              className="h-28 w-28 overflow-hidden rounded-2xl"
             />
           ))}
         </div>
@@ -189,12 +190,13 @@ export default function ReviewPanel({
         } = await supabase.auth.getUser();
         const uploaded: { path: string; phash?: string | null }[] = [];
 
-        for (const file of files.slice(0, MAX_IMAGES)) {
+        for (const original of files.slice(0, MAX_IMAGES)) {
+          const file = await shrinkImage(original);
           const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
           const path = `${user!.id}/${res.reviewId}-${uploaded.length}.${ext}`;
           const { error: upErr } = await supabase.storage
             .from("review-images")
-            .upload(path, file, { upsert: true });
+            .upload(path, file, { upsert: true, contentType: file.type });
           if (upErr) continue;
           uploaded.push({ path, phash: await averageHash(file) });
         }
