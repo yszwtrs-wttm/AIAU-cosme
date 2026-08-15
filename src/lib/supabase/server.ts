@@ -1,8 +1,10 @@
+import { cache } from "react";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "./database.types";
 
-export async function createClient() {
+/** 同じリクエスト内では 1 つのクライアントを使い回す。 */
+export const createClient = cache(async () => {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
@@ -25,4 +27,4 @@ export async function createClient() {
       },
     },
   );
-}
+});
