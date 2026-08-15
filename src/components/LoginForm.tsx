@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { LockKeyhole, Mail } from "lucide-react";
 import PasswordField from "@/components/PasswordField";
+import SocialAuthButtons from "@/components/SocialAuthButtons";
+import { enabledSocialProviders } from "@/lib/oauth";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "signup";
@@ -49,6 +51,7 @@ export default function LoginForm({
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const socialProviders = enabledSocialProviders();
 
   const finishAuth = async () => {
     const supabase = createClient();
@@ -136,12 +139,20 @@ export default function LoginForm({
           {mode === "signup" ? "新規登録" : resetPassword ? "パスワードを再設定" : "ログイン"}
         </h2>
         <p className="mt-1 text-xs text-ink-500">
-          {step === "email" && mode === "signup" && "メールアドレスに確認リンクを送ります。"}
+          {step === "email" &&
+            mode === "signup" &&
+            (socialProviders.length > 0
+              ? "Google / Apple ならメールを開かずに登録できます。メールで登録する場合は確認リンクを送ります。"
+              : "メールアドレスに確認リンクを送ります。")}
           {step === "email" && mode === "login" && !resetPassword && "登録済みのメールアドレスとパスワードでログインします。"}
           {step === "email" && resetPassword && "登録済みのメールアドレスに再設定リンクを送ります。"}
           {step === "sent" && "メールに届いたリンクを開いてください。"}
         </p>
       </div>
+
+      {step === "email" && !resetPassword && (
+        <SocialAuthButtons providers={socialProviders} anonymous={anonymous} />
+      )}
 
       {step === "email" && (
         <form
