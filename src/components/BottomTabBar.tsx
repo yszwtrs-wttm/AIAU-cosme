@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, Home, Images, Search, UserRound } from "lucide-react";
+import { Heart, Images, Search, UserRound } from "lucide-react";
 
 const TABS = [
-  { href: "/", label: "ホーム", icon: Home },
   { href: "/search", label: "探す", icon: Search },
   { href: "/feed", label: "投稿", icon: Images },
   { href: "/stash", label: "Myポーチ", icon: Heart },

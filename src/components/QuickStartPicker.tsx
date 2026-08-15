@@ -32,7 +32,6 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
       </summary>
       <div className="space-y-4 border-t border-ink-100 p-5">
         <div>
-          <h2 className="font-display text-lg font-bold">持っているものをタップするだけ</h2>
           <p className="text-sm text-ink-600">
             よく使われている商品を並べています。当てはまるものを選んで、まとめて登録できます。
           </p>
