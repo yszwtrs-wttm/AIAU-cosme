@@ -38,6 +38,16 @@ export const PERSONAL_COLOR_LABEL: Record<PersonalColor, string> = {
   winter: "ブルベ冬",
 };
 
+/** プロフィールで選べる肌のトーン。自撮りからの推定値もこのどれかに寄せる。 */
+export const SKIN_TONE_PRESETS = [
+  { hex: "#f6e0d2", label: "とても明るい" },
+  { hex: "#efd0bc", label: "明るい" },
+  { hex: "#e2b899", label: "標準（黄より）" },
+  { hex: "#dbb098", label: "標準（赤より）" },
+  { hex: "#c69476", label: "少し暗い" },
+  { hex: "#a8734f", label: "暗い" },
+] as const;
+
 export type Product = {
   id: number;
   name: string;
