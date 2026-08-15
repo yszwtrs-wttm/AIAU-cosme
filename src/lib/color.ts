@@ -1,6 +1,7 @@
 import { converter, differenceCiede2000, formatHex } from "culori";
 
-const toLab = converter("lab");
+// CIEDE2000 も Postgres 側の hex_to_lab も D65 基準の CIELAB。JS 側も lab65 に揃える。
+const toLab = converter("lab65");
 const diff = differenceCiede2000();
 
 export type Lab = { l: number; a: number; b: number };
@@ -18,6 +19,11 @@ export function labArray(hex: string): [number, number, number] {
 
 export function deltaE(hexA: string, hexB: string): number {
   return diff(hexA, hexB);
+}
+
+/** LAB 値そのものの ΔE(CIEDE2000)。DB から返る color_lab の比較に使う。 */
+export function deltaELab(a: Lab, b: Lab): number {
+  return diff({ mode: "lab65", ...a }, { mode: "lab65", ...b });
 }
 
 /** ΔE の意味を日本語に落とす。CIEDE2000 の一般的な解釈に沿った区切り。 */
