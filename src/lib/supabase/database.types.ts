@@ -168,6 +168,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "product_colors_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
@@ -232,6 +239,32 @@ export type Database = {
           },
         ]
       }
+      profile_allergens: {
+        Row: {
+          created_at: string
+          ingredient_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ingredient_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          ingredient_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_allergens_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_hue: number
@@ -273,32 +306,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      profile_allergens: {
-        Row: {
-          created_at: string
-          ingredient_id: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          ingredient_id: number
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          ingredient_id?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_allergens_ingredient_id_fkey"
-            columns: ["ingredient_id"]
-            isOneToOne: false
-            referencedRelation: "ingredients_master"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       review_images: {
         Row: {
@@ -380,6 +387,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "review_investigations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
             referencedColumns: ["id"]
           },
         ]
@@ -494,6 +508,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "reviews_profile_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -552,6 +573,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -596,6 +624,13 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
+            referencedColumns: ["id"]
+          },
         ]
       }
       product_rating_summary: {
@@ -619,6 +654,35 @@ export type Database = {
           ranked_rating: number | null
         }
         Relationships: []
+      }
+      products_ranked: {
+        Row: {
+          adjusted_rating: number | null
+          brand_id: number | null
+          category: string | null
+          color_hex: string | null
+          counted_count: number | null
+          created_at: string | null
+          id: number | null
+          image_url: string | null
+          ingredients: string[] | null
+          is_mens: boolean | null
+          jan: string | null
+          name: string | null
+          price_yen: number | null
+          ranked_rating: number | null
+          volume: number | null
+          volume_unit: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -810,10 +874,44 @@ export type Database = {
         Returns: number
       }
       search_products: {
-        Args: { p_category?: string | null; p_limit?: number; p_mens?: boolean | null; p_q: string }
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_mens?: boolean
+          p_q: string
+        }
         Returns: {
           product_id: number
           score: number
+        }[]
+      }
+      search_products_page: {
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_mens?: boolean
+          p_offset?: number
+          p_q?: string
+          p_sort?: string
+        }
+        Returns: {
+          avoided: boolean
+          brand_name: string
+          category: string
+          color_hex: string
+          id: number
+          image_url: string
+          ingredients: string[]
+          is_mens: boolean
+          jan: string
+          name: string
+          owned: boolean
+          price_yen: number
+          product_colors: Json
+          ranked_rating: number
+          total_count: number
+          volume: number
+          volume_unit: string
         }[]
       }
       set_limit: {
@@ -999,3 +1097,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

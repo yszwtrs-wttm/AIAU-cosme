@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Mono, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
-import AnonAuth from "@/components/AnonAuth";
 import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
 import ToastProvider from "@/components/Toast";
@@ -42,7 +41,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="ja" className={`${sans.variable} ${mono.variable}`}>
       <body className="min-h-screen text-ink-900 antialiased">
         <ToastProvider>
-          <AnonAuth />
           <SiteHeader isRealAccount={real} />
           <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">{children}</main>
           <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-28 text-[11px] text-ink-500 md:pb-10">
