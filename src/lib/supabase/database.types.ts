@@ -205,6 +205,7 @@ export type Database = {
           display_name: string
           handle: string
           personal_color: string | null
+          prefers_mens: boolean
           skin_tone_hex: string | null
           skin_type: string | null
           stash_public: boolean
@@ -218,6 +219,7 @@ export type Database = {
           display_name: string
           handle: string
           personal_color?: string | null
+          prefers_mens?: boolean
           skin_tone_hex?: string | null
           skin_type?: string | null
           stash_public?: boolean
@@ -231,6 +233,7 @@ export type Database = {
           display_name?: string
           handle?: string
           personal_color?: string | null
+          prefers_mens?: boolean
           skin_tone_hex?: string | null
           skin_type?: string | null
           stash_public?: boolean

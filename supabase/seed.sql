@@ -142,7 +142,18 @@ insert into products (brand_id, name, category, is_mens, price_yen, volume, volu
   ((select id from brands where name = 'LUMINA'), 'デイリーアイパレット 01 ブラウンベージュ', 'eyeshadow', false, 6800, 10.8, 'g', '4901234000245', '#E8D3C2', array['TALC', 'MICA', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'SILICA', 'ZINC STEARATE', 'OCTYLDODECANOL', 'CAPRYLIC/CAPRIC TRIGLYCERIDE', 'BORON NITRIDE', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 15850', 'CI 77491', 'CI 77492', 'CI 77891']::text[]),
   ((select id from brands where name = 'PRICO'), '9色アイパレット 01 ブラウン', 'eyeshadow', false, 1480, 10.8, 'g', '4901234000252', '#EACFC2', array['TALC', 'MICA', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'SILICA', 'OCTYLDODECANOL', 'ZINC STEARATE', 'CAPRYLIC/CAPRIC TRIGLYCERIDE', 'BORON NITRIDE', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 77491', 'CI 15850', 'CI 42090', 'CI 77492']::text[]),
   ((select id from brands where name = 'mode noir'), 'クチュールアイパレット 02 モーヴ', 'eyeshadow', false, 8200, 7.2, 'g', '4901234000259', '#EFD2D2', array['MICA', 'TALC', 'CALCIUM ALUMINUM BOROSILICATE', 'SYNTHETIC FLUORPHLOGOPITE', 'MAGNESIUM MYRISTATE', 'DIMETHICONE', 'TIN OXIDE', 'SILICA', 'OCTYLDODECANOL', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 77492', 'CI 42090', 'CI 77499', 'CI 15850']::text[]),
-  ((select id from brands where name = 'DAILY+'), '6色アイパレット 02 ピンク', 'eyeshadow', false, 1280, 7.2, 'g', '4901234000266', '#ECCDD6', array['MICA', 'TALC', 'CALCIUM ALUMINUM BOROSILICATE', 'MAGNESIUM MYRISTATE', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'TIN OXIDE', 'SILICA', 'OCTYLDODECANOL', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 15850', 'CI 77891', 'CI 42090', 'CI 77492']::text[]);
+  ((select id from brands where name = 'DAILY+'), '6色アイパレット 02 ピンク', 'eyeshadow', false, 1280, 7.2, 'g', '4901234000266', '#ECCDD6', array['MICA', 'TALC', 'CALCIUM ALUMINUM BOROSILICATE', 'MAGNESIUM MYRISTATE', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'TIN OXIDE', 'SILICA', 'OCTYLDODECANOL', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 15850', 'CI 77891', 'CI 42090', 'CI 77492']::text[]),
+  ((select id from brands where name = 'GRIT'), 'メンズBBクリーム ナチュラル', 'bb', true, 2400, 30, 'mL', '4901234000273', '#DDB18C', array['WATER', 'CYCLOPENTASILOXANE', 'ETHYLHEXYL METHOXYCINNAMATE', 'TITANIUM DIOXIDE', 'GLYCERIN', 'PEG-10 DIMETHICONE', 'SILICA', 'ZINC OXIDE', 'TRIETHOXYCAPRYLYLSILANE', 'NIACINAMIDE', 'SALICYLIC ACID', 'PHENOXYETHANOL', 'TOCOPHEROL', 'CI 77491', 'CI 77492', 'CI 77499']::text[]),
+  ((select id from brands where name = 'CLEAR BASE'), 'メンズBB ナチュラル', 'bb', true, 980, 30, 'mL', '4901234000280', '#DCB18F', array['WATER', 'CYCLOPENTASILOXANE', 'ETHYLHEXYL METHOXYCINNAMATE', 'TITANIUM DIOXIDE', 'GLYCERIN', 'PEG-10 DIMETHICONE', 'SILICA', 'ZINC OXIDE', 'TRIETHOXYCAPRYLYLSILANE', 'NIACINAMIDE', 'SALICYLIC ACID', 'PHENOXYETHANOL', 'TOCOPHEROL', 'CI 77491', 'CI 77492', 'CI 77499']::text[]),
+  ((select id from brands where name = 'STOIC'), 'テカリ防止BB ライト', 'bb', true, 3200, 30, 'mL', '4901234000287', '#E8C4A2', array['WATER', 'CYCLOPENTASILOXANE', 'ETHYLHEXYL METHOXYCINNAMATE', 'TITANIUM DIOXIDE', 'GLYCERIN', 'PEG-10 DIMETHICONE', 'SILICA', 'ZINC OXIDE', 'TRIETHOXYCAPRYLYLSILANE', 'NIACINAMIDE', 'SALICYLIC ACID', 'PHENOXYETHANOL', 'TOCOPHEROL', 'CI 77491', 'CI 77492', 'CI 77499']::text[]),
+  ((select id from brands where name = 'GRIT'), 'UVプロテクトジェル', 'sunscreen', true, 1800, 40, 'mL', '4901234000294', null, array['WATER', 'ETHYLHEXYL METHOXYCINNAMATE', 'CYCLOPENTASILOXANE', 'ZINC OXIDE', 'GLYCERIN', 'TITANIUM DIOXIDE', 'SILICA', 'BUTYLENE GLYCOL', 'MENTHYL LACTATE', 'NIACINAMIDE', 'PHENOXYETHANOL', 'TOCOPHEROL']::text[]),
+  ((select id from brands where name = 'HARDSCALP'), 'トーンアップ日焼け止め', 'sunscreen', true, 1480, 40, 'mL', '4901234000301', '#E8C4A2', array['WATER', 'ETHYLHEXYL METHOXYCINNAMATE', 'CYCLOPENTASILOXANE', 'ZINC OXIDE', 'GLYCERIN', 'TITANIUM DIOXIDE', 'SILICA', 'BUTYLENE GLYCOL', 'MENTHYL LACTATE', 'NIACINAMIDE', 'PHENOXYETHANOL', 'TOCOPHEROL']::text[]),
+  ((select id from brands where name = 'GRIT'), 'メンズアイブロウペンシル 01 ナチュラルブラウン', 'eyebrow', true, 1300, 0.2, 'g', '4901234000308', '#6E4630', array['TALC', 'MICA', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'SILICA', 'ZINC STEARATE', 'OCTYLDODECANOL', 'CAPRYLIC/CAPRIC TRIGLYCERIDE', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 77491', 'CI 77492', 'CI 77499']::text[]),
+  ((select id from brands where name = 'CLEAR BASE'), '眉ペンシル 01 ブラウン', 'eyebrow', true, 650, 0.2, 'g', '4901234000315', '#714833', array['TALC', 'MICA', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'SILICA', 'ZINC STEARATE', 'OCTYLDODECANOL', 'CAPRYLIC/CAPRIC TRIGLYCERIDE', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 77491', 'CI 77492', 'CI 77499']::text[]),
+  ((select id from brands where name = 'STOIC'), 'アイブロウパウダー 02 グレーブラウン', 'eyebrow', true, 1600, 2.5, 'g', '4901234000322', '#5A4A42', array['TALC', 'MICA', 'SYNTHETIC FLUORPHLOGOPITE', 'DIMETHICONE', 'SILICA', 'ZINC STEARATE', 'OCTYLDODECANOL', 'CAPRYLIC/CAPRIC TRIGLYCERIDE', 'TOCOPHEROL', 'PHENOXYETHANOL', 'CI 77491', 'CI 77492', 'CI 77499']::text[]),
+  ((select id from brands where name = 'GRIT'), 'メンズリップバーム 無色', 'lip', true, 900, 3.5, 'g', '4901234000329', null, array['HYDROGENATED POLYISOBUTENE', 'MICROCRYSTALLINE WAX', 'CANDELILLA WAX', 'OCTYLDODECANOL', 'SHEA BUTTER ETHYL ESTERS', 'SQUALANE', 'SIMMONDSIA CHINENSIS SEED OIL', 'TOCOPHEROL', 'HYALURONIC ACID']::text[]),
+  ((select id from brands where name = 'STOIC'), '色つきリップ 01 ナチュラルベージュ', 'lip', true, 1200, 3.5, 'g', '4901234000336', '#C98A78', array['HYDROGENATED POLYISOBUTENE', 'MICROCRYSTALLINE WAX', 'CANDELILLA WAX', 'OCTYLDODECANOL', 'SHEA BUTTER ETHYL ESTERS', 'SQUALANE', 'SIMMONDSIA CHINENSIS SEED OIL', 'TOCOPHEROL', 'HYALURONIC ACID', 'CI 77491', 'TITANIUM DIOXIDE']::text[]),
+  ((select id from brands where name = 'CLEAR BASE'), 'うるおいリップ 01 ベージュ', 'lip', true, 600, 3.5, 'g', '4901234000343', '#C78B7B', array['HYDROGENATED POLYISOBUTENE', 'MICROCRYSTALLINE WAX', 'CANDELILLA WAX', 'OCTYLDODECANOL', 'SHEA BUTTER ETHYL ESTERS', 'SQUALANE', 'SIMMONDSIA CHINENSIS SEED OIL', 'TOCOPHEROL', 'HYALURONIC ACID', 'CI 77491', 'TITANIUM DIOXIDE']::text[]);
 
 insert into product_colors (product_id, pos, shade_name, hex) values
   (1, 0, '03 テラコッタ', '#B8604A'),
@@ -196,7 +207,16 @@ insert into product_colors (product_id, pos, shade_name, hex) values
   (38, 2, 'モーヴ', '#B3717B'),
   (38, 3, 'コーラル', '#DA6847'),
   (38, 4, 'ワインレッド', '#903439'),
-  (38, 5, 'シルバー', '#CEBFBC');
+  (38, 5, 'シルバー', '#CEBFBC'),
+  (39, 0, 'ナチュラル', '#DDB18C'),
+  (40, 0, 'ナチュラル', '#DCB18F'),
+  (41, 0, 'ライト', '#E8C4A2'),
+  (43, 0, 'ライトベージュ', '#E8C4A2'),
+  (44, 0, '01 ナチュラルブラウン', '#6E4630'),
+  (45, 0, '01 ブラウン', '#714833'),
+  (46, 0, '02 グレーブラウン', '#5A4A42'),
+  (48, 0, '01 ナチュラルベージュ', '#C98A78'),
+  (49, 0, '01 ベージュ', '#C78B7B');
 
 insert into reviews (product_id, author_name, author_key, rating, body, image_phash, posted_at) values
   ((select p.id from products p join brands b on b.id = p.brand_id where b.name = 'mode noir' and p.name like 'セラムファンデーション%' limit 1), 'mikan_88', 'mikan_88', 4, 'カバー力は十分。ただ夕方は小鼻がよれるので部分的にパウダーがいる。', null, now() - interval '40 days'),

@@ -334,6 +334,63 @@ for brand, name, price, base, palette, dev in eye_specs:
                 formula + pigments, shades)
 
 
+# --- メンズ向け（ベース・眉・リップ） ------------------------------------------
+# メンズはシャンプー / トリートメントしか無く is_mens の絞り込みが効かなかったので、
+# ベース・眉・リップも持たせる。安い代替が見つかる関係も1組ずつ入れる。
+# 成分は既存の INCI プールから選ぶ（成分マスタの次元を増やさない）。
+MENS_BB_BASE = [
+    "WATER", "CYCLOPENTASILOXANE", "ETHYLHEXYL METHOXYCINNAMATE", "TITANIUM DIOXIDE",
+    "GLYCERIN", "PEG-10 DIMETHICONE", "SILICA", "ZINC OXIDE",
+    "TRIETHOXYCAPRYLYLSILANE", "NIACINAMIDE", "SALICYLIC ACID", "PHENOXYETHANOL",
+    "TOCOPHEROL", "CI 77491", "CI 77492", "CI 77499",
+]
+MENS_SUNSCREEN_BASE = [
+    "WATER", "ETHYLHEXYL METHOXYCINNAMATE", "CYCLOPENTASILOXANE", "ZINC OXIDE",
+    "GLYCERIN", "TITANIUM DIOXIDE", "SILICA", "BUTYLENE GLYCOL",
+    "MENTHYL LACTATE", "NIACINAMIDE", "PHENOXYETHANOL", "TOCOPHEROL",
+]
+MENS_BROW_BASE = [
+    "TALC", "MICA", "SYNTHETIC FLUORPHLOGOPITE", "DIMETHICONE", "SILICA",
+    "ZINC STEARATE", "OCTYLDODECANOL", "CAPRYLIC/CAPRIC TRIGLYCERIDE",
+    "TOCOPHEROL", "PHENOXYETHANOL", "CI 77491", "CI 77492", "CI 77499",
+]
+MENS_LIP_BASE = [
+    "HYDROGENATED POLYISOBUTENE", "MICROCRYSTALLINE WAX", "CANDELILLA WAX",
+    "OCTYLDODECANOL", "SHEA BUTTER ETHYL ESTERS", "SQUALANE",
+    "SIMMONDSIA CHINENSIS SEED OIL", "TOCOPHEROL", "HYALURONIC ACID",
+]
+
+mens_specs = [
+    # (brand, 商品名, category, 価格, 容量, 単位, 成分, 色)
+    ("GRIT", "メンズBBクリーム ナチュラル", "bb", 2400, 30, "mL", MENS_BB_BASE,
+     [("ナチュラル", "#DDB18C")]),
+    # ↓ GRIT とほぼ同じ処方・色の安い代替
+    ("CLEAR BASE", "メンズBB ナチュラル", "bb", 980, 30, "mL", MENS_BB_BASE,
+     [("ナチュラル", "#DCB18F")]),
+    ("STOIC", "テカリ防止BB ライト", "bb", 3200, 30, "mL", MENS_BB_BASE,
+     [("ライト", "#E8C4A2")]),
+    ("GRIT", "UVプロテクトジェル", "sunscreen", 1800, 40, "mL", MENS_SUNSCREEN_BASE, []),
+    ("HARDSCALP", "トーンアップ日焼け止め", "sunscreen", 1480, 40, "mL",
+     MENS_SUNSCREEN_BASE, [("ライトベージュ", "#E8C4A2")]),
+    ("GRIT", "メンズアイブロウペンシル 01 ナチュラルブラウン", "eyebrow", 1300, 0.2, "g",
+     MENS_BROW_BASE, [("01 ナチュラルブラウン", "#6E4630")]),
+    # ↓ GRIT のペンシルとほぼ同じ色の安い代替
+    ("CLEAR BASE", "眉ペンシル 01 ブラウン", "eyebrow", 650, 0.2, "g", MENS_BROW_BASE,
+     [("01 ブラウン", "#714833")]),
+    ("STOIC", "アイブロウパウダー 02 グレーブラウン", "eyebrow", 1600, 2.5, "g",
+     MENS_BROW_BASE, [("02 グレーブラウン", "#5A4A42")]),
+    ("GRIT", "メンズリップバーム 無色", "lip", 900, 3.5, "g", MENS_LIP_BASE, []),
+    ("STOIC", "色つきリップ 01 ナチュラルベージュ", "lip", 1200, 3.5, "g",
+     MENS_LIP_BASE + ["CI 77491", "TITANIUM DIOXIDE"], [("01 ナチュラルベージュ", "#C98A78")]),
+    # ↓ STOIC の色つきリップとほぼ同じ色の安い代替
+    ("CLEAR BASE", "うるおいリップ 01 ベージュ", "lip", 600, 3.5, "g",
+     MENS_LIP_BASE + ["CI 77491", "TITANIUM DIOXIDE"], [("01 ベージュ", "#C78B7B")]),
+]
+
+for brand, name, category, price, volume, unit, formula, shades in mens_specs:
+    add_product(brand, name, category, price, volume, unit, formula, shades, is_mens=True)
+
+
 # --- 口コミ ------------------------------------------------------------------
 # 「サクラが湧いている商品」を1つ作る。文体が近い / 同日バースト / 同ブランド偏重 / PR表記 / 画像使い回し。
 SAKURA_TARGET_BRAND = "mode noir"

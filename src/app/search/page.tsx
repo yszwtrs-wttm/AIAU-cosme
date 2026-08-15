@@ -6,7 +6,15 @@ import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABEL, type Category, type Product, type ProductScore } from "@/lib/types";
 
-const CATEGORIES: Category[] = ["lip", "eyeshadow", "foundation", "shampoo", "treatment"];
+const CATEGORIES: Category[] = [
+  "lip",
+  "eyeshadow",
+  "eyebrow",
+  "foundation",
+  "bb",
+  "shampoo",
+  "treatment",
+];
 const PRODUCT_SELECT =
   "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 const CHIP = "rounded-full border px-3 py-1.5 text-sm transition";
@@ -43,7 +51,7 @@ function filterHref({
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (category) params.set("category", category);
-  if (mens === "1") params.set("mens", "1");
+  if (mens === "1" || mens === "0") params.set("mens", mens);
   if (sort && sort !== "recommended") params.set("sort", sort);
   const query = params.toString();
   return query ? `/search?${query}` : "/search";
@@ -61,9 +69,14 @@ export default async function SearchPage({
   const realUser = user && isRealAccount(user) ? user : null;
   const real = Boolean(realUser);
 
+  // メンズ絞り込みは URL の指定が優先。指定が無いときはプロフィールの「メンズ向けを優先」を既定値にする。
+  const profile = real ? await getMyProfile() : null;
+  const mensOnly = params.mens === "1" || (params.mens !== "0" && Boolean(profile?.prefers_mens));
+  const mensFromProfile = mensOnly && params.mens !== "1";
+
   let query = supabase.from("products").select(PRODUCT_SELECT);
   if (params.category) query = query.eq("category", params.category);
-  if (params.mens === "1") query = query.eq("is_mens", true);
+  if (mensOnly) query = query.eq("is_mens", true);
   if (params.q) query = query.ilike("name", `%${params.q}%`);
   if (sort === "new") {
     query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
@@ -72,13 +85,11 @@ export default async function SearchPage({
   const [
     { data, error },
     { data: scores },
-    profile,
     { data: allergenRows },
     { data: ownedRows },
   ] = await Promise.all([
     query.returns<Product[]>(),
     supabase.from("product_score").select("*").returns<ProductScore[]>(),
-    sort === "recommended" && real ? getMyProfile() : Promise.resolve(null),
     sort === "recommended" && realUser
       ? supabase.from("profile_allergens").select("ingredient_id").eq("user_id", realUser.id)
       : Promise.resolve({ data: null }),
@@ -144,6 +155,11 @@ export default async function SearchPage({
             : hasPersonalizationMaterial
               ? "肌情報・避けたい成分・ポーチをもとに、あなた向けに並べています。"
               : "信用できる口コミの評価が高い順に表示しています。";
+  const mensNote = mensFromProfile
+    ? "設定の「メンズ向けを優先」に従って、メンズ向けの商品だけを表示しています。"
+    : mensOnly
+      ? "メンズ向けの商品だけを表示しています。"
+      : null;
 
   return (
     <div className="space-y-6">
@@ -167,7 +183,9 @@ export default async function SearchPage({
             />
           </label>
           {params.category && <input type="hidden" name="category" value={params.category} />}
-          {params.mens === "1" && <input type="hidden" name="mens" value="1" />}
+          {(params.mens === "1" || params.mens === "0") && (
+            <input type="hidden" name="mens" value={params.mens} />
+          )}
           {sort !== "recommended" && <input type="hidden" name="sort" value={sort} />}
           <button
             type="submit"
@@ -178,8 +196,8 @@ export default async function SearchPage({
         </form>
         <div className="flex flex-wrap items-center gap-2">
           <Link
-            href={filterHref({ q: params.q, sort })}
-            className={`${CHIP} ${!params.category && params.mens !== "1" ? CHIP_ON : CHIP_OFF}`}
+            href={filterHref({ q: params.q, mens: mensOnly ? "0" : undefined, sort })}
+            className={`${CHIP} ${!params.category && !mensOnly ? CHIP_ON : CHIP_OFF}`}
           >
             すべて
           </Link>
@@ -193,8 +211,13 @@ export default async function SearchPage({
             </Link>
           ))}
           <Link
-            href={filterHref({ q: params.q, category: params.category, mens: "1", sort })}
-            className={`${CHIP} ${params.mens === "1" ? CHIP_ON : CHIP_OFF}`}
+            href={filterHref({
+              q: params.q,
+              category: params.category,
+              mens: mensOnly ? "0" : "1",
+              sort,
+            })}
+            className={`${CHIP} ${mensOnly ? CHIP_ON : CHIP_OFF}`}
           >
             メンズ
           </Link>
@@ -219,6 +242,8 @@ export default async function SearchPage({
           ))}
         </div>
       </section>
+
+      {mensNote && <p className="text-sm text-ink-600">{mensNote}</p>}
 
       {sort === "recommended" && !hasPersonalizationMaterial && (
         <p className="rounded-2xl border border-ink-200 bg-white p-4 text-sm text-ink-600">

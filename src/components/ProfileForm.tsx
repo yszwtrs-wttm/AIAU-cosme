@@ -46,6 +46,7 @@ export default function ProfileForm({
   const [hue, setHue] = useState(profile?.avatar_hue ?? 330);
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? null);
   const [stashPublic, setStashPublic] = useState(profile?.stash_public ?? true);
+  const [prefersMens, setPrefersMens] = useState(profile?.prefers_mens ?? false);
   const [selectedAllergenIds, setSelectedAllergenIds] = useState<number[]>(allergenIds);
   const [allergenQuery, setAllergenQuery] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -133,6 +134,7 @@ export default function ProfileForm({
             skinType: skinType || null,
             personalColor: personalColor || null,
             stashPublic,
+            prefersMens,
             avatarHue: hue,
             avatarUrl,
             allergenIds: selectedAllergenIds,
@@ -348,6 +350,20 @@ export default function ProfileForm({
             <p className="p-3 text-xs text-ink-400">一致する成分がありません。</p>
           )}
         </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={prefersMens}
+            onChange={(e) => setPrefersMens(e.target.checked)}
+          />
+          メンズ向けの商品を優先して表示する
+        </label>
+        <p className="text-[11px] text-ink-400">
+          商品を探すときに、メンズ向けの絞り込みを最初から掛けます。検索画面で外すこともできます。
+        </p>
       </div>
 
       <label className="flex items-center gap-2 text-sm">
