@@ -7,6 +7,7 @@ import IngredientPanel from "@/components/IngredientPanel";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
+import UseUpFirstNotice, { type UseUpItem } from "@/components/UseUpFirstNotice";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
@@ -20,6 +21,7 @@ import {
   type RatingSummary,
   type Review,
 } from "@/lib/types";
+import { SHELF_LIFE_SOURCE_LABEL, judgeUseUp, type StashUsage } from "@/lib/shelf-life";
 import { colorDifferenceText, colorMatchText, colorName, formulaMatchText } from "@/lib/wording";
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -169,6 +171,34 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const fit = judgeFit(product, profile);
   const isOwned = Boolean(owned);
+
+  // 「買う前に、期限が近い同じカテゴリの手持ちを先に使い切る」提案。
+  let useUpFirst: UseUpItem[] = [];
+  if (user && !isOwned) {
+    type Row = StashUsage & { products: Product };
+    const { data: stashRows } = await supabase
+      .from("user_items")
+      .select(
+        "opened_at, purchased_at, purchase_price_yen, remaining_pct, note, products!inner(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
+      )
+      .eq("user_id", user.id)
+      .eq("products.category", product.category)
+      .not("opened_at", "is", null)
+      .returns<Row[]>();
+
+    useUpFirst = (stashRows ?? [])
+      .filter((row) => row.products)
+      .map((row) => ({ ...row, product: row.products }))
+      .filter((item) => {
+        const state = judgeUseUp(item.product.category, item).state;
+        return state === "over" || state === "soon";
+      })
+      .sort(
+        (a, b) =>
+          judgeUseUp(a.product.category, a).sortKey - judgeUseUp(b.product.category, b).sortKey,
+      )
+      .slice(0, 3);
+  }
   const canUseStash = isRealAccount(user);
   const canPost = canUseStash;
 
@@ -234,6 +264,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           )}
         </div>
       </section>
+
+      <UseUpFirstNotice
+        items={useUpFirst}
+        title="買う前に、先に使い切れる手持ちがあります"
+        description={`同じ${CATEGORY_LABEL[product.category]}で、期限の目安が近い手持ちです。${SHELF_LIFE_SOURCE_LABEL}`}
+      />
 
       <section className="space-y-2">
         <h2 className="font-display text-lg font-bold">あなたに合うか</h2>

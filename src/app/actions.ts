@@ -50,6 +50,58 @@ export async function addManyToStash(
   return { ok: !error, error: error?.message };
 }
 
+/**
+ * 手持ちの使用状況（開封日・購入日・購入価格・残量・メモ）を更新する。
+ * 開封日はカテゴリ別の使用期限目安と合わせて「使い切りたい順」に使う。
+ */
+export async function updateStashUsage(input: {
+  productId: number;
+  openedAt?: string | null;
+  purchasedAt?: string | null;
+  purchasePriceYen?: number | null;
+  remainingPct?: number;
+  note?: string | null;
+}): Promise<Result> {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData.user;
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "ポーチの利用にはアカウント登録が必要です" };
+  }
+
+  const price = input.purchasePriceYen;
+  if (price !== undefined && price !== null && (price < 0 || price > 1_000_000)) {
+    return { ok: false, error: "購入価格は0〜1,000,000円で入力してください" };
+  }
+  const remaining = input.remainingPct;
+  if (remaining !== undefined && (remaining < 0 || remaining > 100)) {
+    return { ok: false, error: "残量が不正です" };
+  }
+
+  const { data: updated, error } = await supabase
+    .from("user_items")
+    .update({
+      opened_at: input.openedAt ?? null,
+      purchased_at: input.purchasedAt ?? null,
+      purchase_price_yen: price ?? null,
+      remaining_pct: remaining ?? 100,
+      note: input.note?.trim() ? input.note.trim() : null,
+    })
+    .eq("product_id", input.productId)
+    .eq("user_id", user.id)
+    .select("product_id");
+
+  if (error) return { ok: false, error: error.message };
+  // 自分のポーチに無い商品は更新されない。黙って成功にすると保存できたように見える。
+  if (!updated || updated.length === 0) {
+    return { ok: false, error: "自分のポーチに登録されている商品だけ記録できます" };
+  }
+
+  revalidatePath("/stash");
+  revalidatePath(`/products/${input.productId}`);
+  return { ok: true };
+}
+
 export async function removeFromStash(productId: number): Promise<Result> {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
