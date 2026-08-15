@@ -4,15 +4,15 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ImagePlus, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { extractPalette, labArray, type ExtractedColor } from "@/lib/color";
+import { labArray, type ExtractedColor } from "@/lib/color";
 import {
-  PALETTE_MIN_DELTA,
   PALETTE_SAMPLE_WIDTH,
+  paletteFor,
   sampleHeight,
   type PaletteResponse,
 } from "@/lib/palette";
 import { CATEGORY_LABEL, type ColorMatch } from "@/lib/types";
-import { colorName, colorSearchBadge, dedupeShades, hueGroup, sortBySkinTone } from "@/lib/wording";
+import { colorName, colorSearchBadge, hueGroup, sortBySkinTone } from "@/lib/wording";
 
 const CATEGORIES = [
   { value: "lip", label: "リップ" },
@@ -34,6 +34,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
   const [preview, setPreview] = useState<string | null>(null);
   const [extracted, setExtracted] = useState<ExtractedColor[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imageDataRef = useRef<Uint8ClampedArray | null>(null);
   const previewUrlRef = useRef<string | null>(null);
   const workerRef = useRef<Worker | null>(null);
   // 写真を選び直したとき、古い抽出結果で上書きしないための世代番号。
@@ -55,7 +56,9 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
   };
 
   const applyPalette = useCallback(
-    (palette: ExtractedColor[], cat: string) => {
+    (palette: ExtractedColor[], data: Uint8ClampedArray, cat: string) => {
+      // カテゴリを切り替えたときに再抽出するため、縮小後の画素を持っておく。
+      imageDataRef.current = data;
       setExtracted(palette);
       setExtracting(false);
       const first = palette[0]?.hex;
@@ -80,10 +83,10 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
       canvas.width = w;
       canvas.height = h;
       ctx.drawImage(img, 0, 0, w, h);
-      // ほぼ同じ色が並ぶと選べないので、見分けのつく色だけ残す。
-      const palette = dedupeShades(extractPalette(ctx.getImageData(0, 0, w, h).data), PALETTE_MIN_DELTA);
+      const { data } = ctx.getImageData(0, 0, w, h);
+      const palette = paletteFor(data, cat);
       if (id !== requestIdRef.current) return;
-      applyPalette(palette, cat);
+      applyPalette(palette, data, cat);
     };
     img.onerror = () => {
       if (id === requestIdRef.current) setExtracting(false);
@@ -104,7 +107,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
           setExtracting(false);
           return;
         }
-        applyPalette(res.palette, categoryRef.current);
+        applyPalette(res.palette, res.data, categoryRef.current);
       });
       workerRef.current = worker;
       return worker;
@@ -132,7 +135,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
         bitmap.close();
         return;
       }
-      worker.postMessage({ id, bitmap }, [bitmap]);
+      worker.postMessage({ id, bitmap, category }, [bitmap]);
     } catch {
       extractOnMainThread(url, category, id);
     }
@@ -224,7 +227,17 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                 type="button"
                 onClick={() => {
                   setCategory(c.value);
-                  if (hex) void search(hex, c.value);
+                  const data = imageDataRef.current;
+                  const palette = data ? paletteFor(data, c.value) : extracted;
+                  setExtracted(palette);
+                  const next =
+                    hex && palette.some((p) => p.hex.toLowerCase() === hex.toLowerCase())
+                      ? hex
+                      : palette[0]?.hex;
+                  if (next) {
+                    setHex(next);
+                    void search(next, c.value);
+                  }
                 }}
                 className={`rounded-full border px-3 py-1.5 text-sm ${
                   category === c.value
