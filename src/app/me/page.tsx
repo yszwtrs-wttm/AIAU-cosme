@@ -120,7 +120,7 @@ export default async function MyPage() {
                 <Link href={`/products/${r.product_id}`} className="text-xs text-brand-600">
                   この商品を見る
                 </Link>
-                <div className="text-amber-500" aria-label={`${r.rating}点`}>
+                <div className="text-amber-500" role="img" aria-label={`${r.rating}点`}>
                   {"★".repeat(r.rating)}
                 </div>
                 <p className="text-sm">{r.body}</p>

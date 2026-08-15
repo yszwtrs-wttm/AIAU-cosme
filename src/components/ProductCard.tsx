@@ -45,8 +45,9 @@ export default function ProductCard({ product }: { product: Product }) {
               />
             ))}
             {shades.length > 6 && (
-              <span className="text-[10px] text-ink-400" aria-label={`ほか${shades.length - 6}色`}>
-                +{shades.length - 6}
+              <span className="text-[10px] text-ink-400">
+                <span aria-hidden="true">+{shades.length - 6}</span>
+                <span className="sr-only">ほか{shades.length - 6}色</span>
               </span>
             )}
           </div>

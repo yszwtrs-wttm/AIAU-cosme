@@ -66,7 +66,7 @@ export default async function FeedPage() {
                   ) : (
                     <span className="font-bold">{r.author_name}</span>
                   )}
-                  <span className="text-amber-500" aria-label={`${r.rating}点`}>
+                  <span className="text-amber-500" role="img" aria-label={`${r.rating}点`}>
                     {"★".repeat(r.rating)}
                   </span>
                 </div>

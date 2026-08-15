@@ -119,7 +119,7 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
                 <Link href={`/products/${r.product_id}`} className="text-sm font-bold hover:text-brand-600">
                   {r.products?.name}
                 </Link>
-                <div className="text-amber-500" aria-label={`${r.rating}点`}>
+                <div className="text-amber-500" role="img" aria-label={`${r.rating}点`}>
                   {"★".repeat(r.rating)}
                 </div>
                 <p className="mt-1 text-sm leading-relaxed">{r.body}</p>
