@@ -249,7 +249,7 @@ export default function LoginForm({
               onClick={startPasswordReset}
               className="w-full text-xs text-brand-600 underline"
             >
-              パスワードを忘れた場合
+              パスワードを忘れた場合・まだ設定していない場合
             </button>
           )}
           {resetPassword && (
