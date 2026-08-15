@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { addManyToStash } from "@/app/actions";
+import ProductThumb from "@/components/ProductThumb";
 import { CATEGORY_LABEL, type Category, type Product } from "@/lib/types";
 
 /**
@@ -50,9 +51,12 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
                     on ? "border-brand-400 bg-brand-50" : "border-brand-100 bg-white"
                   }`}
                 >
-                  <span
-                    className="swatch inline-block h-7 w-7 rounded-full"
-                    style={{ background: p.color_hex ?? "#e9e2e6" }}
+                  <ProductThumb
+                    category={p.category}
+                    colors={p.product_colors ?? []}
+                    imageUrl={p.image_url}
+                    size={28}
+                    className="rounded-xl"
                   />
                   <span className="min-w-0">
                     <span className="block text-[10px] text-ink-400">{p.brands?.name}</span>
@@ -85,7 +89,7 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
         }
         className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-40"
       >
-        {pending ? "登録中…" : `${selected.length}点をまとめて登録`}
+        {pending ? "登録中…" : "追加"}
       </button>
     </div>
   );

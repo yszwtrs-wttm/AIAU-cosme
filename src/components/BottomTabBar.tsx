@@ -7,8 +7,8 @@ import { Heart, Home, Images, Search, UserRound } from "lucide-react";
 const TABS = [
   { href: "/", label: "ホーム", icon: Home },
   { href: "/search", label: "探す", icon: Search },
-  { href: "/stash", label: "ポーチ", icon: Heart },
   { href: "/feed", label: "投稿", icon: Images },
+  { href: "/stash", label: "Myポーチ", icon: Heart },
   { href: "/me", label: "マイpage", icon: UserRound },
 ];
 const GUEST_TABS = [

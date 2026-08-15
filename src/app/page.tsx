@@ -241,11 +241,11 @@ function PersonalizedHome({
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="flex items-center gap-2 text-sm font-bold">
-            <Heart size={17} className="text-brand-600" /> ポーチの状況
+            <Heart size={17} className="text-brand-600" /> Myポーチの状況
           </div>
           <p className="mt-3 font-display text-3xl font-bold tabular-nums">{stashCount}点</p>
           <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
-            ポーチを見る <ArrowRight className="inline" size={14} />
+            Myポーチを見る <ArrowRight className="inline" size={14} />
           </Link>
         </div>
         <div className="rounded-2xl border border-ink-200 bg-white p-5">

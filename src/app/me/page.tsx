@@ -71,7 +71,7 @@ export default async function MyPage() {
 
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-ink-200 bg-white p-4">
-          <div className="text-xs font-bold text-ink-400">ポーチの数</div>
+          <div className="text-xs font-bold text-ink-400">Myポーチの数</div>
           <div className="mt-1 font-display text-3xl font-bold tabular-nums">{items.length}</div>
         </div>
         <div className="rounded-2xl border border-ink-200 bg-white p-4">
@@ -84,7 +84,7 @@ export default async function MyPage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold">ポーチの中身</h2>
+          <h2 className="font-display text-lg font-bold">Myポーチの中身</h2>
           <Link href="/stash" className="text-xs font-bold text-brand-600">
             追加する
           </Link>

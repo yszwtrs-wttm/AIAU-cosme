@@ -36,7 +36,9 @@ export default async function StashPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold">ポーチ（{products.length}点）</h1>
+      <h1 className="font-display text-2xl font-bold">Myポーチ（{products.length}点）</h1>
+
+      {products.length > 0 && <MakeupPlan products={products} />}
 
       <section className="space-y-2">
         <h2 className="font-display text-lg font-bold">バーコードで登録</h2>
@@ -63,8 +65,6 @@ export default async function StashPage() {
           <ProductCard key={p.id} product={p} />
         ))}
       </section>
-
-      {products.length > 0 && <MakeupPlan products={products} />}
     </div>
   );
 }
