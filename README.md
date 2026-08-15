@@ -16,7 +16,7 @@ LIPS や @cosme は「何を買うか」を決めるアプリ。KAWANAI は手�
 | 口コミ信頼度 | `recompute_review_trust`。スコアと除外理由は内部で使い、UI には出さない |
 | 画像から色検出 | `/color`。主要色を抽出 → Lab 変換 → `find_by_color`。色名・系統・肌トーン順で提示 |
 | 手持ちだけのメイク提案 | `/stash`（本アカウント限定）。`OPENAI_API_KEY` があれば LLM、無ければルールベース |
-| 認証 / プロフィール | `/login`（初回はメールのリンクで確認し、プロフィール作成画面でパスワードを設定。以降はメールアドレス＋パスワードでログイン）、`/settings`、`/me`、`/u/[handle]` |
+| 認証 / プロフィール | `/login`（Google / Apple ならメールを開かずにログイン。メールの場合は初回はリンクで確認し、プロフィール作成画面でパスワードを設定）、`/settings`、`/me`、`/u/[handle]` |
 | 画像つき口コミ | `/feed`。1投稿4枚まで、Supabase Storage の `review-images` に保存 |
 | 成分の日本語化 | `src/lib/ingredients.ts` の辞書で日本語名・役割・効果に変換 |
 | 使用感 | `src/lib/feel.ts`。口コミがあれば平均、無ければ成分からの推定 |
@@ -51,6 +51,14 @@ UI には数値を出さず、`src/lib/wording.ts` で「ほぼ同じ色」「�
 投稿ゲート: 匿名セッションは不可（本アカウント必須）、ポーチに登録済みの商品のみ、1日5件・同一ブランド1日2件・1商品1件まで。通報3件で総合評価から除外（削除はしない）。
 
 閲覧（商品・成分・口コミ・色検索）はログイン不要。初回登録はメールのリンクで確認し、プロフィール作成画面でパスワードを設定する。以降はメールアドレス＋パスワードでログインする。手持ち登録・ポーチの利用・口コミ投稿には本アカウントが必要。
+
+## ソーシャルログイン
+
+メールの受信を待たずに登録できるよう、Supabase Auth の OAuth（Google / Apple）を使う。
+
+- ログイン画面に出すボタンは `NEXT_PUBLIC_OAUTH_PROVIDERS`（例: `google,apple`）で制御する。Supabase 側で有効にしていないプロバイダを書くとログインは失敗するので、有効なものだけを列挙する。
+- お試し利用（匿名セッション）のときは `linkIdentity` で同じユーザーに identity を紐付けるので、登録したポーチがそのまま引き継がれる。Supabase の Auth 設定で Manual linking（`enable_manual_linking`）を有効にしておく。
+- リダイレクト先はメールリンクと同じ `/auth/callback`。ローカルで試すなら `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` / `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET` を入れて `supabase/config.toml` の `[auth.external.google] enabled` を `true` にする。
 
 ## セットアップ
 
