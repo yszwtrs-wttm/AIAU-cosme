@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import ProductList from "@/components/ProductList";
@@ -37,6 +38,23 @@ function filterHref({
   if (sort && sort !== "recommended") params.set("sort", sort);
   const query = params.toString();
   return query ? `/search?${query}` : "/search";
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ category?: string; q?: string; mens?: string; sort?: string }>;
+}): Promise<Metadata> {
+  const { q, category, mens } = await searchParams;
+  const categoryLabel =
+    category && category in CATEGORY_LABEL ? CATEGORY_LABEL[category as Category] : undefined;
+  const parts = [mens === "1" ? "メンズ" : "", categoryLabel, q ? `「${q}」` : ""].filter(Boolean);
+  const title = parts.length > 0 ? `${parts.join(" ")}の商品を探す` : "商品を探す";
+
+  return {
+    title,
+    description: "商品名検索・カテゴリで絞り込んで、信用できる口コミの評価が高い順に見る。",
+  };
 }
 
 export default async function SearchPage({

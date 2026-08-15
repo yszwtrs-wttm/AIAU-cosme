@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import LoginForm from "@/components/LoginForm";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "ログイン / アカウントを作る",
+  description: "メールアドレスとパスワードでログインして、手持ち登録や口コミ投稿を使う。",
+};
 
 export default async function LoginPage({
   searchParams,

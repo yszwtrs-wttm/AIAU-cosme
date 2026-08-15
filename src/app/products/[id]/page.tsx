@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ComparePanel, { type CompareSide } from "@/components/ComparePanel";
 import DupeRowItem from "@/components/DupeRowItem";
@@ -10,6 +11,7 @@ import StashButton from "@/components/StashButton";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import {
   CATEGORY_LABEL,
@@ -21,6 +23,49 @@ import {
   type Review,
 } from "@/lib/types";
 import { colorDifferenceText, colorMatchText, colorName, formulaMatchText } from "@/lib/wording";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const productId = Number(id);
+  if (!Number.isFinite(productId)) return { title: "商品" };
+
+  const supabase = await createClient();
+  const { data: product } = await supabase
+    .from("products")
+    .select("name,category,price_yen,color_hex,brands(name),product_colors(pos,shade_name,hex)")
+    .eq("id", productId)
+    .maybeSingle<
+      Pick<Product, "name" | "category" | "price_yen" | "color_hex" | "brands" | "product_colors">
+    >();
+
+  if (!product) return { title: "商品が見つかりません" };
+
+  const brand = product.brands?.name ?? "";
+  const title = [brand, product.name].filter(Boolean).join(" ");
+  const shades = [...(product.product_colors ?? [])].sort((a, b) => a.pos - b.pos);
+  const colorLabels = (
+    shades.length > 0
+      ? shades.map((shade) => shade.shade_name || colorName(shade.hex))
+      : product.color_hex
+        ? [colorName(product.color_hex)]
+        : []
+  ).slice(0, 5);
+  const description = [
+    `${title}（${CATEGORY_LABEL[product.category]}）¥${product.price_yen.toLocaleString("ja-JP")}`,
+    colorLabels.length > 0 ? `色: ${colorLabels.join("、")}` : "",
+    SITE_DESCRIPTION,
+  ]
+    .filter(Boolean)
+    .join(" / ");
+
+  return {
+    title,
+    description,
+    // OG 画像は同ディレクトリの opengraph-image.tsx が自動で付く。
+    openGraph: { type: "article", siteName: SITE_NAME, locale: "ja_JP", title, description },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

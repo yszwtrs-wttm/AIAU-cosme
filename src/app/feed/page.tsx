@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/server";
@@ -8,6 +9,11 @@ import type { Profile, Review } from "@/lib/types";
 type FeedReview = Review & {
   profiles: Pick<Profile, "handle" | "display_name" | "avatar_hue" | "avatar_url"> | null;
   products: { id: number; name: string; brands: { name: string } | null } | null;
+};
+
+export const metadata: Metadata = {
+  title: "みんなの投稿",
+  description: "画像つきの口コミを新しい順に見れるタイムライン。",
 };
 
 /** 口コミを新しい順に並べる、みんなの投稿。 */

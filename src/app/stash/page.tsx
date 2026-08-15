@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import MakeupPlan from "@/components/MakeupPlan";
@@ -8,6 +9,11 @@ import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
 
 type StashItem = { product_id: number; products: Product };
+
+export const metadata: Metadata = {
+  title: "Myポーチ",
+  description: "手持ちコスメの登録と、持っているものだけで組めるメイクの提案。",
+};
 
 export default async function StashPage() {
   const user = await getMyUser();

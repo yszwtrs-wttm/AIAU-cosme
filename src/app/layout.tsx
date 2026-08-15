@@ -5,6 +5,7 @@ import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
 import ToastProvider from "@/components/Toast";
 import { getMyUser, isRealAccount } from "@/lib/auth";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TAGLINE, siteUrl } from "@/lib/site";
 
 const sans = Zen_Kaku_Gothic_New({
   subsets: ["latin"],
@@ -21,9 +22,21 @@ const display = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "KAWANAI — そのコスメ、もう持ってるかも",
-  description:
-    "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
+  metadataBase: new URL(siteUrl()),
+  // 各ページは title だけを返せば「〜 ｜ もう持ってるかも」に揃う。
+  title: {
+    default: `${SITE_NAME} — そのコスメ、${SITE_TAGLINE}`,
+    template: `%s ｜ ${SITE_TAGLINE}`,
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "ja_JP",
+    title: `${SITE_NAME} — そのコスメ、${SITE_TAGLINE}`,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 // スマホ利用が前提なので、ノッチ端末でも下タブが安全領域に収まるようにする。
