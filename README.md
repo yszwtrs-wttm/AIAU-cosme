@@ -136,7 +136,7 @@ CRUD だけでなく、**判定ロジック自体を Postgres 側に置いてい
 | RLS / セキュリティ | 公開読み取りと投稿条件を DB 側で強制（`20260815000600_review_policies.sql`、`20260816000100_profiles_and_reviews.sql`、`20260815000700_harden_functions.sql` で `search_path` 固定） |
 | Auth | メールのリンクで初回確認 → パスワード設定。匿名サインインは使わない |
 | Storage | 口コミ画像 `review-images`（1投稿4枚まで、WebP へ縮小して保存、画像変換でサムネ配信） |
-| Migrations / 型生成 | `supabase/migrations/` の14ファイルで再現。`npm run db:types` で型を生成し、CI が差分を検出する |
+| Migrations / 型生成 | `supabase/migrations/` の14ファイルで再現。`npm run db:types` で TypeScript の型を生成する |
 
 ## Devin の使い方
 
@@ -150,7 +150,7 @@ CRUD だけでなく、**判定ロジック自体を Postgres 側に置いてい
 | 未ログイン向け紹介ページとログイン後トップの分離 | [#6](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/6) |
 | 認証方式の作り直し（コード → リンク＋パスワード） | [#7](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/7) [#8](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/8) [#9](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/9) |
 | Issue テンプレートと、**Issue を立てると Devin が自動で調査して修正 PR を出す仕組み** | [#11](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/11) [#17](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/17) / `.github/workflows/devin-on-issue.yml` |
-| 上記の自動化で回した性能・セキュリティ・アクセシビリティの改善（trgm 検索、HNSW 索引、IDF の日次再計算、匿名サインイン廃止、型 drift 検出 CI、画像の WebP 化 など） | [#104](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/104) [#113](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/113) [#116](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/116) ほか。Issue 起点の PR が並んでいる |
+| 上記の自動化で回した性能・セキュリティ・アクセシビリティの改善（trgm 検索、HNSW 索引、IDF の日次再計算、匿名サインイン廃止、画像の WebP 化 など） | [#104](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/104) [#113](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/113) ほか。Issue 起点の PR が並んでいる |
 | ブラウザでの実機確認（全ページ表示・口コミ投稿・ポーチ公開の動作） | Devin のコンピュータ操作で実施 |
 
 エージェントが自走できるようにリポジトリ側も整えている。
@@ -158,7 +158,7 @@ CRUD だけでなく、**判定ロジック自体を Postgres 側に置いてい
 - `npm run db:reset` 一発でスキーマ + シードが再現する（判定ロジックの検証がすぐできる）
 - `npm run seed:gen`（`scripts/generate_seed.py`）は**決定論的**にシードを生成するので、被り検出の結果が毎回同じ
 - `.env.example` に必要な環境変数と、無い場合の挙動を明記
-- Issue → Devin セッション → PR → CI が GitHub Actions で自動で回る（`.github/workflows/devin-on-issue.yml`、`.github/workflows/ci.yml`）
+- Issue → Devin セッション → PR が GitHub Actions で自動で回る（`.github/workflows/devin-on-issue.yml`）
 
 ## セットアップ
 
@@ -200,8 +200,6 @@ Docker が使えない環境では、Supabase クラウドのプロジェクト�
 npx supabase start             # ローカルDBが起動していること
 npm run db:types
 ```
-
-再生成し忘れると CI（`.github/workflows/ci.yml` の `db-types` ジョブ）が差分を検出して落ちる。
 
 ## 検証
 
