@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import { reportReview } from "@/app/actions";
 import Avatar from "@/components/Avatar";
 import ReviewForm from "@/components/ReviewForm";
+import { useToast } from "@/components/Toast";
+import { japaneseError } from "@/lib/errors";
 import { closenessScore } from "@/lib/fit";
 import { publicImageUrl } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
@@ -25,6 +27,7 @@ function Stars({ value }: { value: number }) {
 
 function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   const [reported, setReported] = useState(false);
+  const showToast = useToast();
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
   const skin = review.profiles?.skin_type;
@@ -54,7 +57,16 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
           type="button"
           disabled={reported}
           onClick={async () => {
-            await reportReview(review.id, "fake");
+            try {
+              const res = await reportReview(review.id, "fake");
+              if (!res.ok) {
+                showToast(japaneseError(res.error, "報告できませんでした"));
+                return;
+              }
+            } catch (e) {
+              showToast(japaneseError(e, "報告できませんでした"));
+              return;
+            }
             setReported(true);
           }}
           className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"

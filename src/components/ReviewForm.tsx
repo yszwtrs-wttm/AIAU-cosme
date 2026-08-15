@@ -4,6 +4,8 @@ import { useRef, useState, useTransition } from "react";
 import { ImagePlus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { attachReviewImages, postReview } from "@/app/actions";
+import { useToast } from "@/components/Toast";
+import { japaneseError } from "@/lib/errors";
 import { axesFor } from "@/lib/feel";
 import { averageHash } from "@/lib/phash";
 import type { Category } from "@/lib/types";
@@ -34,13 +36,20 @@ export default function ReviewForm({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
+  const showToast = useToast();
 
   const submit = () => {
     setError(null);
     startTransition(async () => {
-      const res = await postReview({ productId, rating, body, feel });
+      let res: Awaited<ReturnType<typeof postReview>>;
+      try {
+        res = await postReview({ productId, rating, body, feel });
+      } catch (e) {
+        setError(japaneseError(e, "投稿できませんでした"));
+        return;
+      }
       if (!res.ok || !res.reviewId) {
-        setError(res.error ?? "投稿できませんでした");
+        setError(japaneseError(res.error, "投稿できませんでした"));
         return;
       }
 
@@ -51,7 +60,9 @@ export default function ReviewForm({
         } = await supabase.auth.getUser();
         const uploaded: { path: string; phash?: string | null }[] = [];
 
-        for (const file of files.slice(0, MAX_IMAGES)) {
+        const targets = files.slice(0, MAX_IMAGES);
+
+        for (const file of targets) {
           const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
           const path = `${user!.id}/${res.reviewId}-${uploaded.length}.${ext}`;
           const { error: upErr } = await supabase.storage
@@ -61,9 +72,21 @@ export default function ReviewForm({
           uploaded.push({ path, phash: await averageHash(file) });
         }
 
-        if (uploaded.length > 0) await attachReviewImages(res.reviewId, uploaded);
+        const attached: { ok: boolean; error?: string } =
+          uploaded.length > 0 ? await attachReviewImages(res.reviewId, uploaded) : { ok: true };
+
+        // 口コミ本文は保存できているので、写真だけ失敗したことを伝える。
+        if (!attached.ok || uploaded.length < targets.length) {
+          showToast(
+            japaneseError(
+              attached.ok ? null : attached.error,
+              "口コミは投稿できましたが、写真を上げられませんでした",
+            ),
+          );
+        }
       }
 
+      showToast("口コミを投稿しました", "success");
       setBody("");
       setFiles([]);
       if (fileInput.current) fileInput.current.value = "";
