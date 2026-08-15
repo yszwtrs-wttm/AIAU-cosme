@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Link from "next/link";
 import { Playfair_Display, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
 import AnonAuth from "@/components/AnonAuth";
@@ -46,6 +47,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-28 text-[11px] text-ink-400 md:pb-10">
           <p>
             デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
+          </p>
+          <p>
+            <Link href="/privacy" className="underline hover:text-brand-600">
+              公開範囲とプライバシー
+            </Link>
           </p>
           <p>© {new Date().getFullYear()} Team Cosme. All rights reserved.</p>
         </footer>

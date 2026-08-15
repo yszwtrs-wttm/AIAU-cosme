@@ -93,8 +93,23 @@ export type Profile = {
   skin_tone_hex: string | null;
   skin_type: SkinType | null;
   personal_color: PersonalColor | null;
-  stash_public: boolean;
+  stash_visibility: StashVisibility;
   created_at: string;
+};
+
+/** ポーチの公開範囲。既定は非公開（所持コスメは購買履歴に近い情報のため）。 */
+export type StashVisibility = "public" | "link" | "private";
+
+export const STASH_VISIBILITY_LABEL: Record<StashVisibility, string> = {
+  public: "全体に公開",
+  link: "リンクを知っている人だけ",
+  private: "非公開",
+};
+
+export const STASH_VISIBILITY_HINT: Record<StashVisibility, string> = {
+  public: "ユーザーページに出て、検索エンジンからも見られます。",
+  link: "共有リンクを渡した人だけが見られます。リンクは後から作り直せます。",
+  private: "自分だけが見られます。",
 };
 
 export type SkinType = "dry" | "normal" | "oily" | "combination" | "sensitive";

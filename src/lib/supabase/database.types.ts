@@ -207,7 +207,7 @@ export type Database = {
           personal_color: string | null
           skin_tone_hex: string | null
           skin_type: string | null
-          stash_public: boolean
+          stash_visibility: string
           user_id: string
         }
         Insert: {
@@ -220,7 +220,7 @@ export type Database = {
           personal_color?: string | null
           skin_tone_hex?: string | null
           skin_type?: string | null
-          stash_public?: boolean
+          stash_visibility?: string
           user_id: string
         }
         Update: {
@@ -233,7 +233,7 @@ export type Database = {
           personal_color?: string | null
           skin_tone_hex?: string | null
           skin_type?: string | null
-          stash_public?: boolean
+          stash_visibility?: string
           user_id?: string
         }
         Relationships: []
@@ -263,6 +263,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profile_share_tokens: {
+        Row: {
+          created_at: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          token?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       review_images: {
         Row: {
@@ -760,6 +778,10 @@ export type Database = {
       set_limit: {
         Args: { "": number }
         Returns: number
+      }
+      shared_stash_product_ids: {
+        Args: { p_handle: string; p_token?: string | null }
+        Returns: number[]
       }
       show_limit: {
         Args: Record<PropertyKey, never>

@@ -13,10 +13,16 @@ import {
 } from "@/lib/types";
 
 type PublicReview = Review & { products: { id: number; name: string; brands: { name: string } | null } | null };
-type StashRow = { products: Product | null };
 
-export default async function UserPage({ params }: { params: Promise<{ handle: string }> }) {
+export default async function UserPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ handle: string }>;
+  searchParams: Promise<{ stash?: string }>;
+}) {
   const { handle } = await params;
+  const { stash: shareToken } = await searchParams;
   const supabase = await createClient();
 
   const { data: profile } = await supabase
@@ -27,7 +33,9 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
 
   if (!profile) notFound();
 
-  const [{ data: reviews }, stashRes] = await Promise.all([
+  // 公開範囲の判定は shared_stash_product_ids に寄せる。
+  // リンク限定のトークンは本人しか読めないので、照合は security definer 関数の中で行う。
+  const [{ data: reviews }, { data: stashIds }] = await Promise.all([
     supabase
       .from("reviews")
       .select("*,review_images(id,review_id,path,pos),products(id,name,brands(name))")
@@ -35,18 +43,29 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
       .eq("excluded", false)
       .order("posted_at", { ascending: false })
       .returns<PublicReview[]>(),
-    profile.stash_public
-      ? supabase
-          .from("user_items")
-          .select(
-            "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
-          )
-          .eq("user_id", profile.user_id)
-          .returns<StashRow[]>()
-      : Promise.resolve({ data: [] as StashRow[] }),
+    profile.stash_visibility === "private"
+      ? Promise.resolve({ data: [] as number[] })
+      : supabase.rpc("shared_stash_product_ids", {
+          p_handle: handle,
+          p_token: shareToken ?? null,
+        }),
   ]);
 
-  const stash = (stashRes.data ?? []).map((r) => r.products).filter((p): p is Product => Boolean(p));
+  const productIds = stashIds ?? [];
+  const { data: stashProducts } =
+    productIds.length > 0
+      ? await supabase
+          .from("products")
+          .select(
+            "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
+          )
+          .in("id", productIds)
+          .returns<Product[]>()
+      : { data: [] as Product[] };
+
+  const stash = stashProducts ?? [];
+  // 全体公開はいつも見出しを出す。リンク限定は、トークンが合っていたときだけ見せる。
+  const showStash = profile.stash_visibility === "public" || stash.length > 0;
 
   return (
     <div className="space-y-6">
@@ -85,9 +104,16 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
         </div>
       </section>
 
-      {profile.stash_public && (
+      {showStash && (
         <section className="space-y-3">
-          <h2 className="font-display text-lg font-bold">公開しているポーチ（{stash.length}点）</h2>
+          <h2 className="font-display text-lg font-bold">
+            公開しているポーチ（{stash.length}点）
+            {profile.stash_visibility === "link" && (
+              <span className="ml-2 align-middle text-[11px] font-normal text-ink-400">
+                リンクを知っている人だけに公開
+              </span>
+            )}
+          </h2>
           {stash.length === 0 ? (
             <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
               まだ登録がありません。
