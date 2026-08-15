@@ -7,6 +7,7 @@ import { attachReviewImages, postReview } from "@/app/actions";
 import { useToast } from "@/components/Toast";
 import { japaneseError } from "@/lib/errors";
 import { axesFor } from "@/lib/feel";
+import { shrinkImage } from "@/lib/image";
 import { averageHash } from "@/lib/phash";
 import type { Category } from "@/lib/types";
 
@@ -62,12 +63,13 @@ export default function ReviewForm({
 
         const targets = files.slice(0, MAX_IMAGES);
 
-        for (const file of targets) {
+        for (const original of targets) {
+          const file = await shrinkImage(original);
           const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
           const path = `${user!.id}/${res.reviewId}-${uploaded.length}.${ext}`;
           const { error: upErr } = await supabase.storage
             .from("review-images")
-            .upload(path, file, { upsert: true });
+            .upload(path, file, { upsert: true, contentType: file.type });
           if (upErr) continue;
           uploaded.push({ path, phash: await averageHash(file) });
         }

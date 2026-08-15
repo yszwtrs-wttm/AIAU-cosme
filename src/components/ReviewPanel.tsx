@@ -7,10 +7,11 @@ import { createClient } from "@/lib/supabase/client";
 import { reportReview } from "@/app/actions";
 import Avatar from "@/components/Avatar";
 import ReviewForm from "@/components/ReviewForm";
+import ReviewImage from "@/components/ReviewImage";
 import { useToast } from "@/components/Toast";
 import { japaneseError } from "@/lib/errors";
 import { closenessScore } from "@/lib/fit";
-import { publicImageUrl } from "@/lib/storage";
+import { THUMB_WIDTH } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
 
@@ -98,12 +99,11 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
       {images.length > 0 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {images.map((img) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <ReviewImage
               key={img.id}
-              src={publicImageUrl(img.path)}
-              alt=""
-              className="h-28 w-28 shrink-0 rounded-2xl object-cover"
+              path={img.path}
+              width={THUMB_WIDTH}
+              className="h-28 w-28 overflow-hidden rounded-2xl"
             />
           ))}
         </div>
