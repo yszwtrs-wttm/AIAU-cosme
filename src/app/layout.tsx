@@ -5,6 +5,7 @@ import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
 import ToastProvider from "@/components/Toast";
 import { getMyUser, isRealAccount } from "@/lib/auth";
+import { TERMS } from "@/lib/copy";
 
 const sans = Zen_Kaku_Gothic_New({
   subsets: ["latin"],
@@ -22,8 +23,7 @@ const display = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "KAWANAI — そのコスメ、もう持ってるかも",
-  description:
-    "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
+  description: `${TERMS.pouch}のコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。`,
 };
 
 // スマホ利用が前提なので、ノッチ端末でも下タブが安全領域に収まるようにする。

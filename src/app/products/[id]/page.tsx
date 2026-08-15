@@ -8,6 +8,7 @@ import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
+import { TERMS } from "@/lib/copy";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
@@ -257,7 +258,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             {topDupe ? (
               <div className="rounded-2xl border border-ink-200 bg-white p-4">
                 <p className="text-sm leading-relaxed">
-                  ポーチの「{topDupe.brand} {topDupe.name}」と{formulaMatchText(topDupe.ing_sim)}。
+                  {TERMS.pouch}の「{topDupe.brand} {topDupe.name}」と{formulaMatchText(topDupe.ing_sim)}。
                   {topDupe.delta_e !== null && `色は${colorMatchText(topDupe.delta_e).title}。`}
                   {topDupe.delta_e !== null &&
                     topDupe.color_hex &&
@@ -275,7 +276,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               </div>
             ) : (
               <div className="rounded-2xl border border-ink-200 bg-white p-4 text-sm">
-                <p className="font-bold">ポーチに近いものはありません</p>
+                <p className="font-bold">{TERMS.pouch}に近いものはありません</p>
                 <p className="mt-1 text-xs text-ink-400">
                   持っていない色・処方なので、足りていない役割を埋められます。
                 </p>
@@ -285,7 +286,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
           {coverage.length > 1 && (
             <section className="space-y-2">
-              <h2 className="font-display text-lg font-bold">手持ちで似た色が出せるか</h2>
+              <h2 className="font-display text-lg font-bold">{TERMS.pouch}で似た色が出せるか</h2>
               <div className="rounded-2xl border border-ink-200 bg-white p-4">
                 <div className="text-sm">
                   <span className="text-lg font-bold">

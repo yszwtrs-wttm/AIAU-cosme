@@ -1,4 +1,5 @@
 import { hexToLab } from "./color";
+import { TERMS } from "./copy";
 import { CATEGORY_LABEL, type Product } from "./types";
 
 export type PlanStep = { order: number; product: string; reason: string };
@@ -30,7 +31,7 @@ export function buildRulePlan(products: Product[], request: string): Plan {
     steps.push({
       order: steps.length + 1,
       product: `${cheapest.brands?.name} ${cheapest.name}`,
-      reason: "ベースは手持ちの中で一番減りが早くて良いものを薄く。",
+      reason: `ベースは${TERMS.pouch}の中で一番減りが早くて良いものを薄く。`,
     });
   }
 
@@ -42,14 +43,14 @@ export function buildRulePlan(products: Product[], request: string): Plan {
     steps.push({
       order: steps.length + 1,
       product: `${best.brands?.name} ${best.name}`,
-      reason: `${mood.key}見えの条件（${mood.label}）に、手持ちの中で色が一番近い。`,
+      reason: `${mood.key}見えの条件（${mood.label}）に、${TERMS.pouch}の中で色が一番近い。`,
     });
     if (scored.length > 1) {
       const second = scored[1].p;
       steps.push({
         order: steps.length + 1,
         product: `${second.brands?.name} ${second.name}`,
-        reason: "内側に重ねてグラデーションにすると、同じ手持ちで印象を変えられる。",
+        reason: `内側に重ねてグラデーションにすると、同じ${TERMS.pouch}の中で印象を変えられる。`,
       });
     }
   }

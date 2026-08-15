@@ -2,6 +2,7 @@ import Link from "next/link";
 import PasswordSettings from "@/components/PasswordSettings";
 import ProfileForm from "@/components/ProfileForm";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
+import { TERMS } from "@/lib/copy";
 import { createClient } from "@/lib/supabase/server";
 import type { IngredientMaster } from "@/lib/types";
 
@@ -14,7 +15,7 @@ export default async function SettingsPage() {
       <div className="mx-auto max-w-md space-y-4 rounded-2xl border border-ink-200 bg-white p-6 text-sm">
         <h1 className="font-display text-xl font-bold">プロフィール設定</h1>
         <p className="text-ink-600">
-          プロフィールを作るにはログインが必要です。いま登録しているポーチの中身は引き継がれます。
+          プロフィールを作るにはログインが必要です。いま登録している{TERMS.pouch}の中身は引き継がれます。
         </p>
         <Link
           href="/login"

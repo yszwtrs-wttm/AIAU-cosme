@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Sparkles, UserRound } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import { getMyProfile } from "@/lib/auth";
+import { TERMS } from "@/lib/copy";
 
 export default async function SiteHeader({ isRealAccount: real }: { isRealAccount: boolean }) {
   const profile = real ? await getMyProfile() : null;
@@ -9,7 +10,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
     ? [
         { href: "/search", label: "商品を探す" },
         { href: "/feed", label: "みんなの投稿" },
-        { href: "/stash", label: "Myポーチ" },
+        { href: "/stash", label: TERMS.pouch },
       ]
     : [
         { href: "/search", label: "商品を探す" },

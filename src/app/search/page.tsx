@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import ProductList from "@/components/ProductList";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
+import { TERMS } from "@/lib/copy";
 import {
   PAGE_SIZE,
   SORT_OPTIONS,
@@ -91,7 +92,7 @@ export default async function SearchPage({
           : sort === "rating"
             ? "信用できる口コミの評価が高い順に表示しています。"
             : hasPersonalizationMaterial
-              ? "肌情報・避けたい成分・ポーチをもとに、あなた向けに並べています。"
+              ? `肌情報・避けたい成分・${TERMS.pouch}をもとに、あなた向けに並べています。`
               : "信用できる口コミの評価が高い順に表示しています。";
 
   return (

@@ -4,6 +4,7 @@ import Avatar from "@/components/Avatar";
 import LogoutButton from "@/components/LogoutButton";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
+import { TERMS } from "@/lib/copy";
 import { createClient } from "@/lib/supabase/server";
 import type { Product, Review } from "@/lib/types";
 
@@ -55,7 +56,7 @@ export default async function MyPage() {
                 プロフィールを作成すると、口コミが書けます
               </Link>
             ) : (
-              "ログインすると、口コミが書けてポーチを引き継げます"
+              `ログインすると、口コミが書けて${TERMS.pouch}を引き継げます`
             )}
           </div>
           {profile?.personal_color && (
@@ -79,7 +80,7 @@ export default async function MyPage() {
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-ink-200 bg-white p-4">
-          <div className="text-xs font-bold text-ink-400">Myポーチの数</div>
+          <div className="text-xs font-bold text-ink-400">{TERMS.pouch}の数</div>
           <div className="mt-1 font-display text-3xl font-bold tabular-nums">{items.length}</div>
         </div>
         <div className="rounded-2xl border border-ink-200 bg-white p-4">
@@ -92,7 +93,7 @@ export default async function MyPage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold">Myポーチの中身</h2>
+          <h2 className="font-display text-lg font-bold">{TERMS.pouch}の中身</h2>
           <div className="flex items-center gap-3 text-xs font-bold text-brand-600">
             {items.length > 4 && <Link href="/stash">すべて見る</Link>}
             <Link href="/stash">追加する</Link>

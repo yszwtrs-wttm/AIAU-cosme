@@ -4,6 +4,7 @@ import MakeupPlan from "@/components/MakeupPlan";
 import ProductCard from "@/components/ProductCard";
 import QuickStartPicker from "@/components/QuickStartPicker";
 import { getMyUser, isRealAccount } from "@/lib/auth";
+import { COPY } from "@/lib/copy";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
 
@@ -36,7 +37,7 @@ export default async function StashPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold">Myポーチ（{products.length}点）</h1>
+      <h1 className="font-display text-2xl font-bold">{COPY.pouchWithCount(products.length)}</h1>
 
       {products.length > 0 && <MakeupPlan products={products} />}
 

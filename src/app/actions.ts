@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
+import { COPY } from "@/lib/copy";
 import type { PersonalColor, SkinType } from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
@@ -15,7 +16,7 @@ export async function addToStash(
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
   if (!user || !isRealAccount(user)) {
-    return { ok: false, error: "ポーチへの登録にはアカウント登録が必要です" };
+    return { ok: false, error: COPY.pouchAddRequiresAccount };
   }
 
   const { error } = await supabase
@@ -38,7 +39,7 @@ export async function addManyToStash(
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
   if (!user || !isRealAccount(user)) {
-    return { ok: false, error: "ポーチへの登録にはアカウント登録が必要です" };
+    return { ok: false, error: COPY.pouchAddRequiresAccount };
   }
 
   const { error } = await supabase.from("user_items").upsert(
@@ -55,7 +56,7 @@ export async function removeFromStash(productId: number): Promise<Result> {
   const { data: userData } = await supabase.auth.getUser();
   const user = userData.user;
   if (!user || !isRealAccount(user)) {
-    return { ok: false, error: "ポーチの利用にはアカウント登録が必要です" };
+    return { ok: false, error: COPY.pouchRequiresAccount };
   }
 
   const { error } = await supabase

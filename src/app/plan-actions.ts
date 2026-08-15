@@ -1,13 +1,14 @@
 "use server";
 
+import { TERMS } from "@/lib/copy";
 import { buildRulePlan, type Plan } from "@/lib/makeup";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
 
 /**
- * 手持ちだけで組めるメイク手順を返す。
+ * Myポーチだけで組めるメイク手順を返す。
  * OPENAI_API_KEY があれば LLM に組ませ、無ければ色相・明度ベースのルールで組む。
- * どちらの場合も候補は「手持ちに登録済みの商品」に限定する。
+ * どちらの場合も候補は「Myポーチに登録済みの商品」に限定する。
  */
 export async function generateMakeupPlan(request: string): Promise<Plan> {
   const supabase = await createClient();
@@ -39,10 +40,10 @@ export async function generateMakeupPlan(request: string): Promise<Plan> {
           {
             role: "system",
             content:
-              "あなたはコスメの提案をするアシスタントです。ユーザーが所有している商品だけを使い、買い足しを勧めてはいけません。" +
+              `あなたはコスメの提案をするアシスタントです。ユーザーが所有している商品（${TERMS.pouch}）だけを使い、買い足しを勧めてはいけません。持ち物を指すときは「${TERMS.pouch}」と呼び、「手持ち」「ポーチ」とは書かないでください。` +
               'JSON で {"headline": string, "steps": [{"order": number, "product": string, "reason": string}], "note": string} を返してください。',
           },
-          { role: "user", content: `やりたいこと: ${request}\n手持ち:\n${inventory}` },
+          { role: "user", content: `やりたいこと: ${request}\n${TERMS.pouch}:\n${inventory}` },
         ],
       }),
     });

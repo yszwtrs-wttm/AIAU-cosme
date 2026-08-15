@@ -6,6 +6,7 @@ import { Camera, Check, Search } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import { addToStash } from "@/app/actions";
+import { COPY, TERMS } from "@/lib/copy";
 import { createClient } from "@/lib/supabase/client";
 import { CATEGORY_LABEL, type Category, type Product } from "@/lib/types";
 
@@ -198,7 +199,7 @@ export default function BarcodeScanner() {
           </form>
         </div>
         <p className="mt-2 text-xs text-ink-400">
-          カメラは開いたままにできます。パッケージを次々かざすと、そのままポーチに入っていきます。
+          カメラは開いたままにできます。パッケージを次々かざすと、そのまま{TERMS.pouch}に入っていきます。
         </p>
         <video
           ref={videoRef}
@@ -209,7 +210,7 @@ export default function BarcodeScanner() {
 
       {registered.length > 0 && (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-          <div className="font-bold text-emerald-900">{registered.length}点をポーチに入れました</div>
+          <div className="font-bold text-emerald-900">{registered.length}点を{TERMS.pouch}に入れました</div>
           <ul className="mt-2 space-y-1 text-sm text-emerald-900">
             {registered.map((p) => (
               <li key={p.id} className="flex items-center gap-1.5">
@@ -221,7 +222,7 @@ export default function BarcodeScanner() {
             href="/stash"
             className="mt-3 inline-block rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
           >
-            Myポーチを見る
+            {COPY.viewPouch}
           </Link>
         </div>
       )}
@@ -240,7 +241,7 @@ export default function BarcodeScanner() {
             onClick={() => void register(hit, "manual")}
             className="mt-3 rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white"
           >
-            ポーチに入れる
+            {TERMS.pouch}に入れる
           </button>
         </div>
       )}
@@ -251,7 +252,7 @@ export default function BarcodeScanner() {
             このバーコード（{unknownJan}）は登録がありません
           </div>
           <p className="text-sm text-amber-900">
-            登録済みの商品から選んでポーチに入れてください。名前やカテゴリで絞り込めます。
+            登録済みの商品から選んで{TERMS.pouch}に入れてください。名前やカテゴリで絞り込めます。
           </p>
           <label className="relative mt-3 block">
             <Search

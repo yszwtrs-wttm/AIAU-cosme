@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Check, Heart } from "lucide-react";
 import { addToStash, removeFromStash } from "@/app/actions";
 import { useToast } from "@/components/Toast";
+import { COPY, TERMS } from "@/lib/copy";
 import { japaneseError } from "@/lib/errors";
 
 export default function StashButton({
@@ -31,7 +32,7 @@ export default function StashButton({
         href="/login"
         className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white"
       >
-        ログインしてポーチに追加
+        {COPY.loginToAddToPouch}
       </Link>
     );
   }
@@ -39,7 +40,9 @@ export default function StashButton({
   const toggle = () =>
     startTransition(async () => {
       setShownOwned(!owned);
-      const fallback = owned ? "ポーチから外せませんでした" : "ポーチに追加できませんでした";
+      const fallback = owned
+        ? `${TERMS.pouch}から外せませんでした`
+        : `${TERMS.pouch}に追加できませんでした`;
       try {
         const res = owned
           ? await removeFromStash(productId)
@@ -52,7 +55,10 @@ export default function StashButton({
         showToast(japaneseError(e, fallback));
         return;
       }
-      showToast(owned ? "ポーチから外しました" : "ポーチに追加しました", "success");
+      showToast(
+        owned ? `${TERMS.pouch}から外しました` : `${TERMS.pouch}に追加しました`,
+        "success",
+      );
       router.refresh();
     });
 
@@ -67,7 +73,7 @@ export default function StashButton({
       }`}
     >
       {shownOwned ? <Check size={15} /> : <Heart size={15} />}
-      {shownOwned ? "ポーチに入っています" : "ポーチに追加"}
+      {shownOwned ? COPY.inPouch : COPY.addToPouch}
     </button>
   );
 }

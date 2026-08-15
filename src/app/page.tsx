@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
+import { COPY, TERMS } from "@/lib/copy";
 import { judgeFit } from "@/lib/fit";
 import { searchProducts, withFitOrder } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
@@ -105,7 +106,7 @@ function LandingPage({ products }: { products: Product[] }) {
           <FeatureCard
             icon={<CircleDollarSign size={20} />}
             title="似たものを見つける"
-            text="手持ちとの被りや、似ていてもっと手頃なものを見つけられます。"
+            text={`${TERMS.pouch}との被りや、似ていてもっと手頃なものを見つけられます。`}
           />
           <FeatureCard
             icon={<ShieldCheck size={20} />}
@@ -178,7 +179,7 @@ function PersonalizedHome({
           見つけよう。
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-600">
-          手持ちと肌情報をもとに、あなたに必要なものだけを探せます。
+          {TERMS.pouch}と肌情報をもとに、あなたに必要なものだけを探せます。
         </p>
       </section>
 
@@ -214,7 +215,7 @@ function PersonalizedHome({
         <section className="rounded-2xl border border-ink-200 bg-white p-5">
           <p className="font-bold">肌の状態と肌の色を登録すると、合いそうなものを出せます</p>
           <p className="mt-1 text-xs text-ink-600">
-            登録は2項目だけです。手持ちのコスメが0件でも判定できます。
+            登録は2項目だけです。{TERMS.pouch}が0点でも判定できます。
           </p>
           <Link href="/settings" className="mt-3 inline-block text-sm font-bold text-brand-600">
             肌情報を登録する <ArrowRight className="inline" size={14} />
@@ -225,17 +226,17 @@ function PersonalizedHome({
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="flex items-center gap-2 text-sm font-bold">
-            <Heart size={17} className="text-brand-600" /> Myポーチの状況
+            <Heart size={17} className="text-brand-600" /> {TERMS.pouch}の状況
           </div>
           <p className="mt-3 font-display text-3xl font-bold tabular-nums">{stashCount}点</p>
           <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
-            Myポーチを見る <ArrowRight className="inline" size={14} />
+            {COPY.viewPouch} <ArrowRight className="inline" size={14} />
           </Link>
         </div>
         <div className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="text-sm font-bold">すぐ使える機能</div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-            <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />
+            <QuickLink href="/stash" icon={<Camera size={15} />} label={`${TERMS.pouch}に登録`} />
             <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
             <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
             <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
