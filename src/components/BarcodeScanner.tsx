@@ -264,7 +264,8 @@ export default function BarcodeScanner() {
               value={candidateQuery}
               onChange={(e) => setCandidateQuery(e.target.value)}
               placeholder="商品名で絞り込む"
-              className="w-full rounded-full border border-ink-200 bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
+              aria-label="商品名で絞り込む"
+              className="w-full rounded-full border border-ink-200 bg-white py-2 pl-9 pr-4 text-sm focus-ring focus:border-brand-400"
             />
           </label>
           <div className="mt-2 flex flex-wrap gap-1.5">
