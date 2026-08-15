@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useTransition } from "react";
+import { useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Heart } from "lucide-react";
 import { addToStash, removeFromStash } from "@/app/actions";
+import { useToast } from "@/components/Toast";
+import { japaneseError } from "@/lib/errors";
 
 export default function StashButton({
   productId,
@@ -18,7 +20,10 @@ export default function StashButton({
   canUse?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
+  // 通信を待たせず先に表示を切り替える。失敗すれば owned のまま戻る。
+  const [shownOwned, setShownOwned] = useOptimistic(owned);
   const router = useRouter();
+  const showToast = useToast();
 
   if (!canUse) {
     return (
@@ -31,22 +36,38 @@ export default function StashButton({
     );
   }
 
+  const toggle = () =>
+    startTransition(async () => {
+      setShownOwned(!owned);
+      const fallback = owned ? "ポーチから外せませんでした" : "ポーチに追加できませんでした";
+      try {
+        const res = owned
+          ? await removeFromStash(productId)
+          : await addToStash(productId, source);
+        if (!res.ok) {
+          showToast(japaneseError(res.error, fallback));
+          return;
+        }
+      } catch (e) {
+        showToast(japaneseError(e, fallback));
+        return;
+      }
+      showToast(owned ? "ポーチから外しました" : "ポーチに追加しました", "success");
+      router.refresh();
+    });
+
   return (
     <button
       type="button"
       disabled={pending}
-      onClick={() =>
-        startTransition(async () => {
-          await (owned ? removeFromStash(productId) : addToStash(productId, source));
-          router.refresh();
-        })
-      }
-      className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition disabled:opacity-50 ${
-        owned ? "border border-brand-200 bg-white text-brand-600" : "bg-brand-600 text-white"
+      aria-busy={pending}
+      onClick={toggle}
+      className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed ${
+        shownOwned ? "border border-brand-200 bg-white text-brand-600" : "bg-brand-600 text-white"
       }`}
     >
-      {owned ? <Check size={15} /> : <Heart size={15} />}
-      {pending ? "処理中…" : owned ? "ポーチに入っています" : "ポーチに追加"}
+      {shownOwned ? <Check size={15} /> : <Heart size={15} />}
+      {shownOwned ? "ポーチに入っています" : "ポーチに追加"}
     </button>
   );
 }
