@@ -168,7 +168,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
             写真の色に近い順に並んでいます。写真の色は照明やカメラで変わるので、目安として使ってください。
           </p>
 
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {shown.map((m, i) => (
               <Link
                 key={`${m.product_id}-${m.shade_name ?? ""}`}

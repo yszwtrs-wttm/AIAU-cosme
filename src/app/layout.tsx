@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
 import AnonAuth from "@/components/AnonAuth";
@@ -24,6 +24,13 @@ export const metadata: Metadata = {
   title: "KAWANAI — そのコスメ、もう持ってるかも",
   description:
     "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
+};
+
+// スマホ利用が前提なので、ノッチ端末でも下タブが安全領域に収まるようにする。
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

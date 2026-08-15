@@ -111,7 +111,7 @@ export default function BarcodeScanner() {
             </button>
           )}
           <form
-            className="flex gap-2"
+            className="flex w-full gap-2 sm:w-auto"
             onSubmit={(e) => {
               e.preventDefault();
               if (jan) void lookup(jan, false);
@@ -121,11 +121,11 @@ export default function BarcodeScanner() {
               value={jan}
               onChange={(e) => setJan(e.target.value)}
               placeholder="バーコードの数字を手入力"
-              className="w-56 rounded-full border border-brand-100 px-4 py-2.5 text-sm outline-none focus:border-brand-300"
+              className="min-w-0 flex-1 rounded-full border border-brand-100 px-4 py-2.5 text-sm outline-none focus:border-brand-300 sm:w-56 sm:flex-none"
             />
             <button
               type="submit"
-              className="flex items-center gap-1 rounded-full border border-brand-200 bg-white px-3 py-2.5 text-sm"
+              className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-brand-200 bg-white px-3 py-2.5 text-sm"
             >
               <Search size={14} /> 探す
             </button>
@@ -183,7 +183,7 @@ export default function BarcodeScanner() {
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
           <div className="font-bold text-amber-900">このバーコードは登録がありません</div>
           <p className="text-sm text-amber-900">似ている商品を下から選んで登録してください。</p>
-          <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
+          <div className="mt-3 grid max-h-72 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
             {candidates.map((p) => (
               <button
                 key={p.id}
