@@ -38,12 +38,12 @@ export default function ComparePanel({
 
   return (
     <div className="overflow-hidden rounded-2xl border-2 border-brand-500 bg-white">
-      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)] items-stretch gap-1 bg-brand-50 p-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch gap-2 bg-brand-50 p-4">
         <SideHead side={high} caption="この商品" />
         <div className="pt-9">
           {priceDiff > 0 && (
-            <div className="flex w-full items-baseline justify-center gap-1 whitespace-nowrap rounded-xl border-2 border-ink-900 bg-white px-1 py-2 text-ink-900">
-              <span className="text-xl font-bold tabular-nums leading-none">
+            <div className="mx-auto flex items-baseline gap-1 whitespace-nowrap rounded-full border-2 border-ink-900 bg-white px-3 py-1.5 text-ink-900">
+              <span className="text-lg font-bold tabular-nums leading-none">
                 ¥{priceDiff.toLocaleString()}
               </span>
               <span className="text-[11px] font-bold">おトク</span>
@@ -57,16 +57,17 @@ export default function ComparePanel({
         {diffs.map(({ axis, high: h, low: l, diff }) => {
           const lead = Math.abs(diff) >= 12 ? (diff > 0 ? "high" : "low") : null;
           return (
-            <li key={axis.key} className="px-4 py-3">
-              <div className="text-center text-sm font-bold">{axis.label}</div>
-              <div className="mt-2 flex items-center gap-2">
-                <span className="w-16 shrink-0" />
-                <div className="flex min-w-0 flex-1 justify-between text-[11px] font-bold text-ink-400">
+            <li key={axis.key} className="px-4 py-3.5">
+              <div className="flex items-center gap-2">
+                <span className="w-16 shrink-0 text-[11px] font-bold tracking-wide text-ink-900">
+                  {axis.label}
+                </span>
+                <div className="flex min-w-0 flex-1 justify-between text-[10px] text-ink-400">
                   <span>{axis.low}</span>
                   <span>{axis.high}</span>
                 </div>
               </div>
-              <div className="mt-1 space-y-2">
+              <div className="mt-1.5 space-y-2">
                 <Bar value={h} label="この商品" tone="high" lead={lead === "high"} />
                 <Bar value={l} label="安い方" tone="low" lead={lead === "low"} />
               </div>
@@ -99,7 +100,7 @@ function SideHead({
 }) {
   return (
     <div className={`min-w-0 ${align === "right" ? "text-right" : ""}`}>
-      <div className="text-[11px] text-ink-400">{caption}</div>
+      <div className="text-[10px] font-bold tracking-wider text-brand-600">{caption}</div>
       <ProductThumb
         category={side.category}
         colors={side.colors}
@@ -107,7 +108,7 @@ function SideHead({
         size={72}
         className={`my-1 rounded-xl ${align === "right" ? "ml-auto" : ""}`}
       />
-      <div className="truncate text-[11px] text-ink-400">{side.brand}</div>
+      <div className="truncate text-[10px] text-ink-400">{side.brand}</div>
       {href ? (
         <Link href={href} className="block text-sm font-bold leading-tight hover:underline">
           {side.name}
@@ -115,8 +116,10 @@ function SideHead({
       ) : (
         <div className="text-sm font-bold leading-tight">{side.name}</div>
       )}
-      <div className="text-lg font-bold tabular-nums">¥{side.priceYen.toLocaleString()}</div>
-      <span className="mt-1 inline-block rounded-full bg-white px-2 py-0.5 text-[10px] text-ink-600">
+      <div className="mt-0.5 text-lg font-bold tabular-nums leading-none">
+        ¥{side.priceYen.toLocaleString()}
+      </div>
+      <span className="mt-1.5 inline-block rounded-full border border-ink-100 bg-white px-2 py-0.5 text-[10px] text-ink-400">
         {side.measured ? `口コミ${side.reviewCount}人の平均` : "成分からの予想"}
       </span>
     </div>
