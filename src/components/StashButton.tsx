@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Heart } from "lucide-react";
 import { addToStash, removeFromStash } from "@/app/actions";
@@ -20,6 +20,7 @@ export default function StashButton({
   canUse?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
+  const [overlapLabels, setOverlapLabels] = useState<string[]>([]);
   // 通信を待たせず先に表示を切り替える。失敗すれば owned のまま戻る。
   const [shownOwned, setShownOwned] = useOptimistic(owned);
   const router = useRouter();
@@ -41,12 +42,20 @@ export default function StashButton({
       setShownOwned(!owned);
       const fallback = owned ? "ポーチから外せませんでした" : "ポーチに追加できませんでした";
       try {
-        const res = owned
-          ? await removeFromStash(productId)
-          : await addToStash(productId, source);
-        if (!res.ok) {
-          showToast(japaneseError(res.error, fallback));
-          return;
+        if (owned) {
+          const res = await removeFromStash(productId);
+          if (!res.ok) {
+            showToast(japaneseError(res.error, fallback));
+            return;
+          }
+          setOverlapLabels([]);
+        } else {
+          const res = await addToStash(productId, source);
+          if (!res.ok) {
+            showToast(japaneseError(res.error, fallback));
+            return;
+          }
+          setOverlapLabels(res.overlapLabels ?? []);
         }
       } catch (e) {
         showToast(japaneseError(e, fallback));
@@ -57,17 +66,31 @@ export default function StashButton({
     });
 
   return (
-    <button
-      type="button"
-      disabled={pending}
-      aria-busy={pending}
-      onClick={toggle}
-      className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed ${
-        shownOwned ? "border border-brand-200 bg-white text-brand-600" : "bg-brand-600 text-white"
-      }`}
-    >
-      {shownOwned ? <Check size={15} /> : <Heart size={15} />}
-      {shownOwned ? "ポーチに入っています" : "ポーチに追加"}
-    </button>
+    <div className="space-y-2">
+      <button
+        type="button"
+        disabled={pending}
+        aria-busy={pending}
+        onClick={toggle}
+        className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed ${
+          shownOwned ? "border border-brand-200 bg-white text-brand-600" : "bg-brand-600 text-white"
+        }`}
+      >
+        {shownOwned ? <Check size={15} /> : <Heart size={15} />}
+        {shownOwned ? "ポーチに入っています" : "ポーチに追加"}
+      </button>
+
+      {overlapLabels.length > 0 && (
+        <div className="animate-rise rounded-2xl border border-plum-300 bg-plum-100 p-3 text-xs text-plum-700">
+          <p className="font-bold">気になるリストと被りました</p>
+          <p className="mt-1">
+            「{overlapLabels.join("」「")}」は、いま入れたものでほぼ足ります。
+          </p>
+          <Link href="/wishlist" prefetch className="mt-1 inline-block font-bold underline">
+            気になるリストを見る
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }

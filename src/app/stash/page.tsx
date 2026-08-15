@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { BellRing } from "lucide-react";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import MakeupPlan from "@/components/MakeupPlan";
 import ProductCard from "@/components/ProductCard";
@@ -15,28 +17,50 @@ export default async function StashPage() {
 
   const supabase = await createClient();
 
-  const [{ data: items }, { data: popular }] = await Promise.all([
-    supabase
-      .from("user_items")
-      .select(
-        "product_id, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
-      )
-      .returns<StashItem[]>(),
-    supabase
-      .from("products")
-      .select(
-        "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
-      )
-      .order("price_yen", { ascending: true })
-      .limit(24)
-      .returns<Product[]>(),
-  ]);
+  const [{ data: items }, { data: popular }, { count: wishCount }, { count: unreadCount }] =
+    await Promise.all([
+      supabase
+        .from("user_items")
+        .select(
+          "product_id, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
+        )
+        .returns<StashItem[]>(),
+      supabase
+        .from("products")
+        .select(
+          "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
+        )
+        .order("price_yen", { ascending: true })
+        .limit(24)
+        .returns<Product[]>(),
+      supabase.from("wishlist_items").select("product_id", { count: "exact", head: true }),
+      supabase
+        .from("wishlist_alerts")
+        .select("id", { count: "exact", head: true })
+        .is("read_at", null),
+    ]);
 
   const products = (items ?? []).map((i) => i.products).filter(Boolean);
 
   return (
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Myポーチ（{products.length}点）</h1>
+
+      <Link
+        href="/wishlist"
+        prefetch
+        className="flex items-center gap-3 rounded-2xl border border-plum-300 bg-plum-100 p-4 text-sm text-plum-700"
+      >
+        <BellRing size={18} className="shrink-0" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-bold">気になるリスト（{wishCount ?? 0}点）</span>
+          <span className="block text-xs">
+            {unreadCount
+              ? `被り・値下がりの未読通知が ${unreadCount} 件あります`
+              : "手持ちが増えて被ったときと、値下がりを知らせます"}
+          </span>
+        </span>
+      </Link>
 
       {products.length > 0 && <MakeupPlan products={products} />}
 

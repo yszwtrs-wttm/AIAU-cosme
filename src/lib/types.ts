@@ -83,6 +83,28 @@ export type StashOverlap = {
   score: number;
 };
 
+export type WishlistAlertKind = "overlap" | "price_drop";
+
+/**
+ * 気になるリストの通知。文言は持たず、判定に使った数値だけを持つ。
+ * 言い回しは src/lib/wording.ts 側で作る。
+ */
+export type WishlistAlert = {
+  id: number;
+  kind: WishlistAlertKind;
+  /** 通知の対象になった「気になる」商品 */
+  product_id: number;
+  /** overlap のとき、被った手持ち商品 */
+  related_product_id: number | null;
+  ing_sim: number | null;
+  delta_e: number | null;
+  score: number | null;
+  old_price_yen: number | null;
+  new_price_yen: number | null;
+  read_at: string | null;
+  created_at: string;
+};
+
 export type Profile = {
   user_id: string;
   handle: string;
