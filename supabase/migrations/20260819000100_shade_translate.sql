@@ -106,46 +106,50 @@ as $$
     join product_colors pc on pc.product_id = p.id
     where ui.user_id = auth.uid() and pc.lab is not null
   )
-  select
-    m.product_id,
-    m.label,
-    m.pos,
-    m.shade_name,
-    m.hex,
-    m.price_yen,
-    c.product_id,
-    c.brand,
-    c.name,
-    c.shade_name,
-    c.shade_hex,
-    c.price_yen,
-    c.delta_e,
-    m.price_yen - c.price_yen
-  from mine m
-  join lateral (
-    select
-      p.id as product_id,
-      b.name as brand,
-      p.name as name,
-      pc.shade_name,
-      pc.hex as shade_hex,
-      p.price_yen,
-      lab_delta_e(pc.lab, m.lab) as delta_e
-    from products p
-    join brands b on b.id = p.brand_id
-    join product_colors pc on pc.product_id = p.id
-    where p.category = m.category
-      and p.id <> m.product_id
-      and p.price_yen < m.price_yen
-      and pc.lab is not null
-      and lab_delta_e(pc.lab, m.lab) <= p_max_delta
-      and not exists (
-        select 1 from user_items ui
-        where ui.user_id = auth.uid() and ui.product_id = p.id
-      )
-    order by p.price_yen asc, lab_delta_e(pc.lab, m.lab) asc
-    limit 1
-  ) c on true
-  order by (m.price_yen - c.price_yen) desc
+  -- 同じ商品ペアが色ごとに何度も並ばないよう、ペアごとに一番近い色だけ残す。
+  select * from (
+    select distinct on (m.product_id, c.product_id)
+      m.product_id as mine_product_id,
+      m.label as mine_label,
+      m.pos as mine_pos,
+      m.shade_name as mine_shade,
+      m.hex as mine_hex,
+      m.price_yen as mine_price,
+      c.product_id,
+      c.brand,
+      c.name,
+      c.shade_name,
+      c.shade_hex,
+      c.price_yen,
+      c.delta_e,
+      m.price_yen - c.price_yen as savings
+    from mine m
+    join lateral (
+      select
+        p.id as product_id,
+        b.name as brand,
+        p.name as name,
+        pc.shade_name,
+        pc.hex as shade_hex,
+        p.price_yen,
+        lab_delta_e(pc.lab, m.lab) as delta_e
+      from products p
+      join brands b on b.id = p.brand_id
+      join product_colors pc on pc.product_id = p.id
+      where p.category = m.category
+        and p.id <> m.product_id
+        and p.price_yen < m.price_yen
+        and pc.lab is not null
+        and lab_delta_e(pc.lab, m.lab) <= p_max_delta
+        and not exists (
+          select 1 from user_items ui
+          where ui.user_id = auth.uid() and ui.product_id = p.id
+        )
+      order by p.price_yen asc, lab_delta_e(pc.lab, m.lab) asc
+      limit 1
+    ) c on true
+    order by m.product_id, c.product_id, c.delta_e asc
+  ) best
+  order by best.savings desc, best.delta_e asc
   limit p_limit;
 $$;

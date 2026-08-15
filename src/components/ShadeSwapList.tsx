@@ -7,14 +7,15 @@ import { colorName } from "@/lib/wording";
 export default function ShadeSwapList({ swaps }: { swaps: CheaperShadeSwap[] }) {
   if (swaps.length === 0) return null;
 
-  const total = swaps.reduce((sum, swap) => sum + swap.savings, 0);
+  const best = Math.max(...swaps.map((swap) => swap.savings));
 
   return (
     <div className="space-y-2 rounded-2xl border border-ink-200 bg-white p-4">
       <p className="text-sm">
-        <span className="text-lg font-bold tabular-nums">¥{total.toLocaleString()}</span>
+        <span className="text-lg font-bold tabular-nums">{swaps.length}件</span>
         <span className="ml-2 text-ink-600">
-          ぶんは、同じ色で安い商品に置き換えられます（買い足すときの参考）
+          は、同じ色のまま安い商品に置き換えられます（いちばん差が大きいものは ¥
+          {best.toLocaleString()} 差）
         </span>
       </p>
       <ul className="space-y-2">
