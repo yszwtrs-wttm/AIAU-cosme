@@ -42,7 +42,7 @@ export default function ComparePanel({
         <SideHead side={high} caption="この商品" />
         <div className="pt-9">
           {priceDiff > 0 && (
-            <div className="mx-auto flex items-baseline gap-1 whitespace-nowrap rounded-full border-2 border-ink-900 bg-white px-3 py-1.5 text-ink-900">
+            <div className="mx-auto flex items-baseline gap-1 whitespace-nowrap border-2 border-ink-900 bg-white px-3 py-1.5 text-ink-900">
               <span className="text-lg font-bold tabular-nums leading-none">
                 ¥{priceDiff.toLocaleString()}
               </span>
