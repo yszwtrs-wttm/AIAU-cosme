@@ -85,126 +85,41 @@ export type Database = {
         }
         Relationships: []
       }
-      passes: {
+      maintenance_runs: {
         Row: {
-          alt_label: string | null
-          alt_price_yen: number | null
-          alt_product_id: number | null
-          created_at: string
-          delta_e: number | null
+          detail: string | null
+          duration_ms: number | null
+          finished_at: string | null
           id: number
-          ing_sim: number | null
-          owned_label: string | null
-          owned_product_id: number | null
-          palette_covered: number | null
-          palette_total: number | null
-          price_yen: number
-          product_id: number
-          reason: string
-          share_id: string
-          user_id: string
+          ingredients: number | null
+          job: string
+          products: number | null
+          started_at: string
+          status: string
         }
         Insert: {
-          alt_label?: string | null
-          alt_price_yen?: number | null
-          alt_product_id?: number | null
-          created_at?: string
-          delta_e?: number | null
-          id?: never
-          ing_sim?: number | null
-          owned_label?: string | null
-          owned_product_id?: number | null
-          palette_covered?: number | null
-          palette_total?: number | null
-          price_yen: number
-          product_id: number
-          reason?: string
-          share_id?: string
-          user_id?: string
+          detail?: string | null
+          duration_ms?: number | null
+          finished_at?: string | null
+          id?: number
+          ingredients?: number | null
+          job: string
+          products?: number | null
+          started_at?: string
+          status?: string
         }
         Update: {
-          alt_label?: string | null
-          alt_price_yen?: number | null
-          alt_product_id?: number | null
-          created_at?: string
-          delta_e?: number | null
-          id?: never
-          ing_sim?: number | null
-          owned_label?: string | null
-          owned_product_id?: number | null
-          palette_covered?: number | null
-          palette_total?: number | null
-          price_yen?: number
-          product_id?: number
-          reason?: string
-          share_id?: string
-          user_id?: string
+          detail?: string | null
+          duration_ms?: number | null
+          finished_at?: string | null
+          id?: number
+          ingredients?: number | null
+          job?: string
+          products?: number | null
+          started_at?: string
+          status?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "passes_alt_product_id_fkey"
-            columns: ["alt_product_id"]
-            isOneToOne: false
-            referencedRelation: "product_rating_summary"
-            referencedColumns: ["product_id"]
-          },
-          {
-            foreignKeyName: "passes_alt_product_id_fkey"
-            columns: ["alt_product_id"]
-            isOneToOne: false
-            referencedRelation: "product_score"
-            referencedColumns: ["product_id"]
-          },
-          {
-            foreignKeyName: "passes_alt_product_id_fkey"
-            columns: ["alt_product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "passes_owned_product_id_fkey"
-            columns: ["owned_product_id"]
-            isOneToOne: false
-            referencedRelation: "product_rating_summary"
-            referencedColumns: ["product_id"]
-          },
-          {
-            foreignKeyName: "passes_owned_product_id_fkey"
-            columns: ["owned_product_id"]
-            isOneToOne: false
-            referencedRelation: "product_score"
-            referencedColumns: ["product_id"]
-          },
-          {
-            foreignKeyName: "passes_owned_product_id_fkey"
-            columns: ["owned_product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "passes_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "product_rating_summary"
-            referencedColumns: ["product_id"]
-          },
-          {
-            foreignKeyName: "passes_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "product_score"
-            referencedColumns: ["product_id"]
-          },
-          {
-            foreignKeyName: "passes_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       product_colors: {
         Row: {
@@ -641,6 +556,18 @@ export type Database = {
       }
     }
     Views: {
+      ingredient_idf_status: {
+        Row: {
+          detail: string | null
+          duration_ms: number | null
+          finished_at: string | null
+          ingredients: number | null
+          products: number | null
+          started_at: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
       product_feel_summary: {
         Row: {
           feel: Json | null
@@ -782,29 +709,6 @@ export type Database = {
           score: number
         }[]
       }
-      get_shared_pass: {
-        Args: { p_share_id: string }
-        Returns: {
-          alt_label: string
-          alt_price_yen: number
-          author_handle: string
-          author_name: string
-          brand: string
-          category: string
-          color_hex: string
-          created_at: string
-          delta_e: number
-          ing_sim: number
-          name: string
-          owned_label: string
-          palette_covered: number
-          palette_total: number
-          price_yen: number
-          product_id: number
-          reason: string
-          share_id: string
-        }[]
-      }
       gtrgm_compress: {
         Args: { "": unknown }
         Returns: unknown
@@ -900,6 +804,17 @@ export type Database = {
       refresh_ingredient_idf: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      refresh_ingredient_idf_logged: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      search_products: {
+        Args: { p_category?: string | null; p_limit?: number; p_mens?: boolean | null; p_q: string }
+        Returns: {
+          product_id: number
+          score: number
+        }[]
       }
       set_limit: {
         Args: { "": number }
