@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
-import AnonAuth from "@/components/AnonAuth";
 import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
 import ToastProvider from "@/components/Toast";
@@ -42,7 +41,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     <html lang="ja" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen text-ink-900 antialiased">
         <ToastProvider>
-          <AnonAuth />
           <a
             href="#main"
             className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-white"
