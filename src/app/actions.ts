@@ -132,6 +132,97 @@ export async function attachReviewImages(
   return { ok: !error, error: error?.message };
 }
 
+/**
+ * 自分の口コミの編集。評価・本文・使用感だけを書き換える。
+ * 商品や投稿者の付け替えは RLS と before update トリガーで弾かれる。
+ */
+export async function updateReview(input: {
+  reviewId: number;
+  rating: number;
+  body: string;
+  feel?: Record<string, number> | null;
+}): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!isRealAccount(user)) return { ok: false, error: "ログインが必要です" };
+
+  if (!input.body.trim()) return { ok: false, error: "本文を入れてください" };
+  if (!Number.isInteger(input.rating) || input.rating < 1 || input.rating > 5) {
+    return { ok: false, error: "評価は1〜5で選んでください" };
+  }
+
+  const { data: review, error: readError } = await supabase
+    .from("reviews")
+    .select("id,product_id,user_id")
+    .eq("id", input.reviewId)
+    .maybeSingle();
+  if (readError) return { ok: false, error: readError.message };
+  if (!review || review.user_id !== user!.id) {
+    return { ok: false, error: "自分の口コミだけ編集できます" };
+  }
+
+  const { error } = await supabase
+    .from("reviews")
+    .update({
+      rating: input.rating,
+      body: input.body,
+      ...(input.feel === undefined ? {} : { feel: input.feel }),
+    })
+    .eq("id", input.reviewId)
+    .eq("user_id", user!.id);
+
+  revalidatePath(`/products/${review.product_id}`);
+  revalidatePath("/feed");
+  revalidatePath("/me");
+  return { ok: !error, error: error?.message };
+}
+
+/**
+ * 自分の口コミの削除。review_images はカスケードで消えるが、
+ * Storage の実体は残るので先に片付ける（孤立した画像を作らない）。
+ */
+export async function deleteReview(reviewId: number): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!isRealAccount(user)) return { ok: false, error: "ログインが必要です" };
+
+  const { data: review, error: readError } = await supabase
+    .from("reviews")
+    .select("id,product_id,user_id,review_images(path)")
+    .eq("id", reviewId)
+    .maybeSingle<{
+      id: number;
+      product_id: number;
+      user_id: string | null;
+      review_images: { path: string }[] | null;
+    }>();
+  if (readError) return { ok: false, error: readError.message };
+  if (!review || review.user_id !== user!.id) {
+    return { ok: false, error: "自分の口コミだけ削除できます" };
+  }
+
+  const paths = (review.review_images ?? []).map((img) => img.path);
+  if (paths.length > 0) {
+    const { error: storageError } = await supabase.storage.from("review-images").remove(paths);
+    if (storageError) return { ok: false, error: storageError.message };
+  }
+
+  const { error } = await supabase
+    .from("reviews")
+    .delete()
+    .eq("id", reviewId)
+    .eq("user_id", user!.id);
+
+  revalidatePath(`/products/${review.product_id}`);
+  revalidatePath("/feed");
+  revalidatePath("/me");
+  return { ok: !error, error: error?.message };
+}
+
 export async function reportReview(reviewId: number, reason: string): Promise<Result> {
   const supabase = await createClient();
   const { error } = await supabase.from("review_reports").insert({ review_id: reviewId, reason });
