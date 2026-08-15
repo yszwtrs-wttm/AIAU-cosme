@@ -4,6 +4,7 @@ import "./globals.css";
 import AnonAuth from "@/components/AnonAuth";
 import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
+import { getMyUser, isRealAccount } from "@/lib/auth";
 
 const sans = Zen_Kaku_Gothic_New({
   subsets: ["latin"],
@@ -25,17 +26,20 @@ export const metadata: Metadata = {
     "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const user = await getMyUser();
+  const real = isRealAccount(user);
+
   return (
     <html lang="ja" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen text-ink-900 antialiased">
         <AnonAuth />
-        <SiteHeader />
+        <SiteHeader isRealAccount={real} />
         <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">{children}</main>
         <footer className="mx-auto max-w-5xl px-4 pb-28 text-[11px] text-ink-400 md:pb-10">
           デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
         </footer>
-        <BottomTabBar />
+        <BottomTabBar isRealAccount={real} />
       </body>
     </html>
   );

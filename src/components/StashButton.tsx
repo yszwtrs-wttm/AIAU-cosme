@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Heart } from "lucide-react";
@@ -9,13 +10,26 @@ export default function StashButton({
   productId,
   owned,
   source = "manual",
+  canUse = true,
 }: {
   productId: number;
   owned: boolean;
   source?: "manual" | "scan" | "photo" | "quick";
+  canUse?: boolean;
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+
+  if (!canUse) {
+    return (
+      <Link
+        href="/login"
+        className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white"
+      >
+        ログインしてポーチに追加
+      </Link>
+    );
+  }
 
   return (
     <button

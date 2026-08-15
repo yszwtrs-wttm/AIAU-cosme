@@ -95,6 +95,12 @@ function LandingPage({ products }: { products: Product[] }) {
               はじめる <ArrowRight size={16} />
             </Link>
             <Link
+              href="/login"
+              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+            >
+              ログイン
+            </Link>
+            <Link
               href="/search"
               className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
             >

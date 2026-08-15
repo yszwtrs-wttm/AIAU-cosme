@@ -13,12 +13,15 @@ export async function addToStash(
 ): Promise<Result> {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { ok: false, error: "セッションがありません" };
+  const user = userData.user;
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "ポーチへの登録にはアカウント登録が必要です" };
+  }
 
   const { error } = await supabase
     .from("user_items")
     .upsert(
-      { product_id: productId, user_id: userData.user.id, source },
+      { product_id: productId, user_id: user.id, source },
       { onConflict: "user_id,product_id" },
     );
 
@@ -33,10 +36,13 @@ export async function addManyToStash(
 ): Promise<Result> {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { ok: false, error: "セッションがありません" };
+  const user = userData.user;
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "ポーチへの登録にはアカウント登録が必要です" };
+  }
 
   const { error } = await supabase.from("user_items").upsert(
-    productIds.map((product_id) => ({ product_id, user_id: userData.user!.id, source })),
+    productIds.map((product_id) => ({ product_id, user_id: user.id, source })),
     { onConflict: "user_id,product_id" },
   );
 
@@ -47,13 +53,16 @@ export async function addManyToStash(
 export async function removeFromStash(productId: number): Promise<Result> {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { ok: false, error: "セッションがありません" };
+  const user = userData.user;
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "ポーチの利用にはアカウント登録が必要です" };
+  }
 
   const { error } = await supabase
     .from("user_items")
     .delete()
     .eq("product_id", productId)
-    .eq("user_id", userData.user.id);
+    .eq("user_id", user.id);
 
   revalidatePath("/stash");
   revalidatePath(`/products/${productId}`);

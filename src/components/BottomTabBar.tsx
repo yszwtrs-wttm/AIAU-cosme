@@ -12,15 +12,21 @@ const TABS = [
   { href: "/feed", label: "投稿", icon: Images },
   { href: "/me", label: "マイpage", icon: UserRound },
 ];
+const GUEST_TABS = [
+  { href: "/search", label: "探す", icon: Search },
+  { href: "/feed", label: "投稿", icon: Images },
+  { href: "/login", label: "ログイン", icon: UserRound },
+];
 
 /** 店頭で片手で使うアプリなので、モバイルではタブバーを主導線にする。 */
-export default function BottomTabBar() {
+export default function BottomTabBar({ isRealAccount }: { isRealAccount: boolean }) {
   const pathname = usePathname();
+  const tabs = isRealAccount ? TABS : GUEST_TABS;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-white/95 backdrop-blur md:hidden">
       <ul className="mx-auto flex max-w-5xl">
-        {TABS.map(({ href, label, icon: Icon }) => {
+        {tabs.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
             <li key={href} className="flex-1">
