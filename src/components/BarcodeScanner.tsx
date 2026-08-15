@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Check, Search } from "lucide-react";
+import { Camera, Check, Flashlight, Search, SwitchCamera } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
+import type { IScannerControls } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import { addToStash } from "@/app/actions";
 import { createClient } from "@/lib/supabase/client";
@@ -29,13 +30,28 @@ const CHIP = "rounded-full border px-3 py-1 text-xs transition";
 const CHIP_ON = "border-ink-900 bg-ink-900 text-white";
 const CHIP_OFF = "border-ink-200 bg-white text-ink-600";
 
+/** カメラが開けなかった理由ごとに、その場でできる復帰手順を出す。 */
+function cameraErrorMessage(e: unknown): string {
+  const name = e instanceof Error ? e.name : "";
+  if (name === "NotAllowedError" || name === "SecurityError") {
+    return "カメラの使用が許可されていません。iPhone は「設定 > Safari > カメラ」または画面左上の「ぁあ」>「Webサイトの設定」、Android Chrome はアドレスバーの鍵アイコン >「権限」からカメラを「許可」にして、ページを再読み込みしてください。バーコードの数字は手入力でも登録できます。";
+  }
+  if (name === "NotFoundError" || name === "OverconstrainedError") {
+    return "使えるカメラが見つかりませんでした。カメラのある端末で開くか、バーコードの数字を手入力してください。";
+  }
+  if (name === "NotReadableError" || name === "TrackStartError") {
+    return "カメラを他のアプリが使用中の可能性があります。カメラを使っているアプリやタブを閉じて、もう一度お試しください。";
+  }
+  return e instanceof Error ? `カメラを開けませんでした: ${e.message}` : "カメラを開けませんでした";
+}
+
 /**
  * 連続スキャン。1本ごとにカメラを止めず、読めたらそのまま登録して次に進める。
  * 「1個ずつ登録が面倒」を減らすのが目的。
  */
 export default function BarcodeScanner() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const controlsRef = useRef<{ stop: () => void } | null>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
   const busyRef = useRef(false);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -43,6 +59,11 @@ export default function BarcodeScanner() {
   const [hit, setHit] = useState<Product | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [registered, setRegistered] = useState<Product[]>([]);
+  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [deviceId, setDeviceId] = useState<string | undefined>(undefined);
+  const [torchOn, setTorchOn] = useState(false);
+  const [torchReady, setTorchReady] = useState(false);
+  const [active, setActive] = useState(false);
   /** 候補一覧の対象になっている、登録が無かったバーコード */
   const [unknownJan, setUnknownJan] = useState("");
   const [candidateQuery, setCandidateQuery] = useState("");
@@ -126,14 +147,27 @@ export default function BarcodeScanner() {
     setStatus("unknown");
   };
 
-  const start = async () => {
+  const start = async (preferredDeviceId?: string) => {
     setStatus("scanning");
     setMessage("");
+    setTorchOn(false);
+    setTorchReady(false);
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setStatus("error");
+      setMessage(
+        "この環境ではカメラを使えません。https:// で開いているか確認してください（http:// ではカメラが使えません）。バーコードの数字は手入力でも登録できます。",
+      );
+      return;
+    }
     try {
       const hints = new Map();
       hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.CODE_128]);
       const reader = new BrowserMultiFormatReader(hints);
-      controlsRef.current = await reader.decodeFromVideoDevice(undefined, videoRef.current!, (result) => {
+      // 端末既定だとフロントカメラが選ばれることがあるので、背面カメラを明示的に要求する。
+      const video: MediaTrackConstraints = preferredDeviceId
+        ? { deviceId: { exact: preferredDeviceId } }
+        : { facingMode: { ideal: "environment" } };
+      const controls = await reader.decodeFromConstraints({ video, audio: false }, videoRef.current!, (result) => {
         if (!result || busyRef.current) return;
         busyRef.current = true;
         void lookup(result.getText(), true).finally(() => {
@@ -143,23 +177,55 @@ export default function BarcodeScanner() {
           }, 1500);
         });
       });
+      controlsRef.current = controls;
+      setActive(true);
+      setTorchReady(typeof controls.switchTorch === "function");
+      setDeviceId(videoRef.current?.srcObject instanceof MediaStream
+        ? videoRef.current.srcObject.getVideoTracks()[0]?.getSettings().deviceId
+        : preferredDeviceId);
+      // 許可後でないとラベルが取れないので、開いた後に一覧を作る。
+      const list = await BrowserMultiFormatReader.listVideoInputDevices();
+      setDevices(list);
     } catch (e) {
+      setActive(false);
       setStatus("error");
-      setMessage(e instanceof Error ? `カメラを開けませんでした: ${e.message}` : "カメラを開けませんでした");
+      setMessage(cameraErrorMessage(e));
     }
   };
 
   const stop = () => {
     controlsRef.current?.stop();
     controlsRef.current = null;
+    setTorchOn(false);
+    setTorchReady(false);
+    setActive(false);
     setStatus("idle");
+  };
+
+  const toggleTorch = async () => {
+    const switchTorch = controlsRef.current?.switchTorch;
+    if (!switchTorch) return;
+    try {
+      await switchTorch(!torchOn);
+      setTorchOn((prev) => !prev);
+    } catch {
+      setTorchReady(false);
+      setMessage("この端末ではライトを使えませんでした");
+    }
+  };
+
+  const changeDevice = async (nextId: string) => {
+    controlsRef.current?.stop();
+    controlsRef.current = null;
+    setDeviceId(nextId);
+    await start(nextId);
   };
 
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-ink-200 bg-white p-5">
         <div className="flex flex-wrap items-center gap-2">
-          {status === "scanning" ? (
+          {active ? (
             <button
               type="button"
               onClick={stop}
@@ -170,11 +236,40 @@ export default function BarcodeScanner() {
           ) : (
             <button
               type="button"
-              onClick={start}
+              onClick={() => void start(deviceId)}
               className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white"
             >
               <Camera size={15} /> スキャンする
             </button>
+          )}
+          {active && torchReady && (
+            <button
+              type="button"
+              onClick={() => void toggleTorch()}
+              aria-pressed={torchOn}
+              className={`flex items-center gap-1.5 rounded-full border px-4 py-2.5 text-sm font-bold ${
+                torchOn ? "border-amber-300 bg-amber-100 text-amber-900" : "border-ink-200 bg-white text-ink-600"
+              }`}
+            >
+              <Flashlight size={15} /> ライト{torchOn ? "OFF" : "ON"}
+            </button>
+          )}
+          {active && devices.length > 1 && (
+            <label className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-3 py-2 text-sm text-ink-600">
+              <SwitchCamera size={15} />
+              <span className="sr-only">使うカメラ</span>
+              <select
+                value={deviceId ?? ""}
+                onChange={(e) => void changeDevice(e.target.value)}
+                className="max-w-[9rem] bg-transparent text-sm outline-none"
+              >
+                {devices.map((d, i) => (
+                  <option key={d.deviceId} value={d.deviceId}>
+                    {d.label || `カメラ ${i + 1}`}
+                  </option>
+                ))}
+              </select>
+            </label>
           )}
           <form
             className="flex w-full gap-2 sm:w-auto"
@@ -202,7 +297,10 @@ export default function BarcodeScanner() {
         </p>
         <video
           ref={videoRef}
-          className={`mt-3 w-full rounded-2xl bg-black ${status === "scanning" ? "" : "hidden"}`}
+          playsInline
+          muted
+          autoPlay
+          className={`mt-3 w-full rounded-2xl bg-black ${active ? "" : "hidden"}`}
         />
         {message && <p className="mt-2 text-sm text-red-600">{message}</p>}
       </div>
