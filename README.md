@@ -92,8 +92,6 @@ npx supabase start             # ローカルDBが起動していること
 npm run db:types
 ```
 
-再生成し忘れると CI（`.github/workflows/ci.yml` の `db-types` ジョブ）が差分を検出して落ちる。
-
 ## 検証
 
 ```bash
