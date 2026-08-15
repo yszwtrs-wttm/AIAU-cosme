@@ -199,6 +199,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "passes_alt_product_id_fkey"
+            columns: ["alt_product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "passes_owned_product_id_fkey"
             columns: ["owned_product_id"]
             isOneToOne: false
@@ -220,6 +227,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "passes_owned_product_id_fkey"
+            columns: ["owned_product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "passes_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -238,6 +252,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
             referencedColumns: ["id"]
           },
         ]
