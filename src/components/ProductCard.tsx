@@ -1,0 +1,26 @@
+import Link from "next/link";
+import ProductThumb from "@/components/ProductThumb";
+import { CATEGORY_LABEL, type Product } from "@/lib/types";
+
+export default function ProductCard({ product }: { product: Product }) {
+  return (
+    <Link
+      href={`/products/${product.id}`}
+      className="flex gap-3 rounded-xl border border-neutral-200 bg-white p-3 transition hover:border-neutral-400"
+    >
+      <ProductThumb
+        category={product.category}
+        colors={product.product_colors ?? []}
+        imageUrl={product.image_url}
+      />
+      <div className="min-w-0">
+        <div className="text-xs text-neutral-500">
+          {product.brands?.name} ・ {CATEGORY_LABEL[product.category]}
+          {product.is_mens && <span className="ml-1 rounded bg-neutral-900 px-1 text-[10px] text-white">MEN</span>}
+        </div>
+        <div className="truncate text-sm font-medium">{product.name}</div>
+        <div className="text-sm tabular-nums">¥{product.price_yen.toLocaleString()}</div>
+      </div>
+    </Link>
+  );
+}
