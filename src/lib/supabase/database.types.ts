@@ -101,7 +101,7 @@ export type Database = {
         Insert: {
           brand_name?: string | null
           created_at?: string
-          id?: never
+          id?: number
           image_path?: string | null
           jan: string
           note?: string | null
@@ -113,7 +113,7 @@ export type Database = {
         Update: {
           brand_name?: string | null
           created_at?: string
-          id?: never
+          id?: number
           image_path?: string | null
           jan?: string
           note?: string | null
@@ -127,7 +127,28 @@ export type Database = {
             foreignKeyName: "jan_requests_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "jan_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "jan_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jan_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
             referencedColumns: ["id"]
           },
         ]
