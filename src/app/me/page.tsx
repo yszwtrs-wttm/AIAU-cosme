@@ -6,6 +6,7 @@ import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Product, Review } from "@/lib/types";
+import { FLAG_LABEL } from "@/lib/types";
 
 type StashRow = { products: Product | null };
 
@@ -116,12 +117,32 @@ export default async function MyPage() {
           <h2 className="font-display text-lg font-bold">書いた口コミ</h2>
           <ul className="space-y-2">
             {(myReviews ?? []).map((r) => (
-              <li key={r.id} className="rounded-2xl border border-ink-200 bg-white p-4">
+              <li
+                key={r.id}
+                className={`rounded-2xl border bg-white p-4 ${
+                  r.excluded ? "border-amber-300" : "border-ink-200"
+                }`}
+              >
                 <Link href={`/products/${r.product_id}`} className="text-xs text-brand-600">
                   この商品を見る
                 </Link>
                 <div className="text-amber-500">{"★".repeat(r.rating)}</div>
                 <p className="text-sm">{r.body}</p>
+                {r.excluded && (
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 font-bold text-amber-800">
+                      点数に入れていません
+                    </span>
+                    {r.flags.map((flag) => (
+                      <span key={flag} className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">
+                        {FLAG_LABEL[flag] ?? flag}
+                      </span>
+                    ))}
+                    <Link href={`/products/${r.product_id}`} className="underline text-amber-800">
+                      理由を見て異議を申し立てる
+                    </Link>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

@@ -307,6 +307,50 @@ export type Database = {
         }
         Relationships: []
       }
+      review_appeals: {
+        Row: {
+          created_at: string
+          flags_after: string[]
+          flags_before: string[]
+          id: number
+          judged_at: string | null
+          message: string
+          review_id: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          flags_after?: string[]
+          flags_before?: string[]
+          id?: never
+          judged_at?: string | null
+          message: string
+          review_id: number
+          status?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          flags_after?: string[]
+          flags_before?: string[]
+          id?: never
+          judged_at?: string | null
+          message?: string
+          review_id?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_appeals_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       review_images: {
         Row: {
           created_at: string
@@ -872,6 +916,14 @@ export type Database = {
       refresh_ingredient_idf_logged: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      request_review_recheck: {
+        Args: { p_message: string; p_review_id: number }
+        Returns: {
+          excluded: boolean
+          flags: string[]
+          status: string
+        }[]
       }
       search_products: {
         Args: {

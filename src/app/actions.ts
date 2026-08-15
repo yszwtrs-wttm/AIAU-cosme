@@ -145,6 +145,36 @@ export async function reportReview(reviewId: number, reason: string): Promise<Re
   return { ok: !error, error: error?.message };
 }
 
+/**
+ * 除外された自分の口コミの再判定リクエスト（異議申し立て）。
+ * 申し立ての記録と判定のやり直しは Postgres 側の request_review_recheck が行う。
+ */
+export async function requestReviewRecheck(
+  reviewId: number,
+  message: string,
+): Promise<Result & { restored?: boolean; flags?: string[] }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!isRealAccount(user)) {
+    return { ok: false, error: "再判定のリクエストにはアカウント登録が必要です" };
+  }
+  if (!message.trim()) {
+    return { ok: false, error: "理由を書いてください" };
+  }
+
+  const { data, error } = await supabase
+    .rpc("request_review_recheck", { p_review_id: reviewId, p_message: message.trim() })
+    .maybeSingle();
+
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/me");
+  revalidatePath("/feed");
+  return { ok: true, restored: data ? !data.excluded : false, flags: data?.flags ?? [] };
+}
+
 export async function saveProfile(input: {
   handle: string;
   displayName: string;

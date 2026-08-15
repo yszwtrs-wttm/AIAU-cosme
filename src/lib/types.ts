@@ -164,12 +164,35 @@ export type ProductScore = {
 };
 
 export const FLAG_LABEL: Record<string, string> = {
-  similar_text: "同一文体クラスタ",
-  burst: "短時間の高評価バースト",
-  brand_bias: "同一ブランドへの偏重投稿",
-  pr_boilerplate: "PR・案件の定型表現",
-  image_reuse: "画像の使い回し",
+  similar_text: "似た文章のくり返し",
+  burst: "短時間の高評価の連投",
+  brand_bias: "同じブランドへの高評価の集中",
+  pr_boilerplate: "宣伝・案件の定型文",
+  image_reuse: "写真の使い回し",
   reported: "通報が多い",
+};
+
+/** 投稿者本人に見せる、その理由が付いた根拠の説明 */
+export const FLAG_DETAIL: Record<string, string> = {
+  similar_text: "同じ商品の他の口コミと文章がよく似ています。テンプレートを使った投稿と区別できません。",
+  burst: "同じ商品に短い間（24時間以内）で満点の口コミが集中していて、その一つになっています。",
+  brand_bias: "同じブランドの商品に満点の口コミを3件以上つけています。",
+  pr_boilerplate: "「PR」「提供」「案件」など、宣伝でよく使われる言葉が本文に入っています。",
+  image_reuse: "添付した写真が、他の口コミの写真と同じものと判定されました。",
+  reported: "他の利用者からの通報が3件以上あります。",
+};
+
+export type AppealStatus = "open" | "restored" | "kept";
+
+export type ReviewAppeal = {
+  id: number;
+  review_id: number;
+  message: string;
+  status: AppealStatus;
+  flags_before: string[];
+  flags_after: string[];
+  created_at: string;
+  judged_at: string | null;
 };
 
 export type FeelSummary = {

@@ -2,9 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Flag, ImagePlus, Lock, X } from "lucide-react";
+import { Flag, ImagePlus, Lock, ShieldAlert, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { attachReviewImages, postReview, reportReview } from "@/app/actions";
+import {
+  attachReviewImages,
+  postReview,
+  reportReview,
+  requestReviewRecheck,
+} from "@/app/actions";
 import Avatar from "@/components/Avatar";
 import { useToast } from "@/components/Toast";
 import { japaneseError } from "@/lib/errors";
@@ -15,11 +20,98 @@ import { shrinkImage } from "@/lib/image";
 import { averageHash } from "@/lib/phash";
 import { THUMB_WIDTH } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
-import { SKIN_TYPE_LABEL } from "@/lib/types";
+import { FLAG_DETAIL, FLAG_LABEL, SKIN_TYPE_LABEL } from "@/lib/types";
 
 type Viewer = { skinType: SkinType | null; skinToneHex: string | null };
 
 const MAX_IMAGES = 4;
+
+function flagLabel(flag: string) {
+  return FLAG_LABEL[flag] ?? flag;
+}
+
+/** 除外された自分の口コミに出す、判定の内訳と再判定リクエスト。 */
+function AppealBox({ review }: { review: Review }) {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [result, setResult] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  return (
+    <div className="mt-3 space-y-2 rounded-2xl bg-amber-50 p-3 text-xs text-amber-900">
+      <div className="flex items-center gap-1.5 font-bold">
+        <ShieldAlert size={13} /> あなたの投稿が点数に入っていない理由
+      </div>
+      <ul className="space-y-1">
+        {review.flags.map((flag) => (
+          <li key={flag}>
+            <span className="font-bold">{flagLabel(flag)}</span>
+            {FLAG_DETAIL[flag] && <span className="ml-1">{FLAG_DETAIL[flag]}</span>}
+          </li>
+        ))}
+        {review.flags.length === 0 && <li>判定の内訳が記録されていません。</li>}
+      </ul>
+      <p className="text-[11px] text-amber-700">
+        投稿は削除していません。判定に心当たりがない場合は、再判定をリクエストできます。
+      </p>
+
+      {result ? (
+        <p className="font-bold">{result}</p>
+      ) : open ? (
+        <form
+          className="space-y-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setError(null);
+            startTransition(async () => {
+              const res = await requestReviewRecheck(review.id, message);
+              if (!res.ok) {
+                setError(res.error ?? "リクエストできませんでした");
+                return;
+              }
+              setResult(
+                res.restored
+                  ? "再判定しました。この投稿は点数に入るようになりました。"
+                  : "再判定しました。判定は変わりませんでした。内容は運営が確認します。",
+              );
+            });
+          }}
+        >
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={2}
+            maxLength={500}
+            placeholder="自分で使った感想であることや、写真を撮った状況などを書いてください"
+            className="w-full rounded-xl border border-amber-200 bg-white px-2 py-1.5 text-xs outline-none focus:border-amber-400"
+          />
+          {error && <p className="text-[11px] font-bold text-red-600">{error}</p>}
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={pending || !message.trim()}
+              className="rounded-full bg-amber-600 px-3 py-1 font-bold text-white disabled:opacity-50"
+            >
+              {pending ? "送信中…" : "再判定をリクエスト"}
+            </button>
+            <button type="button" onClick={() => setOpen(false)} className="px-2 underline">
+              やめる
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded-full border border-amber-300 bg-white px-3 py-1 font-bold text-amber-800"
+        >
+          異議を申し立てる（再判定をリクエスト）
+        </button>
+      )}
+    </div>
+  );
+}
 
 function Stars({ value }: { value: number }) {
   return (
@@ -30,7 +122,15 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-function ReviewCard({ review, close }: { review: Review; close: boolean }) {
+function ReviewCard({
+  review,
+  close,
+  mine = false,
+}: {
+  review: Review;
+  close: boolean;
+  mine?: boolean;
+}) {
   const [reported, setReported] = useState(false);
   const showToast = useToast();
   const name = review.profiles?.display_name ?? review.author_name;
@@ -38,7 +138,11 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   const skin = review.profiles?.skin_type;
 
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-4">
+    <div
+      className={`rounded-2xl border bg-white p-4 ${
+        review.excluded ? "border-amber-300" : "border-ink-200"
+      }`}
+    >
       <div className="flex items-center gap-2">
         <Avatar
           name={name}
@@ -81,6 +185,18 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
       </div>
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+        {review.excluded && (
+          <>
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 font-bold text-amber-800">
+              点数に入れていません
+            </span>
+            {review.flags.map((flag) => (
+              <span key={flag} className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-700">
+                {flagLabel(flag)}
+              </span>
+            ))}
+          </>
+        )}
         {close && (
           <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700">
             あなたと近い肌の人
@@ -112,6 +228,8 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
           ))}
         </div>
       )}
+
+      {review.excluded && mine && <AppealBox review={review} />}
     </div>
   );
 }
@@ -123,6 +241,7 @@ export default function ReviewPanel({
   initialSummary,
   canPost,
   viewer,
+  viewerUserId,
 }: {
   productId: number;
   category: Category;
@@ -130,6 +249,7 @@ export default function ReviewPanel({
   initialSummary: RatingSummary | null;
   canPost: boolean;
   viewer: Viewer;
+  viewerUserId: string | null;
 }) {
   const axes = axesFor(category);
   const [reviews, setReviews] = useState(initialReviews);
@@ -140,6 +260,7 @@ export default function ReviewPanel({
     Object.fromEntries(axes.map((a) => [a.key, 50])),
   );
   const [files, setFiles] = useState<File[]>([]);
+  const [showExcluded, setShowExcluded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -183,6 +304,8 @@ export default function ReviewPanel({
     .filter((r) => !r.excluded)
     .map((r) => ({ review: r, score: closenessScore(viewer, r.profiles) }))
     .sort((a, b) => b.score - a.score);
+  const excluded = reviews.filter((r) => r.excluded);
+  const myExcluded = excluded.filter((r) => viewerUserId && r.user_id === viewerUserId);
   const rated = summary?.adjusted_rating ?? null;
   const counted = summary?.counted_count ?? 0;
   const hasViewerProfile = Boolean(viewer.skinType || viewer.skinToneHex);
@@ -257,8 +380,10 @@ export default function ReviewPanel({
             <>
               点数に入っている口コミ {counted} 件
               <p className="mt-0.5 text-[11px] text-ink-400">
-                宣伝目的・使い回しと判断した投稿は点数に入れていません。実際に登録している人の声は、
-                少し重く見て平均を出しています。
+                宣伝目的・使い回しと判断した投稿は点数に入れていません（削除はしていません）。
+                {summary.excluded_count > 0 &&
+                  `除外した ${summary.excluded_count} 件は下の「除外した口コミも見る」から理由付きで読めます。`}
+                実際に登録している人の声は、少し重く見て平均を出しています。
               </p>
             </>
           ) : (
@@ -383,11 +508,46 @@ export default function ReviewPanel({
         </div>
       )}
 
+      {myExcluded.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-sm font-bold text-amber-800">
+            あなたの投稿 {myExcluded.length} 件が点数に入っていません
+          </h3>
+          {myExcluded.map((review) => (
+            <ReviewCard key={review.id} review={review} close={false} mine />
+          ))}
+        </div>
+      )}
+
       <div className="space-y-2">
         {shown.map(({ review, score }) => (
           <ReviewCard key={review.id} review={review} close={score > 0} />
         ))}
       </div>
+
+      {excluded.length > 0 && (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setShowExcluded(!showExcluded)}
+            className="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-bold text-ink-600"
+          >
+            {showExcluded
+              ? "除外した口コミを隠す"
+              : `除外した口コミも見る（${excluded.length}件）`}
+          </button>
+          {showExcluded && (
+            <>
+              <p className="text-[11px] text-ink-400">
+                下の口コミは、判定した理由を付けたまま残しています。点数には入れていません。
+              </p>
+              {excluded.map((review) => (
+                <ReviewCard key={review.id} review={review} close={false} />
+              ))}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
