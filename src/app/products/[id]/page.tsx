@@ -10,6 +10,7 @@ import StashButton from "@/components/StashButton";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
+import { ingredientKey } from "@/lib/ingredients";
 import { createClient } from "@/lib/supabase/server";
 import {
   CATEGORY_LABEL,
@@ -86,9 +87,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         .from("ingredients_master")
         .select("id,inci,name_ja")
         .in("id", ingredientIds);
-      const productIngredients = new Set(product.ingredients.map((ingredient) => ingredient.toUpperCase()));
+      // 表記ゆれ（日本語表示名・慣用名）で書かれていても同じ成分として突き合わせる。
+      const productIngredients = new Set(product.ingredients.map(ingredientKey));
       avoidedIngredientLabels = (masters ?? [])
-        .filter((ingredient) => productIngredients.has(ingredient.inci.toUpperCase()))
+        .filter((ingredient) => productIngredients.has(ingredientKey(ingredient.inci)))
         .map((ingredient) => ingredient.name_ja || ingredient.inci);
     }
   }

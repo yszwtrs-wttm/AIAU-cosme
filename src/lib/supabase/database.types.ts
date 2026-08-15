@@ -52,6 +52,41 @@ export type Database = {
         }
         Relationships: []
       }
+      ingredient_aliases: {
+        Row: {
+          alias: string
+          alias_norm: string | null
+          created_at: string
+          id: number
+          ingredient_id: number
+          kind: string
+        }
+        Insert: {
+          alias: string
+          alias_norm?: string | null
+          created_at?: string
+          id?: never
+          ingredient_id: number
+          kind?: string
+        }
+        Update: {
+          alias?: string
+          alias_norm?: string | null
+          created_at?: string
+          id?: never
+          ingredient_id?: number
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredient_aliases_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ingredients_master: {
         Row: {
           df: number
@@ -196,6 +231,32 @@ export type Database = {
           },
         ]
       }
+      profile_allergens: {
+        Row: {
+          created_at: string
+          ingredient_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ingredient_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          ingredient_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_allergens_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_hue: number
@@ -237,32 +298,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      profile_allergens: {
-        Row: {
-          created_at: string
-          ingredient_id: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          ingredient_id: number
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          ingredient_id?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_allergens_ingredient_id_fkey"
-            columns: ["ingredient_id"]
-            isOneToOne: false
-            referencedRelation: "ingredients_master"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       review_images: {
         Row: {
@@ -520,6 +555,17 @@ export type Database = {
       }
     }
     Views: {
+      ingredient_normalization_status: {
+        Row: {
+          alias_count: number | null
+          common_alias_count: number | null
+          distinct_ingredient_names: number | null
+          ingredient_count: number | null
+          resolved_names: number | null
+          unresolved_names: number | null
+        }
+        Relationships: []
+      }
       product_feel_summary: {
         Row: {
           feel: Json | null
@@ -569,6 +615,16 @@ export type Database = {
           counted_count: number | null
           product_id: number | null
           ranked_rating: number | null
+        }
+        Relationships: []
+      }
+      unresolved_ingredients: {
+        Row: {
+          name: string | null
+          product_count: number | null
+          sample_products: string[] | null
+          suggested_alias: string | null
+          suggested_similarity: number | null
         }
         Relationships: []
       }
@@ -745,6 +801,10 @@ export type Database = {
         Args: { x: number }
         Returns: number
       }
+      normalize_ingredient_name: {
+        Args: { p_name: string }
+        Returns: string
+      }
       products_min_delta_e: {
         Args: { p_a: number; p_b: number }
         Returns: number
@@ -756,6 +816,25 @@ export type Database = {
       refresh_ingredient_idf: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      resolve_ingredient: {
+        Args: { p_name: string }
+        Returns: {
+          inci: string
+          ingredient_id: number
+          input: string
+          matched_alias: string
+          matched_kind: string
+          name_ja: string
+        }[]
+      }
+      resolve_ingredient_id: {
+        Args: { p_min_similarity?: number; p_name: string }
+        Returns: number
+      }
+      seed_ingredient_aliases: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       set_limit: {
         Args: { "": number }
@@ -940,3 +1019,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

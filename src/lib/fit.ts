@@ -6,6 +6,7 @@
  */
 
 import { deltaE } from "./color";
+import { canonicalIngredientList } from "./ingredients";
 import type { Product, ProductColor, Profile, SkinType } from "./types";
 
 export type FitVerdict = "good" | "caution" | "unknown";
@@ -78,7 +79,7 @@ function skinReasons(skinType: SkinType, list: string[]): FitReason[] {
 }
 
 export function judgeFit(product: Product, profile: Profile | null): Fit {
-  const list = product.ingredients.map((x) => x.toUpperCase());
+  const list = canonicalIngredientList(product.ingredients);
   const shades = [...(product.product_colors ?? [])].sort((a, b) => a.pos - b.pos);
 
   if (!profile || (!profile.skin_type && !profile.skin_tone_hex)) {

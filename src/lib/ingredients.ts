@@ -171,6 +171,146 @@ export const INGREDIENTS: Record<string, IngredientInfo> = {
   "MENTHYL LACTATE": { ja: "乳酸メンチル", role: "fragrance", effect: "おだやかで長続きする清涼感を出す" },
 };
 
+/**
+ * 同義語・慣用名・旧称。左が別名、右が INCI。
+ * 日本語表示名（INGREDIENTS の ja）は自動で別名になるので、ここには載せない。
+ * DB 側の辞書（supabase/migrations/..._ingredient_aliases.sql の seed_ingredient_aliases）と同じ内容。
+ */
+export const INGREDIENT_ALIASES: Record<string, string> = {
+  ビタミンE: "TOCOPHEROL",
+  "Vitamin E": "TOCOPHEROL",
+  "dl-α-トコフェロール": "TOCOPHEROL",
+  ビタミンE酢酸エステル: "TOCOPHERYL ACETATE",
+  ビタミンB3: "NIACINAMIDE",
+  ニコチン酸アミド: "NIACINAMIDE",
+  ビタミンC誘導体: "ASCORBYL GLUCOSIDE",
+  AA2G: "ASCORBYL GLUCOSIDE",
+  プロビタミンB5: "PANTHENOL",
+  パントテニルアルコール: "PANTHENOL",
+  ビタミンH: "BIOTIN",
+  精製水: "WATER",
+  Aqua: "WATER",
+  H2O: "WATER",
+  濃グリセリン: "GLYCERIN",
+  BG: "BUTYLENE GLYCOL",
+  ブチレングリコール: "BUTYLENE GLYCOL",
+  "1,3-ブチレングリコール": "BUTYLENE GLYCOL",
+  ヒアルロン酸ナトリウム: "SODIUM HYALURONATE",
+  二酸化チタン: "TITANIUM DIOXIDE",
+  亜鉛華: "ZINC OXIDE",
+  ベンガラ: "IRON OXIDES",
+  酸化鉄類: "IRON OXIDES",
+  "酸化鉄（赤）": "CI 77491",
+  "酸化鉄（黄）": "CI 77492",
+  "酸化鉄（黒）": "CI 77499",
+  赤202: "CI 15850",
+  赤223: "CI 45410",
+  黄4: "CI 19140",
+  青1: "CI 42090",
+  ビーズワックス: "CERA ALBA",
+  Beeswax: "CERA ALBA",
+  蜜蝋: "CERA ALBA",
+  カンデリラワックス: "CANDELILLA WAX",
+  "Euphorbia Cerifera Wax": "CANDELILLA WAX",
+  雲母: "MICA",
+  無水ケイ酸: "SILICA",
+  食塩: "SODIUM CHLORIDE",
+  塩化ナトリウム: "SODIUM CHLORIDE",
+  "エデト酸2Na": "DISODIUM EDTA",
+  "EDTA-2ナトリウム": "DISODIUM EDTA",
+  安息香酸ナトリウム: "SODIUM BENZOATE",
+  Parfum: "FRAGRANCE",
+  "l-メントール": "MENTHOL",
+  ハッカ脳: "MENTHOL",
+  "乳酸l-メンチル": "MENTHYL LACTATE",
+  シリコーンオイル: "DIMETHICONE",
+  ジメチルポリシロキサン: "DIMETHICONE",
+  ホホバオイル: "SIMMONDSIA CHINENSIS SEED OIL",
+  ホホバ油: "SIMMONDSIA CHINENSIS SEED OIL",
+  アルガン油: "ARGANIA SPINOSA KERNEL OIL",
+  "Castor Oil": "RICINUS COMMUNIS SEED OIL",
+  キャスターオイル: "RICINUS COMMUNIS SEED OIL",
+  スクアラン: "SQUALANE",
+  ラウレス硫酸ナトリウム: "SODIUM LAURETH SULFATE",
+  ヤシ油脂肪酸アミドプロピルベタイン: "COCAMIDOPROPYL BETAINE",
+  ココイルグルタミン酸ナトリウム: "SODIUM COCOYL GLUTAMATE",
+  "パラメトキシケイヒ酸2-エチルヘキシル": "ETHYLHEXYL METHOXYCINNAMATE",
+  オクチノキサート: "ETHYLHEXYL METHOXYCINNAMATE",
+  BHA: "SALICYLIC ACID",
+  チャエキス: "CAMELLIA SINENSIS LEAF EXTRACT",
+  緑茶エキス: "CAMELLIA SINENSIS LEAF EXTRACT",
+  ピリチオン亜鉛: "ZINC PYRITHIONE",
+  オクトピロックス: "PIROCTONE OLAMINE",
+  IPMP: "ISOPROPYL METHYLPHENOL",
+  セトステアリルアルコール: "CETEARYL ALCOHOL",
+};
+
+/**
+ * 表記ゆれを吸収した引き当てキー。
+ * 全角英数を半角に、ひらがな・小さいカナをカタカナに寄せ、記号と空白を捨てる。
+ * DB の normalize_ingredient_name() と同じ規則。
+ */
+export function normalizeIngredientName(name: string): string {
+  return name
+    .trim()
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .replace(/[\u3041-\u3096]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60))
+    .replace(/[ァィゥェォヵヶッャュョヮ]/g, (c) => SMALL_KANA[c])
+    .toUpperCase()
+    .replace(/[\s\u3000\-_.,;:/\\()[\]{}<>|*+"'`~!?#$%&=^ー・（）／－‐‑‒–—―，、。：；「」‘’“”％＋]/g, "");
+}
+
+const SMALL_KANA: Record<string, string> = {
+  ァ: "ア",
+  ィ: "イ",
+  ゥ: "ウ",
+  ェ: "エ",
+  ォ: "オ",
+  ヵ: "カ",
+  ヶ: "ケ",
+  ッ: "ツ",
+  ャ: "ヤ",
+  ュ: "ユ",
+  ョ: "ヨ",
+  ヮ: "ワ",
+};
+
+/** 正規化キー → INCI。INCI 自身・日本語表示名・同義語をすべて入れる。 */
+const ALIAS_INDEX: Map<string, string> = (() => {
+  const index = new Map<string, string>();
+  const put = (alias: string, inci: string) => {
+    const key = normalizeIngredientName(alias);
+    if (key && !index.has(key)) index.set(key, inci);
+  };
+  for (const inci of Object.keys(INGREDIENTS)) put(inci, inci);
+  for (const [inci, info] of Object.entries(INGREDIENTS)) {
+    put(info.ja, inci);
+    // 「BG（ブチレングリコール）」のような表示名は、括弧の中と外も別名として扱う。
+    const paren = /^([^（(]+)[（(]([^）)]+)[）)]$/.exec(info.ja);
+    if (paren) {
+      put(paren[1], inci);
+      put(paren[2], inci);
+    }
+  }
+  for (const [alias, inci] of Object.entries(INGREDIENT_ALIASES)) put(alias, inci);
+  return index;
+})();
+
+/** 別名・日本語名・表記ゆれから INCI を引く。辞書に無ければ null。 */
+export function canonicalInci(name: string): string | null {
+  return ALIAS_INDEX.get(normalizeIngredientName(name)) ?? null;
+}
+
+/** 表記ゆれを INCI に寄せた大文字リスト。成分名のパターンで判定する処理はこれを通す。 */
+export function canonicalIngredientList(list: string[]): string[] {
+  return list.map((name) => canonicalInci(name) ?? name.toUpperCase());
+}
+
+/** 同じ成分かどうかを比べるためのキー。別名は同じ値になる。 */
+export function ingredientKey(name: string): string {
+  return normalizeIngredientName(canonicalInci(name) ?? name);
+}
+
 /** 辞書に無い INCI は、名前のパターンから役割だけでも当てる。 */
 function guessRole(inci: string): Role {
   if (/^CI \d+/.test(inci)) return "color";
@@ -185,6 +325,8 @@ function guessRole(inci: string): Role {
 
 export type ResolvedIngredient = {
   inci: string;
+  /** 全成分表示に書かれていたままの文字列。 */
+  raw: string;
   ja: string;
   role: Role;
   effect: string;
@@ -194,21 +336,23 @@ export type ResolvedIngredient = {
   known: boolean;
 };
 
-export function resolveIngredient(inci: string, pos: number): ResolvedIngredient {
-  const hit = INGREDIENTS[inci];
-  if (hit) return { inci, pos, known: true, ...hit };
+export function resolveIngredient(name: string, pos: number): ResolvedIngredient {
+  const inci = canonicalInci(name);
+  const hit = inci ? INGREDIENTS[inci] : undefined;
+  if (inci && hit) return { inci, raw: name, pos, known: true, ...hit };
   return {
-    inci,
+    inci: name,
+    raw: name,
     pos,
     known: false,
-    ja: inci,
-    role: guessRole(inci),
+    ja: name,
+    role: guessRole(name.toUpperCase()),
     effect: "配合目的の情報がまだありません",
   };
 }
 
 export function resolveIngredients(list: string[]): ResolvedIngredient[] {
-  return list.map((inci, i) => resolveIngredient(inci, i + 1));
+  return list.map((name, i) => resolveIngredient(name, i + 1));
 }
 
 export function groupByRole(list: ResolvedIngredient[]): { role: Role; items: ResolvedIngredient[] }[] {

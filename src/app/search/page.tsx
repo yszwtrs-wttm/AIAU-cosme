@@ -3,6 +3,7 @@ import { Search } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { judgeFit } from "@/lib/fit";
+import { ingredientKey } from "@/lib/ingredients";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABEL, type Category, type Product, type ProductScore } from "@/lib/types";
 
@@ -93,7 +94,8 @@ export default async function SearchPage({
     real && allergenIds.length > 0
       ? await supabase.from("ingredients_master").select("id,inci").in("id", allergenIds)
       : { data: [] };
-  const avoidedInci = new Set((allergenMaster ?? []).map((ingredient) => ingredient.inci.toUpperCase()));
+  // 表記ゆれを吸収したキーで比べる。日本語表示名や慣用名で入っていても避けられる。
+  const avoidedInci = new Set((allergenMaster ?? []).map((ingredient) => ingredientKey(ingredient.inci)));
   const ownedIds = new Set((ownedRows ?? []).map((row) => row.product_id));
   const hasSkinInfo = Boolean(profile?.skin_type || profile?.skin_tone_hex);
   const hasPersonalizationMaterial = hasSkinInfo || avoidedInci.size > 0 || ownedIds.size > 0;
@@ -105,7 +107,7 @@ export default async function SearchPage({
               ? { good: 3, unknown: 0, caution: -3 }[judgeFit(product, profile).verdict]
               : 0;
             const allergenScore = product.ingredients.some((ingredient) =>
-              avoidedInci.has(ingredient.toUpperCase()),
+              avoidedInci.has(ingredientKey(ingredient)),
             )
               ? -10
               : 0;

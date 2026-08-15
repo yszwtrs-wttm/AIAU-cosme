@@ -88,8 +88,8 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
             <div className="text-xs text-ink-400">全成分の原文（配合量の多い順）</div>
             <ol className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-ink-600">
               {resolved.map((item) => (
-                <li key={item.inci} className="rounded-full bg-ink-50 px-2 py-0.5">
-                  <span className="text-ink-400">{item.pos}.</span> {item.inci}
+                <li key={`${item.pos}-${item.raw}`} className="rounded-full bg-ink-50 px-2 py-0.5">
+                  <span className="text-ink-400">{item.pos}.</span> {item.raw}
                 </li>
               ))}
             </ol>
