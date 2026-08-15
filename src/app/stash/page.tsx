@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import BarcodeScanner from "@/components/BarcodeScanner";
 import MakeupPlan from "@/components/MakeupPlan";
@@ -44,6 +45,11 @@ export default async function StashPage() {
         <h2 className="font-display text-lg font-bold">バーコードで登録</h2>
         <p className="text-sm text-ink-600">
           リストに無いものは、パッケージのバーコードをかざしてください。続けて読み取れます。
+          店頭で買う前に判定したいときは
+          <Link href="/store" prefetch className="font-bold text-brand-600">
+            店頭モード
+          </Link>
+          を使ってください。
         </p>
         <BarcodeScanner />
       </section>

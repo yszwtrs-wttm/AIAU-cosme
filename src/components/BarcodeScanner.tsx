@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Camera, Check, Search } from "lucide-react";
-import { BrowserMultiFormatReader } from "@zxing/browser";
-import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import { addToStash } from "@/app/actions";
 import { createClient } from "@/lib/supabase/client";
+import { useBarcodeReader } from "@/lib/useBarcodeReader";
 import { CATEGORY_LABEL, type Category, type Product } from "@/lib/types";
 
-type Status = "idle" | "scanning" | "found" | "unknown" | "error";
+type Status = "idle" | "scanning" | "found" | "unknown";
 
 type Candidate = { product: Product; sameMaker: boolean };
 
@@ -34,9 +33,6 @@ const CHIP_OFF = "border-ink-200 bg-white text-ink-600";
  * 「1個ずつ登録が面倒」を減らすのが目的。
  */
 export default function BarcodeScanner() {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const controlsRef = useRef<{ stop: () => void } | null>(null);
-  const busyRef = useRef(false);
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
   const [jan, setJan] = useState("");
@@ -48,8 +44,6 @@ export default function BarcodeScanner() {
   const [candidateQuery, setCandidateQuery] = useState("");
   const [candidateCategory, setCandidateCategory] = useState<Category | "">("");
   const [searching, setSearching] = useState(false);
-
-  useEffect(() => () => controlsRef.current?.stop(), []);
 
   const register = async (product: Product, source: "scan" | "manual") => {
     const res = await addToStash(product.id, source);
@@ -126,32 +120,16 @@ export default function BarcodeScanner() {
     setStatus("unknown");
   };
 
-  const start = async () => {
-    setStatus("scanning");
+  const { videoRef, scanning, error, start, stop } = useBarcodeReader((code) => lookup(code, true));
+
+  const startScan = async () => {
     setMessage("");
-    try {
-      const hints = new Map();
-      hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.CODE_128]);
-      const reader = new BrowserMultiFormatReader(hints);
-      controlsRef.current = await reader.decodeFromVideoDevice(undefined, videoRef.current!, (result) => {
-        if (!result || busyRef.current) return;
-        busyRef.current = true;
-        void lookup(result.getText(), true).finally(() => {
-          // 同じコードを連続で拾わないよう、少し間を置いてから次を受け付ける。
-          setTimeout(() => {
-            busyRef.current = false;
-          }, 1500);
-        });
-      });
-    } catch (e) {
-      setStatus("error");
-      setMessage(e instanceof Error ? `カメラを開けませんでした: ${e.message}` : "カメラを開けませんでした");
-    }
+    setStatus("scanning");
+    await start();
   };
 
-  const stop = () => {
-    controlsRef.current?.stop();
-    controlsRef.current = null;
+  const stopScan = () => {
+    stop();
     setStatus("idle");
   };
 
@@ -159,10 +137,10 @@ export default function BarcodeScanner() {
     <div className="space-y-4">
       <div className="rounded-2xl border border-ink-200 bg-white p-5">
         <div className="flex flex-wrap items-center gap-2">
-          {status === "scanning" ? (
+          {scanning ? (
             <button
               type="button"
-              onClick={stop}
+              onClick={stopScan}
               className="rounded-full border border-brand-200 bg-white px-4 py-2.5 text-sm font-bold text-brand-600"
             >
               スキャンを終わる
@@ -170,7 +148,7 @@ export default function BarcodeScanner() {
           ) : (
             <button
               type="button"
-              onClick={start}
+              onClick={() => void startScan()}
               className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white"
             >
               <Camera size={15} /> スキャンする
@@ -202,9 +180,9 @@ export default function BarcodeScanner() {
         </p>
         <video
           ref={videoRef}
-          className={`mt-3 w-full rounded-2xl bg-black ${status === "scanning" ? "" : "hidden"}`}
+          className={`mt-3 w-full rounded-2xl bg-black ${scanning ? "" : "hidden"}`}
         />
-        {message && <p className="mt-2 text-sm text-red-600">{message}</p>}
+        {(message || error) && <p className="mt-2 text-sm text-red-600">{message || error}</p>}
       </div>
 
       {registered.length > 0 && (
