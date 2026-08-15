@@ -43,7 +43,10 @@ export default async function Home() {
     await Promise.all([
       supabase.from("products").select(PRODUCT_SELECT).returns<Product[]>(),
       supabase.from("product_score").select("*").returns<ProductScore[]>(),
-      supabase.from("user_items").select("product_id", { count: "exact", head: true }),
+      supabase
+        .from("user_items")
+        .select("product_id", { count: "exact", head: true })
+        .is("finished_at", null),
       getMyProfile(),
     ]);
 

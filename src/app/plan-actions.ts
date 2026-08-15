@@ -16,6 +16,7 @@ export async function generateMakeupPlan(request: string): Promise<Plan> {
     .select(
       "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name))",
     )
+    .is("finished_at", null)
     .returns<{ products: Product }[]>();
 
   const products = (data ?? []).map((r) => r.products).filter(Boolean);

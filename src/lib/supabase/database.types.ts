@@ -196,6 +196,32 @@ export type Database = {
           },
         ]
       }
+      profile_allergens: {
+        Row: {
+          created_at: string
+          ingredient_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ingredient_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          ingredient_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_allergens_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_hue: number
@@ -237,32 +263,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      profile_allergens: {
-        Row: {
-          created_at: string
-          ingredient_id: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          ingredient_id: number
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          ingredient_id?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_allergens_ingredient_id_fkey"
-            columns: ["ingredient_id"]
-            isOneToOne: false
-            referencedRelation: "ingredients_master"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       review_images: {
         Row: {
@@ -469,27 +469,33 @@ export type Database = {
       user_items: {
         Row: {
           created_at: string
+          finished_at: string | null
           id: number
           opened_at: string | null
           product_id: number
+          remaining_level: string
           remaining_pct: number
           source: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          finished_at?: string | null
           id?: never
           opened_at?: string | null
           product_id: number
+          remaining_level?: string
           remaining_pct?: number
           source?: string
           user_id?: string
         }
         Update: {
           created_at?: string
+          finished_at?: string | null
           id?: never
           opened_at?: string | null
           product_id?: number
+          remaining_level?: string
           remaining_pct?: number
           source?: string
           user_id?: string
@@ -626,9 +632,11 @@ export type Database = {
           image_url: string
           ing_sim: number
           name: string
+          opened_at: string
           price_diff: number
           price_yen: number
           product_id: number
+          remaining_level: string
           score: number
         }[]
       }
@@ -940,3 +948,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

@@ -83,7 +83,11 @@ export default async function SearchPage({
       ? supabase.from("profile_allergens").select("ingredient_id").eq("user_id", realUser.id)
       : Promise.resolve({ data: null }),
     sort === "recommended" && realUser
-      ? supabase.from("user_items").select("product_id").eq("user_id", realUser.id)
+      ? supabase
+          .from("user_items")
+          .select("product_id")
+          .eq("user_id", realUser.id)
+          .is("finished_at", null)
       : Promise.resolve({ data: null }),
   ]);
 

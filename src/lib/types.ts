@@ -17,6 +17,16 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   eyeshadow: "アイシャドウ",
 };
 
+/** 残量はざっくり3段階。％では答えられない。 */
+export type RemainingLevel = "plenty" | "half" | "low";
+
+export type StashEntry = {
+  product_id: number;
+  remaining_level: RemainingLevel;
+  opened_at: string | null;
+  finished_at: string | null;
+};
+
 export type ProductColor = {
   pos: number;
   shade_name: string;
@@ -67,6 +77,9 @@ export type DupeRow = {
   score: number;
   price_diff?: number;
   savings?: number;
+  /** ポーチ内の被りのとき、その手持ちの残量と開封日 */
+  remaining_level?: RemainingLevel;
+  opened_at?: string | null;
 };
 
 export type StashOverlap = {

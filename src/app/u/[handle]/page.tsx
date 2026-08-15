@@ -42,6 +42,7 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
             "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
           )
           .eq("user_id", profile.user_id)
+          .is("finished_at", null)
           .returns<StashRow[]>()
       : Promise.resolve({ data: [] as StashRow[] }),
   ]);
