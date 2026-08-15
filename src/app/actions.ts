@@ -145,6 +145,26 @@ export async function reportReview(reviewId: number, reason: string): Promise<Re
   return { ok: !error, error: error?.message };
 }
 
+/**
+ * 商品の追加リクエスト。検索が0件で商品自体が無いときの出口。
+ * 閲覧はログイン不要な機能なので、セッションの種類では塞がない（RLS も insert は誰でも可）。
+ */
+export async function requestProduct(input: {
+  keyword: string;
+  note?: string;
+}): Promise<Result> {
+  const keyword = input.keyword.trim();
+  if (!keyword) return { ok: false, error: "商品名やブランド名を入力してください" };
+  if (keyword.length > 100) return { ok: false, error: "商品名は100文字以内で入力してください" };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("product_requests")
+    .insert({ keyword, note: input.note?.trim() || null });
+
+  return { ok: !error, error: error?.message };
+}
+
 export async function saveProfile(input: {
   handle: string;
   displayName: string;

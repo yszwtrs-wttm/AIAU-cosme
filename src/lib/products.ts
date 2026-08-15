@@ -90,6 +90,31 @@ export async function searchProducts(
   };
 }
 
+const SUGGEST_SELECT =
+  "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
+
+/**
+ * 0件のときの「もしかして」。表記ゆれ・打ち間違いに近い商品を trgm の類似度上位で返す。
+ * 絞り込みは意図的に無視する（0件の原因が絞り込みでも、キーワードに近い商品を出したい）。
+ */
+export async function suggestProducts(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  q: string,
+  limit = 6,
+): Promise<Product[]> {
+  const { data: similar } = await supabase.rpc("suggest_products", { p_q: q, p_limit: limit });
+  const ids = (similar ?? []).map((row) => row.product_id);
+  if (ids.length === 0) return [];
+
+  const { data } = await supabase
+    .from("products")
+    .select(SUGGEST_SELECT)
+    .in("id", ids)
+    .returns<Product[]>();
+  const order = new Map(ids.map((id, index) => [id, index]));
+  return [...(data ?? [])].sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+}
+
 /**
  * おすすめ順の肌情報ぶんの加点。
  * 色差の計算はアプリ側にあるので、DB から受け取ったページの中だけで掛ける。
