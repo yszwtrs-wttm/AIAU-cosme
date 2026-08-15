@@ -32,9 +32,12 @@ export default async function SavingsPage() {
   if (!isRealAccount(user)) redirect("/login");
 
   const supabase = await createClient();
-  const { data } = await supabase
+  // products への外部キーが product_id と evidence_product_id の2本あるので、埋め込み先を明示する
+  const { data, error } = await supabase
     .from("skipped_purchases")
-    .select(`id,product_id,price_yen,saved_yen,reason,evidence_product_id,evidence_price_yen,created_at,products(${PRODUCT_SELECT})`)
+    .select(
+      `id,product_id,price_yen,saved_yen,reason,evidence_product_id,evidence_price_yen,created_at,products!skipped_purchases_product_id_fkey(${PRODUCT_SELECT})`,
+    )
     .order("created_at", { ascending: false })
     .returns<SkippedPurchase[]>();
 
@@ -60,6 +63,12 @@ export default async function SavingsPage() {
           見送った金額は、見送った時点の価格です。似ていて安いものにした場合は差額だけを数えています。
         </p>
       </section>
+
+      {error && (
+        <p className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-800">
+          記録を読み込めませんでした（{error.message}）。時間をおいて開き直してください。
+        </p>
+      )}
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <StatCard

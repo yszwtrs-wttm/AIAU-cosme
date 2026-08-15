@@ -33,6 +33,7 @@ export default function SkipButton({
   canUse?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -50,20 +51,24 @@ export default function SkipButton({
 
   if (skipped) {
     return (
-      <button
-        type="button"
-        disabled={pending}
-        onClick={() =>
-          startTransition(async () => {
-            await unskipPurchase(productId);
-            router.refresh();
-          })
-        }
-        className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-800 disabled:opacity-50"
-      >
-        <PiggyBank size={15} />
-        {pending ? "処理中…" : "見送り中（取り消す）"}
-      </button>
+      <div>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              const result = await unskipPurchase(productId);
+              setError(result.ok ? null : (result.error ?? "取り消せませんでした"));
+              router.refresh();
+            })
+          }
+          className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-800 disabled:opacity-50"
+        >
+          <PiggyBank size={15} />
+          {pending ? "処理中…" : "見送り中（取り消す）"}
+        </button>
+        {error && <ErrorNote message={error} />}
+      </div>
     );
   }
 
@@ -89,13 +94,18 @@ export default function SkipButton({
                   disabled={pending}
                   onClick={() =>
                     startTransition(async () => {
-                      await skipPurchase({
+                      const result = await skipPurchase({
                         productId,
                         reason: choice.reason,
                         evidenceProductId: choice.evidenceProductId ?? null,
                         deltaE: choice.deltaE ?? null,
                         ingSim: choice.ingSim ?? null,
                       });
+                      if (!result.ok) {
+                        setError(result.error ?? "記録できませんでした");
+                        return;
+                      }
+                      setError(null);
                       setOpen(false);
                       router.refresh();
                     })
@@ -110,8 +120,20 @@ export default function SkipButton({
               </li>
             ))}
           </ul>
+          {error && <ErrorNote message={error} />}
         </div>
       )}
     </div>
+  );
+}
+
+function ErrorNote({ message }: { message: string }) {
+  return (
+    <p className="mt-2 rounded-xl border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800">
+      記録できませんでした：{message}
+      <span className="mt-0.5 block text-rose-700">
+        登録したての場合は、一度ログインし直すと記録できます。
+      </span>
+    </p>
   );
 }
