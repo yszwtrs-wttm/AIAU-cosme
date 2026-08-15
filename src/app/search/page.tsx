@@ -12,9 +12,8 @@ import {
   type ProductSort,
 } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORY_LABEL, type Category } from "@/lib/types";
+import { CATEGORY_LABEL, SEARCH_CATEGORIES } from "@/lib/types";
 
-const CATEGORIES: Category[] = ["lip", "eyeshadow", "foundation", "shampoo", "treatment"];
 const CHIP = "rounded-full border px-3 py-1.5 text-sm transition";
 const CHIP_ON = "border-ink-900 bg-ink-900 text-white";
 const CHIP_OFF = "border-ink-200 bg-white text-ink-600 hover:border-ink-400";
@@ -132,7 +131,7 @@ export default async function SearchPage({
           >
             すべて
           </Link>
-          {CATEGORIES.map((category) => (
+          {SEARCH_CATEGORIES.map((category) => (
             <Link
               key={category}
               href={filterHref({ q: params.q, category, mens: params.mens, sort })}
