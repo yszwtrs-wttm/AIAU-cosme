@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveProfile } from "@/app/actions";
 import Avatar from "@/components/Avatar";
+import SkinToneCapture from "@/components/SkinToneCapture";
 import { shrinkImage } from "@/lib/image";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -231,8 +232,13 @@ export default function ProfileForm({
       <div className="space-y-1">
         <span className="text-sm font-bold">肌のトーン（任意）</span>
         <p className="text-[11px] text-ink-400">
-          選んでおくと、肌のトーンに近い色の商品を見つけやすくなります。
+          選んでおくと、ファンデーションが肌のトーンに近い順に並びます。
         </p>
+        <SkinToneCapture
+          selectedHex={skinTone}
+          onPick={setSkinTone}
+          onPickPersonalColor={setPersonalColor}
+        />
         <div className="mt-1 flex flex-wrap gap-2">
           {SKIN_TONES.map((tone) => (
             <button
@@ -249,6 +255,27 @@ export default function ProfileForm({
               {tone.label}
             </button>
           ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+          <label className="flex items-center gap-1.5">
+            自分で微調整
+            <input
+              type="color"
+              value={skinTone || "#e2b899"}
+              onChange={(e) => setSkinTone(e.target.value)}
+              aria-label="肌のトーンを自分で選ぶ"
+              className="h-7 w-10 cursor-pointer rounded border border-brand-100 bg-white"
+            />
+          </label>
+          {skinTone && (
+            <button
+              type="button"
+              onClick={() => setSkinTone("")}
+              className="text-ink-400 underline"
+            >
+              肌のトーンを未設定に戻す
+            </button>
+          )}
         </div>
       </div>
 
