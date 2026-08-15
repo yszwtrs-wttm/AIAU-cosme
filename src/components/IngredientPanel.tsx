@@ -1,18 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ChevronDown } from "lucide-react";
+import IngredientDisclaimer from "@/components/IngredientDisclaimer";
 import {
   ROLE_LABEL,
   ROLE_SHORT_LABEL,
+  type ResolvedIngredient,
   groupByRole,
   resolveIngredients,
+  sourcesOf,
   summarizeIngredientPoints,
 } from "@/lib/ingredients";
 
 /**
  * 英語の全成分表示をそのまま出さず、要約 → 役割別 → 原文の順に見せる。
  * 細かい成分は長くなるので、役割ごとのタブ（+ 全成分の原文）で切り替える。
+ * 成分名を開くと、なぜ避けたい人がいるのかと出典まで読める。
  */
 export default function IngredientPanel({ ingredients }: { ingredients: string[] }) {
   const resolved = resolveIngredients(ingredients);
@@ -68,18 +72,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
             <div className="text-xs font-bold text-brand-600">{ROLE_LABEL[current.role]}</div>
             <ul className="mt-2 space-y-2">
               {current.items.map((item) => (
-                <li key={item.inci} className="text-sm">
-                  <div className="flex flex-wrap items-baseline gap-1.5">
-                    <span className="font-bold">{item.ja}</span>
-                    {item.known && <span className="text-[10px] text-ink-400">{item.inci}</span>}
-                    {item.pos <= 3 && (
-                      <span className="rounded-full bg-brand-50 px-1.5 text-[10px] text-brand-600">
-                        多く入っています
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs leading-relaxed text-ink-600">{item.effect}</p>
-                </li>
+                <IngredientRow key={item.inci} item={item} />
               ))}
             </ul>
           </div>
@@ -96,7 +89,86 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
           </div>
         )}
       </div>
+
+      <IngredientDisclaimer sources={sourcesOf(resolved)} />
     </div>
+  );
+}
+
+/** 1 成分。見出しと一言説明は常に見えて、詳しい話と出典は開いたときだけ見せる。 */
+function IngredientRow({ item }: { item: ResolvedIngredient }) {
+  const hasDetail = Boolean(item.avoid || item.caution || item.sources.length > 0);
+
+  return (
+    <li className="text-sm">
+      <details className="group">
+        <summary
+          className={`flex list-none items-start gap-1.5 [&::-webkit-details-marker]:hidden ${
+            hasDetail ? "cursor-pointer" : "cursor-default"
+          }`}
+        >
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-baseline gap-1.5">
+              <span className="font-bold">{item.ja}</span>
+              {item.known && <span className="text-[10px] text-ink-400">{item.inci}</span>}
+              {item.pos <= 3 && (
+                <span className="rounded-full bg-brand-50 px-1.5 text-[10px] text-brand-600">
+                  多く入っています
+                </span>
+              )}
+              {item.avoid && (
+                <span className="rounded-full bg-amber-50 px-1.5 text-[10px] text-amber-800">
+                  避ける人がいる成分
+                </span>
+              )}
+            </div>
+            <p className="text-xs leading-relaxed text-ink-600">{item.effect}</p>
+          </div>
+          {hasDetail && (
+            <ChevronDown
+              size={14}
+              className="mt-1 shrink-0 text-ink-400 transition group-open:rotate-180"
+            />
+          )}
+        </summary>
+
+        {hasDetail && (
+          <div className="mt-1.5 space-y-1.5 rounded-xl bg-ink-50 p-3 text-xs leading-relaxed text-ink-600">
+            <p>
+              <span className="font-bold text-ink-900">役割</span>：{ROLE_LABEL[item.role]}
+            </p>
+            {item.avoid && (
+              <p>
+                <span className="font-bold text-ink-900">なぜ避けたい人がいるのか</span>：{item.avoid}
+              </p>
+            )}
+            {item.caution && (
+              <p>
+                <span className="font-bold text-ink-900">気にする人向け</span>：{item.caution}
+              </p>
+            )}
+            {item.sources.length > 0 && (
+              <p className="text-[11px] text-ink-400">
+                出典：
+                {item.sources.map((source, i) => (
+                  <span key={source.id}>
+                    {i > 0 && "、"}
+                    <a
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-brand-700"
+                    >
+                      {source.name}
+                    </a>
+                  </span>
+                ))}
+              </p>
+            )}
+          </div>
+        )}
+      </details>
+    </li>
   );
 }
 
