@@ -25,7 +25,7 @@ export default function ColorLab() {
     const supabase = createClient();
     const { data } = await supabase.rpc("find_by_color", {
       p_lab: labArray(targetHex),
-      p_category: cat === "all" ? null : cat,
+      p_category: cat === "all" ? undefined : cat,
       p_limit: 8,
     });
     setMatches((data ?? []) as ColorMatch[]);
