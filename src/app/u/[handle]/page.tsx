@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
@@ -14,6 +15,21 @@ import {
 
 type PublicReview = Review & { products: { id: number; name: string; brands: { name: string } | null } | null };
 type StashRow = { products: Product | null };
+
+export async function generateMetadata({ params }: { params: Promise<{ handle: string }> }): Promise<Metadata> {
+  const { handle } = await params;
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("handle,display_name")
+    .eq("handle", handle)
+    .maybeSingle<Pick<Profile, "handle" | "display_name">>();
+
+  if (!profile) return { title: "ユーザーが見つかりません" };
+
+  const name = profile.display_name || `@${profile.handle}`;
+  return { title: name, description: `${name} のポーチと口コミ。` };
+}
 
 export default async function UserPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import Avatar from "@/components/Avatar";
@@ -8,6 +9,11 @@ import { createClient } from "@/lib/supabase/server";
 import type { Product, Review } from "@/lib/types";
 
 type StashRow = { products: Product | null };
+
+export const metadata: Metadata = {
+  title: "マイページ",
+  description: "自分のプロフィール・ポーチ・投稿した口コミ。",
+};
 
 export default async function MyPage() {
   const supabase = await createClient();

@@ -1,9 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import PasswordSettings from "@/components/PasswordSettings";
 import ProfileForm from "@/components/ProfileForm";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { IngredientMaster } from "@/lib/types";
+
+export const metadata: Metadata = {
+  title: "プロフィール設定",
+  description: "肌質・肌トーン・避けたい成分を登録して、おすすめの精度を上げる。",
+};
 
 export default async function SettingsPage() {
   const user = await getMyUser();

@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import ColorLab from "@/components/ColorLab";
 import { getMyProfile } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "写真の色から探す",
+  description: "「この色にしたい」という写真から主要色を取り出して、近い色のコスメを手持ちや安いものから探します。",
+};
 
 export default async function ColorPage() {
   const profile = await getMyProfile();
