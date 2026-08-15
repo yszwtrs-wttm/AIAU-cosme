@@ -24,7 +24,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl bg-brand-soft p-4">
+      <div className="rounded-2xl border border-brand-300 bg-white p-4">
         <ul className="space-y-1 text-sm leading-relaxed">
           {summarizeIngredientPoints(resolved).map((point) => (
             <li key={point} className="flex gap-1.5">
