@@ -1,18 +1,33 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Check, Search } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { BarcodeFormat, DecodeHintType } from "@zxing/library";
 import { addToStash } from "@/app/actions";
 import { createClient } from "@/lib/supabase/client";
-import { CATEGORY_LABEL, type Product } from "@/lib/types";
+import { CATEGORY_LABEL, type Category, type Product } from "@/lib/types";
 
 type Status = "idle" | "scanning" | "found" | "unknown" | "error";
 
+type Candidate = { product: Product; sameMaker: boolean };
+
 const COLUMNS =
   "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
+const CANDIDATE_LIMIT = 24;
+const CANDIDATE_CATEGORIES: Category[] = [
+  "lip",
+  "eyeshadow",
+  "foundation",
+  "bb",
+  "sunscreen",
+  "shampoo",
+  "treatment",
+];
+const CHIP = "rounded-full border px-3 py-1 text-xs transition";
+const CHIP_ON = "border-ink-900 bg-ink-900 text-white";
+const CHIP_OFF = "border-ink-200 bg-white text-ink-600";
 
 /**
  * 連続スキャン。1本ごとにカメラを止めず、読めたらそのまま登録して次に進める。
@@ -26,8 +41,13 @@ export default function BarcodeScanner() {
   const [message, setMessage] = useState("");
   const [jan, setJan] = useState("");
   const [hit, setHit] = useState<Product | null>(null);
-  const [candidates, setCandidates] = useState<Product[]>([]);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [registered, setRegistered] = useState<Product[]>([]);
+  /** 候補一覧の対象になっている、登録が無かったバーコード */
+  const [unknownJan, setUnknownJan] = useState("");
+  const [candidateQuery, setCandidateQuery] = useState("");
+  const [candidateCategory, setCandidateCategory] = useState<Category | "">("");
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => () => controlsRef.current?.stop(), []);
 
@@ -39,6 +59,48 @@ export default function BarcodeScanner() {
     }
     setRegistered((prev) => (prev.some((p) => p.id === product.id) ? prev : [...prev, product]));
   };
+
+  /**
+   * 登録済みの商品から候補を出す。JANの先頭7桁（事業者コード）が同じものを先に並べ、
+   * 残りを名前順で足す。名前・カテゴリで絞り込める。
+   */
+  const searchCandidates = useCallback(
+    async (code: string, keyword: string, category: Category | "") => {
+      const supabase = createClient();
+      const withFilters = () => {
+        let query = supabase.from("products").select(COLUMNS);
+        if (keyword.trim()) query = query.ilike("name", `%${keyword.trim()}%`);
+        if (category) query = query.eq("category", category);
+        return query.order("name").limit(CANDIDATE_LIMIT);
+      };
+
+      const maker = code.replace(/\D/g, "").slice(0, 7);
+      setSearching(true);
+      const [{ data: sameMaker }, { data: rest }] = await Promise.all([
+        maker.length === 7
+          ? withFilters().like("jan", `${maker}%`).returns<Product[]>()
+          : Promise.resolve({ data: [] as Product[] }),
+        withFilters().returns<Product[]>(),
+      ]);
+      const makerIds = new Set((sameMaker ?? []).map((p) => p.id));
+      setCandidates([
+        ...(sameMaker ?? []).map((product) => ({ product, sameMaker: true })),
+        ...(rest ?? [])
+          .filter((product) => !makerIds.has(product.id))
+          .map((product) => ({ product, sameMaker: false })),
+      ]);
+      setSearching(false);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (status !== "unknown") return;
+    const timer = setTimeout(() => {
+      void searchCandidates(unknownJan, candidateQuery, candidateCategory);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [status, unknownJan, candidateQuery, candidateCategory, searchCandidates]);
 
   const lookup = async (code: string, auto: boolean) => {
     setJan(code);
@@ -53,10 +115,14 @@ export default function BarcodeScanner() {
       return;
     }
 
-    // JAN マスタに無い場合は候補から手で選ばせる。ここで詰まらせないのが大事。
-    const { data: all } = await supabase.from("products").select(COLUMNS).limit(60).returns<Product[]>();
+    // JAN マスタに無い場合は登録済みの商品から手で選ばせる。ここで詰まらせないのが大事。
     setHit(null);
-    setCandidates(all ?? []);
+    if (code !== unknownJan) {
+      setCandidates([]);
+      setCandidateQuery("");
+      setCandidateCategory("");
+      setUnknownJan(code);
+    }
     setStatus("unknown");
   };
 
@@ -182,10 +248,51 @@ export default function BarcodeScanner() {
 
       {status === "unknown" && (
         <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
-          <div className="font-bold text-amber-900">このバーコードは登録がありません</div>
-          <p className="text-sm text-amber-900">似ている商品を下から選んで登録してください。</p>
+          <div className="font-bold text-amber-900">
+            このバーコード（{unknownJan}）は登録がありません
+          </div>
+          <p className="text-sm text-amber-900">
+            登録済みの商品から選んでポーチに入れてください。名前やカテゴリで絞り込めます。
+          </p>
+          <label className="relative mt-3 block">
+            <Search
+              size={15}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
+            />
+            <input
+              type="search"
+              value={candidateQuery}
+              onChange={(e) => setCandidateQuery(e.target.value)}
+              placeholder="商品名で絞り込む"
+              className="w-full rounded-full border border-ink-200 bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
+            />
+          </label>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setCandidateCategory("")}
+              className={`${CHIP} ${candidateCategory === "" ? CHIP_ON : CHIP_OFF}`}
+            >
+              すべて
+            </button>
+            {CANDIDATE_CATEGORIES.map((category) => (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setCandidateCategory(category)}
+                className={`${CHIP} ${candidateCategory === category ? CHIP_ON : CHIP_OFF}`}
+              >
+                {CATEGORY_LABEL[category]}
+              </button>
+            ))}
+          </div>
+          {!searching && candidates.length === 0 && (
+            <p className="mt-3 text-sm text-amber-900">
+              条件に合う商品がありません。絞り込みを変えてください。
+            </p>
+          )}
           <div className="mt-3 grid max-h-72 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
-            {candidates.map((p) => (
+            {candidates.map(({ product: p, sameMaker }) => (
               <button
                 key={p.id}
                 type="button"
@@ -193,7 +300,7 @@ export default function BarcodeScanner() {
                 className="flex items-center gap-2 rounded-2xl border border-ink-200 bg-white p-2 text-left text-sm"
               >
                 <span
-                  className="swatch inline-block h-8 w-8 rounded-full"
+                  className="swatch inline-block h-8 w-8 shrink-0 rounded-full"
                   style={{ background: p.color_hex ?? "#e9e2e6" }}
                   aria-hidden="true"
                 />
@@ -201,7 +308,14 @@ export default function BarcodeScanner() {
                   <span className="block truncate">
                     {p.brands?.name} {p.name}
                   </span>
-                  <span className="text-xs text-ink-400">¥{p.price_yen.toLocaleString()}</span>
+                  <span className="text-xs text-ink-400">
+                    {CATEGORY_LABEL[p.category]} ・ ¥{p.price_yen.toLocaleString()}
+                  </span>
+                  {sameMaker && (
+                    <span className="mt-0.5 block text-xs font-bold text-brand-600">
+                      同じ事業者コード
+                    </span>
+                  )}
                 </span>
               </button>
             ))}

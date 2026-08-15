@@ -61,10 +61,21 @@ export default async function SearchPage({
   const realUser = user && isRealAccount(user) ? user : null;
   const real = Boolean(realUser);
 
+  // 商品名 + ブランド名の検索は Postgres 側の search_products（pg_trgm）に任せる。
+  const term = params.q?.trim() ? params.q.trim() : null;
+  const { data: matches, error: searchError } = term
+    ? await supabase.rpc("search_products", {
+        p_q: term,
+        p_category: params.category ?? null,
+        p_mens: params.mens === "1" ? true : null,
+      })
+    : { data: null, error: null };
+  const searchScores = new Map((matches ?? []).map((match) => [match.product_id, match.score]));
+
   let query = supabase.from("products").select(PRODUCT_SELECT);
   if (params.category) query = query.eq("category", params.category);
   if (params.mens === "1") query = query.eq("is_mens", true);
-  if (params.q) query = query.ilike("name", `%${params.q}%`);
+  if (term) query = query.in("id", [...searchScores.keys()]);
   if (sort === "new") {
     query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
   }
@@ -76,7 +87,9 @@ export default async function SearchPage({
     { data: allergenRows },
     { data: ownedRows },
   ] = await Promise.all([
-    query.returns<Product[]>(),
+    term && searchScores.size === 0
+      ? Promise.resolve({ data: [] as Product[], error: null })
+      : query.returns<Product[]>(),
     supabase.from("product_score").select("*").returns<ProductScore[]>(),
     sort === "recommended" && real ? getMyProfile() : Promise.resolve(null),
     sort === "recommended" && realUser
@@ -119,6 +132,10 @@ export default async function SearchPage({
       : null;
 
   const products = [...(data ?? [])].sort((a, b) => {
+    if (term && sort === "recommended") {
+      const diff = (searchScores.get(b.id) ?? 0) - (searchScores.get(a.id) ?? 0);
+      if (diff !== 0) return diff;
+    }
     if (sort === "new") return 0;
     if (sort === "cheap") return a.price_yen - b.price_yen || b.id - a.id;
     if (sort === "expensive") return b.price_yen - a.price_yen || b.id - a.id;
@@ -158,12 +175,12 @@ export default async function SearchPage({
               size={16}
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
             />
-            <span className="sr-only">商品名で探す</span>
+            <span className="sr-only">商品名・ブランド名で探す</span>
             <input
               type="search"
               name="q"
               defaultValue={params.q ?? ""}
-              placeholder="商品名で探す"
+              placeholder="商品名・ブランド名で探す"
               className="w-full rounded-full border border-ink-200 bg-white py-2.5 pl-9 pr-4 text-sm focus-ring focus:border-brand-400"
             />
           </label>
@@ -235,9 +252,9 @@ export default async function SearchPage({
       )}
 
       {params.q && <p className="text-sm text-ink-600">「{params.q}」の検索結果：{products.length}件</p>}
-      {error && (
+      {(error || searchError) && (
         <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-          商品を取得できませんでした: {error.message}
+          商品を取得できませんでした: {(error ?? searchError)?.message}
         </p>
       )}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

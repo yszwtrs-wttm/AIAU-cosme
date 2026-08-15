@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { extractPalette, labArray, type ExtractedColor } from "@/lib/color";
+import { extractPalette, labArray, SKIN_FILTER, type ExtractedColor } from "@/lib/color";
 import { CATEGORY_LABEL, type ColorMatch } from "@/lib/types";
 import { colorName, colorSearchBadge, dedupeShades, hueGroup, sortBySkinTone } from "@/lib/wording";
 
@@ -27,6 +27,11 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
   const [preview, setPreview] = useState<string | null>(null);
   const [extracted, setExtracted] = useState<ExtractedColor[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imageDataRef = useRef<Uint8ClampedArray | null>(null);
+
+  // ファンデは肌色（低彩度）が本命なので、無彩色を捨てるしきい値を下げて抽出する。
+  const paletteFor = (data: Uint8ClampedArray, cat: string) =>
+    dedupeShades(extractPalette(data, 6, 12, cat === "foundation" ? SKIN_FILTER : undefined), 4);
 
   const search = async (targetHex: string, cat: string) => {
     setLoading(true);
@@ -53,7 +58,9 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, w, h);
       // ほぼ同じ色が並ぶと選べないので、見分けのつく色だけ残す。
-      const palette = dedupeShades(extractPalette(ctx.getImageData(0, 0, w, h).data), 4);
+      const { data } = ctx.getImageData(0, 0, w, h);
+      imageDataRef.current = data;
+      const palette = paletteFor(data, category);
       setExtracted(palette);
       const first = palette[0]?.hex;
       if (first) {
@@ -136,7 +143,17 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                 type="button"
                 onClick={() => {
                   setCategory(c.value);
-                  if (hex) void search(hex, c.value);
+                  const data = imageDataRef.current;
+                  const palette = data ? paletteFor(data, c.value) : extracted;
+                  setExtracted(palette);
+                  const next =
+                    hex && palette.some((p) => p.hex.toLowerCase() === hex.toLowerCase())
+                      ? hex
+                      : palette[0]?.hex;
+                  if (next) {
+                    setHex(next);
+                    void search(next, c.value);
+                  }
                 }}
                 aria-pressed={category === c.value}
                 className={`rounded-full border px-3 py-1.5 text-sm ${
