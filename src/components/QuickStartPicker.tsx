@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Check } from "lucide-react";
 import { addManyToStash } from "@/app/actions";
 import ProductThumb from "@/components/ProductThumb";
+import { japaneseError } from "@/lib/errors";
 import { CATEGORY_LABEL, type Category, type Product } from "@/lib/types";
 
 /**
@@ -81,9 +82,14 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
           onClick={() =>
             startTransition(async () => {
               setError(null);
-              const res = await addManyToStash(selected, "quick");
-              if (!res.ok) {
-                setError(res.error ?? "登録できませんでした");
+              try {
+                const res = await addManyToStash(selected, "quick");
+                if (!res.ok) {
+                  setError(japaneseError(res.error, "登録できませんでした"));
+                  return;
+                }
+              } catch (e) {
+                setError(japaneseError(e, "登録できませんでした"));
                 return;
               }
               router.push("/stash");
