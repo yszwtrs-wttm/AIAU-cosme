@@ -267,7 +267,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       )}
 
       <section className="space-y-2">
-        <h2 className="font-display text-lg font-bold">成分でわかること</h2>
+        <h2 className="font-display text-lg font-bold">商品説明</h2>
         <IngredientPanel ingredients={product.ingredients} />
       </section>
 

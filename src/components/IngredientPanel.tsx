@@ -7,7 +7,7 @@ import {
   ROLE_SHORT_LABEL,
   groupByRole,
   resolveIngredients,
-  summarizeIngredients,
+  summarizeIngredientPoints,
 } from "@/lib/ingredients";
 
 /**
@@ -28,7 +28,14 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
         <div className="flex items-center gap-1.5 text-xs font-bold text-brand-700">
           <FlaskConical size={14} /> この商品は何でできている？
         </div>
-        <p className="mt-1.5 text-sm leading-relaxed">{summarizeIngredients(resolved)}</p>
+        <ul className="mt-1.5 space-y-1 text-sm leading-relaxed">
+          {summarizeIngredientPoints(resolved).map((point) => (
+            <li key={point} className="flex gap-1.5">
+              <span className="text-brand-600">・</span>
+              <span>{point}</span>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {cautions.length > 0 && (
