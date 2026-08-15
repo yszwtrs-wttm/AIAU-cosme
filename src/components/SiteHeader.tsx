@@ -6,7 +6,7 @@ import { getMyProfile } from "@/lib/auth";
 export default async function SiteHeader({ isRealAccount: real }: { isRealAccount: boolean }) {
   const profile = real ? await getMyProfile() : null;
   const navLinks = real
-      ? [
+    ? [
         { href: "/search", label: "探す" },
         { href: "/feed", label: "みんなの投稿" },
         { href: "/stash", label: "Myポーチ" },
