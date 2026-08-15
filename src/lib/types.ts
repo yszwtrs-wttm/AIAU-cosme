@@ -23,6 +23,21 @@ export type ProductColor = {
   hex: string;
 };
 
+export type IngredientMaster = {
+  id: number;
+  name_ja: string | null;
+  inci: string;
+};
+
+export type PersonalColor = "spring" | "summer" | "autumn" | "winter";
+
+export const PERSONAL_COLOR_LABEL: Record<PersonalColor, string> = {
+  spring: "イエベ春",
+  summer: "ブルベ夏",
+  autumn: "イエベ秋",
+  winter: "ブルベ冬",
+};
+
 export type Product = {
   id: number;
   name: string;
@@ -73,9 +88,11 @@ export type Profile = {
   handle: string;
   display_name: string;
   avatar_hue: number;
+  avatar_url: string | null;
   bio: string | null;
   skin_tone_hex: string | null;
   skin_type: SkinType | null;
+  personal_color: PersonalColor | null;
   stash_public: boolean;
   created_at: string;
 };
@@ -115,7 +132,12 @@ export type Review = {
   owner_verified: boolean;
   profiles?: Pick<
     Profile,
-    "handle" | "display_name" | "avatar_hue" | "skin_type" | "skin_tone_hex"
+    | "handle"
+    | "display_name"
+    | "avatar_hue"
+    | "avatar_url"
+    | "skin_type"
+    | "skin_tone_hex"
   > | null;
   review_images?: ReviewImage[];
 };

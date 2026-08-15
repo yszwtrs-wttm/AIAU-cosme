@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 /**
- * 手持ちは RLS で user_id 単位に保護されている。
- * デモでログインを挟まずに済ませるため、初回訪問時に匿名サインインする。
+ * 商品の閲覧をログインなしで使えるよう、初回訪問時に匿名サインインする。
  */
 export default function AnonAuth() {
   const router = useRouter();

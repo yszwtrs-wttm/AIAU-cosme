@@ -64,7 +64,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     supabase
       .from("reviews")
       .select(
-        "*,profiles(handle,display_name,avatar_hue,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
+        "*,profiles(handle,display_name,avatar_hue,avatar_url,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
       )
       .eq("product_id", productId)
       .order("posted_at", { ascending: false })
@@ -75,6 +75,25 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   ]);
 
   if (!product) notFound();
+
+  let avoidedIngredientLabels: string[] = [];
+  if (user && product.ingredients.length > 0) {
+    const { data: allergenRows } = await supabase
+      .from("profile_allergens")
+      .select("ingredient_id")
+      .eq("user_id", user.id);
+    const ingredientIds = (allergenRows ?? []).map((row) => row.ingredient_id);
+    if (ingredientIds.length > 0) {
+      const { data: masters } = await supabase
+        .from("ingredients_master")
+        .select("id,inci,name_ja")
+        .in("id", ingredientIds);
+      const productIngredients = new Set(product.ingredients.map((ingredient) => ingredient.toUpperCase()));
+      avoidedIngredientLabels = (masters ?? [])
+        .filter((ingredient) => productIngredients.has(ingredient.inci.toUpperCase()))
+        .map((ingredient) => ingredient.name_ja || ingredient.inci);
+    }
+  }
 
   const dupes = (dupeRes.data ?? []) as DupeRow[];
   const cheaper = (cheaperRes.data ?? []) as DupeRow[];
@@ -152,7 +171,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const fit = judgeFit(product, profile);
   const isOwned = Boolean(owned);
-  const canPost = isRealAccount(user);
+  const canUseStash = isRealAccount(user);
+  const canPost = canUseStash;
 
   return (
     <div className="space-y-6">
@@ -182,6 +202,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               {summary?.counted_count ? `（口コミ${summary.counted_count}件）` : "（口コミなし）"}
             </span>
           </div>
+          {avoidedIngredientLabels.length > 0 && (
+            <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
+              避けたい成分が入っています: {avoidedIngredientLabels.join("、")}
+            </p>
+          )}
           <div className="mt-1 text-lg font-bold tabular-nums">
             ¥{product.price_yen.toLocaleString()}
             {product.volume && (
@@ -204,8 +229,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </ul>
           )}
           <div className="mt-4">
-            <StashButton productId={product.id} owned={isOwned} />
+            <StashButton productId={product.id} owned={isOwned} canUse={canUseStash} />
           </div>
+          {isOwned && (
+            <p className="mt-2 text-xs font-bold text-brand-700">これは持っている商品です。</p>
+          )}
         </div>
       </section>
 
@@ -225,70 +253,74 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         )}
       </section>
 
-      <section className="space-y-2">
-        {topDupe ? (
-          <div className="rounded-2xl border border-ink-200 bg-white p-4">
-            <p className="text-sm leading-relaxed">
-              ポーチの「{topDupe.brand} {topDupe.name}」と{formulaMatchText(topDupe.ing_sim)}。
-              {topDupe.delta_e !== null && `色は${colorMatchText(topDupe.delta_e).title}。`}
-              {topDupe.delta_e !== null &&
-                topDupe.color_hex &&
-                product.color_hex &&
-                `${colorDifferenceText(topDupe.color_hex, product.color_hex)}`}
-            </p>
-            <p className="mt-1 text-xs text-ink-400">
-              使い分けたい理由があるなら買う意味はあります。同じ用途で足りるなら、持っている方で済みます。
-            </p>
-            <div className="mt-3 space-y-2">
-              {dupes.map((row) => (
-                <DupeRowItem key={row.product_id} row={row} tone="warn" />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-ink-200 bg-white p-4 text-sm">
-            <p className="font-bold">ポーチに近いものはありません</p>
-            <p className="mt-1 text-xs text-ink-400">
-              持っていない色・処方なので、足りていない役割を埋められます。
-            </p>
-          </div>
-        )}
-      </section>
+      {!isOwned && (
+        <>
+          <section className="space-y-2">
+            {topDupe ? (
+              <div className="rounded-2xl border border-ink-200 bg-white p-4">
+                <p className="text-sm leading-relaxed">
+                  ポーチの「{topDupe.brand} {topDupe.name}」と{formulaMatchText(topDupe.ing_sim)}。
+                  {topDupe.delta_e !== null && `色は${colorMatchText(topDupe.delta_e).title}。`}
+                  {topDupe.delta_e !== null &&
+                    topDupe.color_hex &&
+                    product.color_hex &&
+                    `${colorDifferenceText(topDupe.color_hex, product.color_hex)}`}
+                </p>
+                <p className="mt-1 text-xs text-ink-400">
+                  使い分けたい理由があるなら買う意味はあります。同じ用途で足りるなら、持っている方で済みます。
+                </p>
+                <div className="mt-3 space-y-2">
+                  {dupes.map((row) => (
+                    <DupeRowItem key={row.product_id} row={row} tone="warn" />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-ink-200 bg-white p-4 text-sm">
+                <p className="font-bold">ポーチに近いものはありません</p>
+                <p className="mt-1 text-xs text-ink-400">
+                  持っていない色・処方なので、足りていない役割を埋められます。
+                </p>
+              </div>
+            )}
+          </section>
 
-      {coverage.length > 1 && (
-        <section className="space-y-2">
-          <h2 className="font-display text-lg font-bold">手持ちで似た色が出せるか</h2>
-          <div className="rounded-2xl border border-ink-200 bg-white p-4">
-            <div className="text-sm">
-              <span className="text-lg font-bold">
-                {coverage.length} 色中 {covered.length} 色
-              </span>
-              <span className="ml-2 text-ink-600">は、持っているコスメでほぼ同じ色が作れます</span>
-            </div>
-            <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-              {coverage.map((c) => (
-                <li key={c.pos} className="flex items-center gap-2 rounded-xl bg-ink-50 p-2 text-xs">
-                  <span className="swatch inline-block h-6 w-6 shrink-0 rounded-full" style={{ background: c.shade_hex }} />
-                  <span className="w-24 shrink-0 truncate">{c.shade_name}</span>
-                  {c.owned_product_id !== null ? (
-                    <span className="flex min-w-0 items-center gap-1.5 text-emerald-800">
-                      <span
-                        className="swatch inline-block h-4 w-4 shrink-0 rounded-full"
-                        style={{ background: c.owned_hex ?? undefined }}
-                      />
-                      <span className="truncate">
-                        {c.owned_label}
-                        {c.owned_shade && ` / ${c.owned_shade}`}
-                      </span>
-                    </span>
-                  ) : (
-                    <span className="text-ink-400">持っていません</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
+          {coverage.length > 1 && (
+            <section className="space-y-2">
+              <h2 className="font-display text-lg font-bold">手持ちで似た色が出せるか</h2>
+              <div className="rounded-2xl border border-ink-200 bg-white p-4">
+                <div className="text-sm">
+                  <span className="text-lg font-bold">
+                    {coverage.length} 色中 {covered.length} 色
+                  </span>
+                  <span className="ml-2 text-ink-600">は、持っているコスメでほぼ同じ色が作れます</span>
+                </div>
+                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {coverage.map((c) => (
+                    <li key={c.pos} className="flex items-center gap-2 rounded-xl bg-ink-50 p-2 text-xs">
+                      <span className="swatch inline-block h-6 w-6 shrink-0 rounded-full" style={{ background: c.shade_hex }} />
+                      <span className="w-24 shrink-0 truncate">{c.shade_name}</span>
+                      {c.owned_product_id !== null ? (
+                        <span className="flex min-w-0 items-center gap-1.5 text-emerald-800">
+                          <span
+                            className="swatch inline-block h-4 w-4 shrink-0 rounded-full"
+                            style={{ background: c.owned_hex ?? undefined }}
+                          />
+                          <span className="truncate">
+                            {c.owned_label}
+                            {c.owned_shade && ` / ${c.owned_shade}`}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-ink-400">持っていません</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
+        </>
       )}
 
       <section className="space-y-2">
@@ -311,7 +343,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         />
       </section>
 
-      {compareLow && cheaper.length > 1 && (
+      {!isOwned && compareLow && cheaper.length > 1 && (
         <section className="space-y-2">
           <h2 className="font-display text-lg font-bold">ほかの似ていて安いもの</h2>
           {cheaper.slice(1).map((row) => (

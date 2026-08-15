@@ -1,15 +1,20 @@
 import Link from "next/link";
 import { Sparkles, UserRound } from "lucide-react";
-import { createClient } from "@/lib/supabase/server";
-import { getMyProfile, isRealAccount } from "@/lib/auth";
+import Avatar from "@/components/Avatar";
+import { getMyProfile } from "@/lib/auth";
 
-export default async function SiteHeader() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const profile = user ? await getMyProfile() : null;
-  const real = isRealAccount(user);
+export default async function SiteHeader({ isRealAccount: real }: { isRealAccount: boolean }) {
+  const profile = real ? await getMyProfile() : null;
+  const navLinks = real
+    ? [
+        { href: "/search", label: "商品を探す" },
+        { href: "/feed", label: "みんなの投稿" },
+        { href: "/stash", label: "Myポーチ" },
+      ]
+    : [
+        { href: "/search", label: "商品を探す" },
+        { href: "/feed", label: "みんなの投稿" },
+      ];
 
   return (
     <header className="sticky top-0 z-20 border-b border-ink-200 bg-white/90 backdrop-blur">
@@ -23,10 +28,11 @@ export default async function SiteHeader() {
         </Link>
 
         <nav className="ml-auto hidden items-center gap-4 text-sm text-ink-600 md:flex">
-          <Link href="/" className="hover:text-brand-600">探す</Link>
-          <Link href="/scan" className="hover:text-brand-600">手持ちを登録</Link>
-          <Link href="/stash" className="hover:text-brand-600">ポーチ</Link>
-          <Link href="/feed" className="hover:text-brand-600">みんなの投稿</Link>
+          {navLinks.map(({ href, label }) => (
+            <Link key={href} href={href} className="hover:text-brand-600">
+              {label}
+            </Link>
+          ))}
         </nav>
 
         {real && profile ? (
@@ -34,13 +40,20 @@ export default async function SiteHeader() {
             href="/me"
             className="ml-auto flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-2 py-1 text-sm md:ml-3"
           >
-            <span
-              className="grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold text-white"
-              style={{ background: `hsl(${profile.avatar_hue} 70% 62%)` }}
-            >
-              {profile.display_name.slice(0, 1)}
-            </span>
-            <span className="max-w-24 truncate">{profile.display_name}</span>
+            <Avatar
+              name={profile.display_name}
+              hue={profile.avatar_hue}
+              avatarUrl={profile.avatar_url}
+              size="sm"
+            />
+            <span className="max-w-24 truncate sm:max-w-48">{profile.display_name}</span>
+          </Link>
+        ) : real ? (
+          <Link
+            href="/settings"
+            className="ml-auto rounded-full bg-brand-600 px-3 py-1.5 text-sm font-medium text-white md:ml-3"
+          >
+            プロフィール作成
           </Link>
         ) : (
           <Link

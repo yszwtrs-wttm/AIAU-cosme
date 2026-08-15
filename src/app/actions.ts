@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
-import type { SkinType } from "@/lib/types";
+import type { PersonalColor, SkinType } from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
 
@@ -13,12 +13,15 @@ export async function addToStash(
 ): Promise<Result> {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { ok: false, error: "セッションがありません" };
+  const user = userData.user;
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "ポーチへの登録にはアカウント登録が必要です" };
+  }
 
   const { error } = await supabase
     .from("user_items")
     .upsert(
-      { product_id: productId, user_id: userData.user.id, source },
+      { product_id: productId, user_id: user.id, source },
       { onConflict: "user_id,product_id" },
     );
 
@@ -33,10 +36,13 @@ export async function addManyToStash(
 ): Promise<Result> {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { ok: false, error: "セッションがありません" };
+  const user = userData.user;
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "ポーチへの登録にはアカウント登録が必要です" };
+  }
 
   const { error } = await supabase.from("user_items").upsert(
-    productIds.map((product_id) => ({ product_id, user_id: userData.user!.id, source })),
+    productIds.map((product_id) => ({ product_id, user_id: user.id, source })),
     { onConflict: "user_id,product_id" },
   );
 
@@ -47,13 +53,16 @@ export async function addManyToStash(
 export async function removeFromStash(productId: number): Promise<Result> {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { ok: false, error: "セッションがありません" };
+  const user = userData.user;
+  if (!user || !isRealAccount(user)) {
+    return { ok: false, error: "ポーチの利用にはアカウント登録が必要です" };
+  }
 
   const { error } = await supabase
     .from("user_items")
     .delete()
     .eq("product_id", productId)
-    .eq("user_id", userData.user.id);
+    .eq("user_id", user.id);
 
   revalidatePath("/stash");
   revalidatePath(`/products/${productId}`);
@@ -135,8 +144,11 @@ export async function saveProfile(input: {
   bio?: string;
   skinToneHex?: string | null;
   skinType?: SkinType | null;
+  personalColor?: PersonalColor | null;
   stashPublic?: boolean;
   avatarHue?: number;
+  avatarUrl?: string | null;
+  allergenIds?: number[];
 }): Promise<Result> {
   const supabase = await createClient();
   const {
@@ -155,10 +167,42 @@ export async function saveProfile(input: {
     bio: input.bio ?? null,
     skin_tone_hex: input.skinToneHex ?? null,
     skin_type: input.skinType ?? null,
+    personal_color: input.personalColor ?? null,
     stash_public: input.stashPublic ?? true,
     avatar_hue: input.avatarHue ?? 330,
+    avatar_url: input.avatarUrl ?? null,
   });
 
+  if (error) return { ok: false, error: error.message };
+
+  const selectedIds = [...new Set(input.allergenIds ?? [])];
+  const { data: existingAllergens, error: allergenReadError } = await supabase
+    .from("profile_allergens")
+    .select("ingredient_id")
+    .eq("user_id", user.id);
+  if (allergenReadError) return { ok: false, error: allergenReadError.message };
+
+  const existingIds = new Set((existingAllergens ?? []).map((row) => row.ingredient_id));
+  const selectedSet = new Set(selectedIds);
+  const removedIds = [...existingIds].filter((id) => !selectedSet.has(id));
+  const addedIds = selectedIds.filter((id) => !existingIds.has(id));
+
+  if (removedIds.length > 0) {
+    const { error: removeError } = await supabase
+      .from("profile_allergens")
+      .delete()
+      .eq("user_id", user.id)
+      .in("ingredient_id", removedIds);
+    if (removeError) return { ok: false, error: removeError.message };
+  }
+  if (addedIds.length > 0) {
+    const { error: addError } = await supabase.from("profile_allergens").insert(
+      addedIds.map((ingredient_id) => ({ user_id: user.id, ingredient_id })),
+    );
+    if (addError) return { ok: false, error: addError.message };
+  }
+
   revalidatePath("/me");
-  return { ok: !error, error: error?.message };
+  revalidatePath("/settings");
+  return { ok: true };
 }
