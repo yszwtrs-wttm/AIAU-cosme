@@ -47,11 +47,11 @@ export default function ProductList({
             type="button"
             onClick={loadMore}
             disabled={pending}
-            className="rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-bold disabled:opacity-50"
+            className="rounded-lg border border-ink-200 bg-ink-0 px-5 py-2.5 text-sm font-bold disabled:opacity-50"
           >
             {pending ? "読み込み中…" : "もっと見る"}
           </button>
-          <p className="text-xs text-ink-400">
+          <p className="font-mono text-xs tabular-nums text-ink-500">
             {products.length} / {total}件
           </p>
         </div>
