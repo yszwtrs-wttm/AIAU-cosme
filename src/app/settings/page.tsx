@@ -8,14 +8,14 @@ export default async function SettingsPage() {
 
   if (!isRealAccount(user)) {
     return (
-      <div className="mx-auto max-w-md space-y-4 rounded-4xl border border-white bg-white/90 p-6 text-sm shadow-card">
+      <div className="mx-auto max-w-md space-y-4 rounded-2xl border border-ink-200 bg-white p-6 text-sm">
         <h1 className="font-display text-xl font-bold">プロフィール設定</h1>
         <p className="text-ink-600">
           プロフィールを作るにはログインが必要です。いま登録しているポーチの中身は引き継がれます。
         </p>
         <Link
           href="/login"
-          className="inline-block rounded-full bg-brand-gradient px-4 py-2.5 text-sm font-bold text-white shadow-card"
+          className="inline-block rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white"
         >
           ログインする
         </Link>

@@ -6,9 +6,9 @@ export default async function ColorPage() {
 
   return (
     <div className="space-y-4">
-      <section className="rounded-4xl bg-brand-gradient p-6 text-white shadow-pop">
+      <section className="border-b border-ink-200 pb-4">
         <h1 className="font-display text-2xl font-bold">写真の色から探す</h1>
-        <p className="mt-1.5 text-sm text-white/90">
+        <p className="mt-1.5 text-sm text-ink-600">
           「この色にしたい」という写真を選ぶだけ。近い色のコスメを、手持ちや安いものから探します。
         </p>
       </section>

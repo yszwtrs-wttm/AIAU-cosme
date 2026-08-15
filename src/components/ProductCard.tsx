@@ -9,7 +9,7 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={`/products/${product.id}`}
-      className="group flex gap-3 rounded-3xl border border-white bg-white/85 p-3 shadow-card transition hover:-translate-y-0.5 hover:shadow-pop"
+      className="group flex gap-3 rounded-2xl border border-ink-200 bg-white p-3 transition "
     >
       <ProductThumb
         category={product.category}

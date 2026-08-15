@@ -111,7 +111,12 @@ export type Review = {
   image_phash: string | null;
   feel: Record<string, number> | null;
   report_count: number;
-  profiles?: Pick<Profile, "handle" | "display_name" | "avatar_hue"> | null;
+  /** 投稿時にポーチに登録していたか。集計の重みと表示に使う（投稿条件ではない） */
+  owner_verified: boolean;
+  profiles?: Pick<
+    Profile,
+    "handle" | "display_name" | "avatar_hue" | "skin_type" | "skin_tone_hex"
+  > | null;
   review_images?: ReviewImage[];
 };
 
@@ -121,7 +126,19 @@ export type RatingSummary = {
   raw_rating: number | null;
   adjusted_rating: number | null;
   excluded_count: number;
+  /** 点数に入っている口コミの数 */
+  counted_count: number;
+  /** そのうち、投稿時にポーチに登録していた人の数 */
+  owner_count: number;
   exclusion_reasons: string[];
+};
+
+export type ProductScore = {
+  product_id: number;
+  counted_count: number;
+  adjusted_rating: number | null;
+  /** 件数が少ない商品を上に出さないよう補正した評価 */
+  ranked_rating: number | null;
 };
 
 export const FLAG_LABEL: Record<string, string> = {

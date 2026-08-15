@@ -23,7 +23,6 @@ export default async function StashPage() {
 
   const products = (items ?? []).map((i) => i.products).filter(Boolean);
   const overlaps = (overlapRes.data ?? []) as StashOverlap[];
-  const wasted = overlaps.reduce((sum, o) => sum + Math.min(o.a_price, o.b_price), 0);
 
   return (
     <div className="space-y-6">
@@ -31,15 +30,15 @@ export default async function StashPage() {
         <h1 className="font-display text-2xl font-bold">ポーチ（{products.length}点）</h1>
         <Link
           href="/scan"
-          className="flex items-center gap-1.5 rounded-full bg-brand-gradient px-4 py-2 text-sm font-bold text-white shadow-card"
+          className="flex items-center gap-1.5 rounded-full bg-ink-900 px-4 py-2 text-sm font-bold text-white"
         >
           <Camera size={15} /> 追加
         </Link>
       </div>
 
       {products.length === 0 && (
-        <p className="rounded-4xl border border-white bg-white/85 p-5 text-sm text-ink-600 shadow-card">
-          まだ登録がありません。よく使う2〜3個だけ登録すれば、すぐに「もう持ってる」判定が動きます。
+        <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
+          まだ登録がありません。よく使う2〜3個登録すれば、調べた商品との違いを出せるようになります。
           <Link href="/scan" className="ml-1 font-bold text-brand-600 underline">
             登録をはじめる
           </Link>
@@ -47,12 +46,12 @@ export default async function StashPage() {
       )}
 
       {overlaps.length > 0 && (
-        <section className="rounded-4xl border-2 border-amber-300 bg-amber-50 p-5 shadow-card">
+        <section className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
           <h2 className="flex items-center gap-1.5 font-bold text-amber-900">
             <AlertTriangle size={17} /> ポーチの中で {overlaps.length} 組がほぼ同じです
           </h2>
           <p className="text-sm text-amber-900">
-            重なっている側の合計は ¥{wasted.toLocaleString()}。次は、どちらかを買わずに済みます。
+            使い分けているならそのままで。同じ用途なら、次はどちらか1つで足ります。
           </p>
           <div className="mt-3 space-y-2">
             {overlaps.map((o) => (

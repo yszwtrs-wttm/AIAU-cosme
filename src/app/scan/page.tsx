@@ -16,10 +16,10 @@ export default async function ScanPage() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-4xl bg-brand-gradient p-6 text-white shadow-pop">
+      <section className="border-b border-ink-200 pb-4">
         <h1 className="font-display text-2xl font-bold">手持ちを登録する</h1>
-        <p className="mt-1.5 text-sm text-white/90">
-          全部やらなくて大丈夫。よく使う2〜3個から始めれば、その分だけ「かぶり」が見えます。
+        <p className="mt-1.5 text-sm text-ink-600">
+          全部やらなくて大丈夫。よく使う2〜3個から始めれば、その分だけ判定が正確になります。
         </p>
       </section>
 

@@ -12,9 +12,9 @@ export default async function LoginPage() {
 
   return (
     <div className="mx-auto max-w-md space-y-5">
-      <section className="rounded-4xl bg-brand-gradient p-6 text-white shadow-pop">
+      <section className="border-b border-ink-200 pb-4">
         <h1 className="font-display text-2xl font-bold">アカウントを作る</h1>
-        <p className="mt-2 text-sm text-white/90">
+        <p className="mt-2 text-sm text-ink-600">
           ログインすると、ポーチを別の端末でも見られて、口コミも書けるようになります。
           いま登録したポーチの中身は、そのまま引き継がれます。
         </p>

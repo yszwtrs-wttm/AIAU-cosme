@@ -6,9 +6,13 @@ import { Flag, ImagePlus, Lock, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { attachReviewImages, postReview, reportReview } from "@/app/actions";
 import { axesFor } from "@/lib/feel";
+import { closenessScore } from "@/lib/fit";
 import { averageHash } from "@/lib/phash";
 import { publicImageUrl } from "@/lib/storage";
-import type { Category, RatingSummary, Review } from "@/lib/types";
+import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
+import { SKIN_TYPE_LABEL } from "@/lib/types";
+
+type Viewer = { skinType: SkinType | null; skinToneHex: string | null };
 
 const MAX_IMAGES = 4;
 
@@ -32,13 +36,14 @@ function Avatar({ name, hue }: { name: string; hue: number }) {
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   const [reported, setReported] = useState(false);
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
+  const skin = review.profiles?.skin_type;
 
   return (
-    <div className="rounded-3xl border border-white bg-white/90 p-4 shadow-card">
+    <div className="rounded-2xl border border-ink-200 bg-white p-4">
       <div className="flex items-center gap-2">
         <Avatar name={name} hue={review.profiles?.avatar_hue ?? 330} />
         <div className="min-w-0 flex-1">
@@ -66,6 +71,24 @@ function ReviewCard({ review }: { review: Review }) {
         </button>
       </div>
 
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
+        {close && (
+          <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-700">
+            あなたと近い肌の人
+          </span>
+        )}
+        {skin && (
+          <span className="rounded-full bg-ink-50 px-2 py-0.5 text-ink-600">
+            {SKIN_TYPE_LABEL[skin]}
+          </span>
+        )}
+        {review.owner_verified && (
+          <span className="rounded-full bg-ink-50 px-2 py-0.5 text-ink-600">
+            この商品を登録している人
+          </span>
+        )}
+      </div>
+
       <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{review.body}</p>
 
       {images.length > 0 && (
@@ -91,14 +114,14 @@ export default function ReviewPanel({
   initialReviews,
   initialSummary,
   canPost,
-  blockedReason,
+  viewer,
 }: {
   productId: number;
   category: Category;
   initialReviews: Review[];
   initialSummary: RatingSummary | null;
   canPost: boolean;
-  blockedReason?: "login" | "stash";
+  viewer: Viewer;
 }) {
   const axes = axesFor(category);
   const [reviews, setReviews] = useState(initialReviews);
@@ -121,7 +144,9 @@ export default function ReviewPanel({
       const [{ data: rows }, { data: sum }] = await Promise.all([
         supabase
           .from("reviews")
-          .select("*,profiles(handle,display_name,avatar_hue),review_images(id,review_id,path,pos)")
+          .select(
+            "*,profiles(handle,display_name,avatar_hue,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
+          )
           .eq("product_id", productId)
           .order("posted_at", { ascending: false }),
         supabase.from("product_rating_summary").select("*").eq("product_id", productId).maybeSingle(),
@@ -144,8 +169,14 @@ export default function ReviewPanel({
     };
   }, [productId]);
 
-  const shown = reviews.filter((r) => !r.excluded);
+  // 自分と近い肌の人の声を上に出す。同じ近さなら新しい順（元の並び）。
+  const shown = reviews
+    .filter((r) => !r.excluded)
+    .map((r) => ({ review: r, score: closenessScore(viewer, r.profiles) }))
+    .sort((a, b) => b.score - a.score);
   const rated = summary?.adjusted_rating ?? null;
+  const counted = summary?.counted_count ?? 0;
+  const hasViewerProfile = Boolean(viewer.skinType || viewer.skinToneHex);
 
   const submit = () => {
     setError(null);
@@ -184,9 +215,9 @@ export default function ReviewPanel({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4 rounded-3xl bg-brand-soft p-4 shadow-card">
+      <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4">
         <div>
-          <div className="font-display text-4xl font-bold tabular-nums text-brand-600">
+          <div className="font-display text-4xl font-bold tabular-nums">
             {rated?.toFixed(1) ?? "—"}
           </div>
           <div className="text-[11px] text-ink-400">5点満点</div>
@@ -194,9 +225,10 @@ export default function ReviewPanel({
         <div className="text-sm text-ink-600">
           {summary?.review_count ? (
             <>
-              使った人の口コミ {summary.review_count - (summary.excluded_count ?? 0)} 件
+              点数に入っている口コミ {counted} 件
               <p className="mt-0.5 text-[11px] text-ink-400">
-                宣伝目的の投稿と判断したものは、点数に入れていません。
+                宣伝目的・使い回しと判断した投稿は点数に入れていません。実際に登録している人の声は、
+                少し重く見て平均を出しています。
               </p>
             </>
           ) : (
@@ -205,9 +237,13 @@ export default function ReviewPanel({
         </div>
       </div>
 
+      {hasViewerProfile && shown.some((s) => s.score > 0) && (
+        <p className="text-[11px] text-ink-400">あなたと肌が近い人の口コミを上に並べています。</p>
+      )}
+
       {canPost ? (
         <form
-          className="space-y-3 rounded-3xl border border-white bg-white/90 p-4 shadow-card"
+          className="space-y-3 rounded-2xl border border-ink-200 bg-white p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (!body.trim()) return;
@@ -299,35 +335,27 @@ export default function ReviewPanel({
           <button
             type="submit"
             disabled={pending}
-            className="rounded-full bg-brand-gradient px-4 py-2 text-sm font-bold text-white shadow-card disabled:opacity-50"
+            className="rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
           >
             {pending ? "投稿中…" : "投稿する"}
           </button>
         </form>
       ) : (
-        <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-brand-100 bg-white/80 p-4 text-sm">
-          <Lock size={16} className="text-brand-500" />
-          {blockedReason === "stash" ? (
-            <span>
-              口コミは<b>ポーチに登録した商品</b>だけに書けます。持っている人の声だけを集めるためです。
-            </span>
-          ) : (
-            <>
-              <span>口コミを書くにはログインが必要です。</span>
-              <Link
-                href="/login"
-                className="rounded-full bg-brand-gradient px-3 py-1.5 text-xs font-bold text-white"
-              >
-                ログイン
-              </Link>
-            </>
-          )}
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-ink-200 bg-white p-4 text-sm">
+          <Lock size={16} className="text-ink-400" />
+          <span>口コミを書くにはログインが必要です。</span>
+          <Link
+            href="/login"
+            className="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-bold text-white"
+          >
+            ログイン
+          </Link>
         </div>
       )}
 
       <div className="space-y-2">
-        {shown.map((r) => (
-          <ReviewCard key={r.id} review={r} />
+        {shown.map(({ review, score }) => (
+          <ReviewCard key={review.id} review={review} close={score > 0} />
         ))}
       </div>
     </div>

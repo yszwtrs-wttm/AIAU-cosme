@@ -14,7 +14,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
 
   return (
     <div className="space-y-3">
-      <div className="rounded-3xl bg-brand-soft p-4 shadow-card">
+      <div className="rounded-2xl bg-brand-soft p-4">
         <div className="flex items-center gap-1.5 text-xs font-bold text-brand-700">
           <FlaskConical size={14} /> この商品は何でできている？
         </div>
@@ -22,7 +22,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
       </div>
 
       {cautions.length > 0 && (
-        <ul className="space-y-1 rounded-3xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+        <ul className="space-y-1 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
           {cautions.map((c) => (
             <li key={c.inci} className="flex gap-1.5">
               <AlertTriangle size={13} className="mt-0.5 shrink-0" />
@@ -36,7 +36,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
 
       <div className="space-y-3">
         {groups.map((g) => (
-          <div key={g.role} className="rounded-3xl border border-white bg-white/90 p-4 shadow-card">
+          <div key={g.role} className="rounded-2xl border border-ink-200 bg-white p-4">
             <div className="text-xs font-bold text-brand-600">{ROLE_LABEL[g.role]}</div>
             <ul className="mt-2 space-y-2">
               {g.items.map((item) => (
@@ -58,7 +58,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
         ))}
       </div>
 
-      <details className="rounded-3xl border border-white bg-white/70 p-4">
+      <details className="rounded-2xl border border-ink-200 bg-white p-4">
         <summary className="cursor-pointer text-xs text-ink-400">
           全成分の原文（配合量の多い順）を見る
         </summary>

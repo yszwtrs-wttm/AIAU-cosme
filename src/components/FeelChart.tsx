@@ -16,7 +16,7 @@ export default function FeelChart({
   const estimated = reviewCount === 0;
 
   return (
-    <div className="rounded-3xl border border-white bg-white/90 p-4 shadow-card">
+    <div className="rounded-2xl border border-ink-200 bg-white p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm font-bold">使い心地</div>
         <span
@@ -40,11 +40,11 @@ export default function FeelChart({
               </div>
               <div className="relative mt-1 h-2 rounded-full bg-brand-50">
                 <div
-                  className="h-2 rounded-full bg-brand-gradient"
+                  className="h-2 rounded-full bg-brand-600"
                   style={{ width: `${v}%` }}
                 />
                 <span
-                  className="absolute -top-1 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-white bg-brand-500 shadow-card"
+                  className="absolute -top-1 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-white bg-brand-500"
                   style={{ left: `${v}%` }}
                 />
               </div>

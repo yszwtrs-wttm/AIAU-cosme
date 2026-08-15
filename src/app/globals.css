@@ -9,11 +9,8 @@
 
 body {
   font-family: var(--font-sans);
-  background:
-    radial-gradient(1200px 600px at 15% -10%, #ffe3ee 0%, rgba(255, 227, 238, 0) 60%),
-    radial-gradient(900px 500px at 95% 0%, #f3e8ff 0%, rgba(243, 232, 255, 0) 55%),
-    #fffafc;
-  background-attachment: fixed;
+  /* 色は商品を見せるために使いたいので、背景は紙に近い無彩色にする。 */
+  background: #fdfcfc;
 }
 
 /* 色を主役にしたいので、スウォッチには内側の影で厚みを出す。 */

@@ -122,6 +122,13 @@ export type Database = {
             foreignKeyName: "product_colors_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "product_colors_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -297,6 +304,13 @@ export type Database = {
             foreignKeyName: "review_investigations_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "review_investigations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -345,6 +359,7 @@ export type Database = {
           flags: string[]
           id: number
           image_phash: string | null
+          owner_verified: boolean
           posted_at: string
           product_id: number
           rating: number
@@ -362,6 +377,7 @@ export type Database = {
           flags?: string[]
           id?: never
           image_phash?: string | null
+          owner_verified?: boolean
           posted_at?: string
           product_id: number
           rating: number
@@ -379,6 +395,7 @@ export type Database = {
           flags?: string[]
           id?: never
           image_phash?: string | null
+          owner_verified?: boolean
           posted_at?: string
           product_id?: number
           rating?: number
@@ -398,6 +415,13 @@ export type Database = {
             foreignKeyName: "reviews_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -407,48 +431,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
-          },
-        ]
-      }
-      skipped_purchases: {
-        Row: {
-          created_at: string
-          id: number
-          price_yen: number
-          product_id: number
-          reason: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: never
-          price_yen: number
-          product_id: number
-          reason?: string | null
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          id?: never
-          price_yen?: number
-          product_id?: number
-          reason?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "skipped_purchases_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "product_rating_summary"
-            referencedColumns: ["product_id"]
-          },
-          {
-            foreignKeyName: "skipped_purchases_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -492,6 +474,13 @@ export type Database = {
             foreignKeyName: "user_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "user_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -517,6 +506,13 @@ export type Database = {
             foreignKeyName: "reviews_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -525,11 +521,22 @@ export type Database = {
       product_rating_summary: {
         Row: {
           adjusted_rating: number | null
+          counted_count: number | null
           excluded_count: number | null
           exclusion_reasons: string[] | null
+          owner_count: number | null
           product_id: number | null
           raw_rating: number | null
           review_count: number | null
+        }
+        Relationships: []
+      }
+      product_score: {
+        Row: {
+          adjusted_rating: number | null
+          counted_count: number | null
+          product_id: number | null
+          ranked_rating: number | null
         }
         Relationships: []
       }

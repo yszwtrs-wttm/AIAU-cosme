@@ -46,7 +46,7 @@ export default function ProfileForm({
 
   return (
     <form
-      className="space-y-5 rounded-4xl border border-white bg-white/90 p-5 shadow-card"
+      className="space-y-5 rounded-2xl border border-ink-200 bg-white p-5"
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
@@ -73,7 +73,7 @@ export default function ProfileForm({
     >
       <div className="flex items-center gap-3">
         <span
-          className="grid h-14 w-14 place-items-center rounded-full text-xl font-bold text-white shadow-card"
+          className="grid h-14 w-14 place-items-center rounded-full text-xl font-bold text-white"
           style={{ background: `hsl(${hue} 70% 62%)` }}
         >
           {(displayName || handle || "?").slice(0, 1)}
@@ -180,7 +180,7 @@ export default function ProfileForm({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-full bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white shadow-card disabled:opacity-50"
+          className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
         >
           {pending ? "保存中…" : "保存する"}
         </button>

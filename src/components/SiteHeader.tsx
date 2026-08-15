@@ -12,10 +12,10 @@ export default async function SiteHeader() {
   const real = isRealAccount(user);
 
   return (
-    <header className="sticky top-0 z-20 border-b border-white/60 glass">
+    <header className="sticky top-0 z-20 border-b border-ink-200 bg-white/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-gradient text-white shadow-card">
+          <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-600 text-white">
             <Sparkles size={16} />
           </span>
           <span className="font-display text-xl font-bold tracking-tight">KAWANAI</span>
@@ -45,7 +45,7 @@ export default async function SiteHeader() {
         ) : (
           <Link
             href="/login"
-            className="ml-auto flex items-center gap-1.5 rounded-full bg-brand-gradient px-3 py-1.5 text-sm font-medium text-white shadow-card md:ml-3"
+            className="ml-auto flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-sm font-medium text-white md:ml-3"
           >
             <UserRound size={14} />
             ログイン

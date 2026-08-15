@@ -1,14 +1,15 @@
 import { notFound } from "next/navigation";
-import { AlertTriangle, PiggyBank, Sparkles } from "lucide-react";
+import ComparePanel, { type CompareSide } from "@/components/ComparePanel";
 import DupeRowItem from "@/components/DupeRowItem";
 import FeelChart from "@/components/FeelChart";
+import FitCard from "@/components/FitCard";
 import IngredientPanel from "@/components/IngredientPanel";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
-import SkipPurchaseButton from "@/components/SkipPurchaseButton";
 import StashButton from "@/components/StashButton";
-import { isRealAccount } from "@/lib/auth";
+import { getMyProfile, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
+import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
 import {
   CATEGORY_LABEL,
@@ -27,6 +28,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   if (!Number.isFinite(productId)) notFound();
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const [
     { data: product },
@@ -37,9 +41,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     { data: reviews },
     { data: summary },
     { data: feelSummary },
-    {
-      data: { user },
-    },
+    profile,
   ] = await Promise.all([
     supabase
       .from("products")
@@ -48,19 +50,28 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       )
       .eq("id", productId)
       .maybeSingle<Product>(),
-    supabase.from("user_items").select("product_id").eq("product_id", productId).maybeSingle(),
+    user
+      ? supabase
+          .from("user_items")
+          .select("product_id")
+          .eq("product_id", productId)
+          .eq("user_id", user.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
     supabase.rpc("find_duplicates_in_stash", { p_product_id: productId }),
     supabase.rpc("find_cheaper_dupes", { p_product_id: productId, p_limit: 5 }),
     supabase.rpc("find_palette_coverage", { p_product_id: productId }),
     supabase
       .from("reviews")
-      .select("*,profiles(handle,display_name,avatar_hue),review_images(id,review_id,path,pos)")
+      .select(
+        "*,profiles(handle,display_name,avatar_hue,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
+      )
       .eq("product_id", productId)
       .order("posted_at", { ascending: false })
       .returns<Review[]>(),
     supabase.from("product_rating_summary").select("*").eq("product_id", productId).maybeSingle<RatingSummary>(),
     supabase.from("product_feel_summary").select("*").eq("product_id", productId).maybeSingle<FeelSummary>(),
-    supabase.auth.getUser(),
+    getMyProfile(),
   ]);
 
   if (!product) notFound();
@@ -68,39 +79,79 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   const dupes = (dupeRes.data ?? []) as DupeRow[];
   const cheaper = (cheaperRes.data ?? []) as DupeRow[];
   const topDupe = dupes[0];
-  const bestSaving = cheaper[0];
+  const cheapestSimilar = cheaper[0];
   const shades = [...(product.product_colors ?? [])].sort((a, b) => a.pos - b.pos);
   const coverage = (coverageRes.data ?? []) as PaletteCoverage[];
   const covered = coverage.filter((c) => c.owned_product_id !== null);
 
   const axes = axesFor(product.category);
-  const feelValues =
-    feelSummary?.feel && feelSummary.feel_count > 0
-      ? Object.fromEntries(Object.entries(feelSummary.feel).map(([k, v]) => [k, Number(v)]))
-      : estimateFeel(product.category, product.ingredients);
+  const measuredFeel = Boolean(feelSummary?.feel && feelSummary.feel_count > 0);
+  const feelValues = measuredFeel
+    ? Object.fromEntries(Object.entries(feelSummary!.feel!).map(([k, v]) => [k, Number(v)]))
+    : estimateFeel(product.category, product.ingredients);
 
+  // 高い方の良さを見せる比較。安い候補の成分と口コミ平均も要るので、決まってから取りに行く。
+  let compareLow: CompareSide | null = null;
+  if (cheapestSimilar) {
+    const [{ data: lowProduct }, { data: lowFeel }] = await Promise.all([
+      supabase
+        .from("products")
+        .select("id,name,category,price_yen,ingredients,brands(name)")
+        .eq("id", cheapestSimilar.product_id)
+        .maybeSingle<Pick<Product, "id" | "name" | "category" | "price_yen" | "ingredients" | "brands">>(),
+      supabase
+        .from("product_feel_summary")
+        .select("*")
+        .eq("product_id", cheapestSimilar.product_id)
+        .maybeSingle<FeelSummary>(),
+    ]);
+
+    if (lowProduct) {
+      const lowMeasured = Boolean(lowFeel?.feel && lowFeel.feel_count > 0);
+      compareLow = {
+        productId: lowProduct.id,
+        brand: lowProduct.brands?.name ?? "",
+        name: lowProduct.name,
+        priceYen: lowProduct.price_yen,
+        ingredients: lowProduct.ingredients,
+        measured: lowMeasured,
+        feel: lowMeasured
+          ? Object.fromEntries(Object.entries(lowFeel!.feel!).map(([k, v]) => [k, Number(v)]))
+          : estimateFeel(lowProduct.category, lowProduct.ingredients),
+      };
+    }
+  }
+
+  const compareHigh: CompareSide = {
+    productId: product.id,
+    brand: product.brands?.name ?? "",
+    name: product.name,
+    priceYen: product.price_yen,
+    ingredients: product.ingredients,
+    measured: measuredFeel,
+    feel: feelValues,
+  };
+
+  const fit = judgeFit(product, profile);
   const isOwned = Boolean(owned);
-  const canPost = isRealAccount(user) && isOwned;
-  const blockedReason = !isRealAccount(user) ? "login" : "stash";
+  const canPost = isRealAccount(user);
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-wrap items-start gap-4 rounded-4xl border border-white bg-white/90 p-5 shadow-card">
+      <section className="flex flex-wrap items-start gap-4 rounded-2xl border border-ink-200 bg-white p-5">
         <ProductThumb
           category={product.category}
           colors={shades}
           imageUrl={product.image_url}
           size={112}
-          className="rounded-3xl"
+          className="rounded-xl"
         />
         <div className="min-w-64 flex-1">
           <div className="flex items-center gap-2 text-xs text-ink-400">
             <span>{product.brands?.name}</span>
-            <span className="rounded-full bg-brand-50 px-2 py-0.5 text-brand-600">
-              {CATEGORY_LABEL[product.category]}
-            </span>
+            <span>{CATEGORY_LABEL[product.category]}</span>
             {product.is_mens && (
-              <span className="rounded-full bg-ink-900 px-2 py-0.5 text-[10px] text-white">MEN</span>
+              <span className="rounded bg-ink-900 px-1.5 py-0.5 text-[10px] text-white">MEN</span>
             )}
           </div>
           <h1 className="font-display text-2xl font-bold">{product.name}</h1>
@@ -117,7 +168,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {shades.length > 0 && (
             <ul className="mt-3 flex flex-wrap gap-2 text-[11px] text-ink-600">
               {shades.map((s) => (
-                <li key={s.pos} className="flex items-center gap-1.5 rounded-full bg-white px-2 py-1 shadow-card">
+                <li key={s.pos} className="flex items-center gap-1.5 rounded-full border border-ink-100 px-2 py-1">
                   <span className="swatch inline-block h-4 w-4 rounded-full" style={{ background: s.hex }} />
                   {s.shade_name}
                   <span className="text-ink-400">{colorName(s.hex)}</span>
@@ -125,28 +176,50 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               ))}
             </ul>
           )}
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4">
             <StashButton productId={product.id} owned={isOwned} />
-            {topDupe && <SkipPurchaseButton productId={product.id} priceYen={product.price_yen} />}
           </div>
         </div>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="font-display text-lg font-bold">買う前チェック</h2>
-        {topDupe ? (
-          <div className="rounded-4xl border-2 border-amber-300 bg-amber-50 p-5 shadow-card">
-            <div className="flex items-center gap-1.5 text-lg font-bold text-amber-900">
-              <AlertTriangle size={18} /> それ、もう持っています
+      <section className="space-y-2">
+        <h2 className="font-display text-lg font-bold">あなたに合うか</h2>
+        <FitCard fit={fit} hasProfile={Boolean(profile?.skin_type || profile?.skin_tone_hex)} />
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-display text-lg font-bold">使い心地</h2>
+        <FeelChart axes={axes} values={feelValues} reviewCount={feelSummary?.feel_count ?? 0} />
+      </section>
+
+      {compareLow && (
+        <section className="space-y-2">
+          <h2 className="font-display text-lg font-bold">似ていて安いものとの違い</h2>
+          <ComparePanel axes={axes} high={compareHigh} low={compareLow} />
+          {cheaper.length > 1 && (
+            <div className="space-y-2">
+              {cheaper.slice(1).map((row) => (
+                <DupeRowItem key={row.product_id} row={row} tone="save" />
+              ))}
             </div>
-            <p className="mt-1.5 text-sm leading-relaxed text-amber-900">
+          )}
+        </section>
+      )}
+
+      <section className="space-y-2">
+        <h2 className="font-display text-lg font-bold">持っているものと近いか</h2>
+        {topDupe ? (
+          <div className="rounded-2xl border border-ink-200 bg-white p-4">
+            <p className="text-sm leading-relaxed">
               ポーチの「{topDupe.brand} {topDupe.name}」と{formulaMatchText(topDupe.ing_sim)}。
               {topDupe.delta_e !== null && `色は${colorMatchText(topDupe.delta_e).title}。`}
               {topDupe.delta_e !== null &&
                 topDupe.color_hex &&
                 product.color_hex &&
                 `${colorDifferenceText(topDupe.color_hex, product.color_hex)}`}
-              このまま買うと ¥{product.price_yen.toLocaleString()} を似たものに使うことになります。
+            </p>
+            <p className="mt-1 text-xs text-ink-400">
+              使い分けたい理由があるなら買う意味はあります。同じ用途で足りるなら、持っている方で済みます。
             </p>
             <div className="mt-3 space-y-2">
               {dupes.map((row) => (
@@ -155,48 +228,28 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </div>
           </div>
         ) : (
-          <div className="rounded-4xl border border-white bg-white/85 p-5 text-sm text-ink-600 shadow-card">
-            <span className="flex items-center gap-1.5 font-bold text-ink-900">
-              <Sparkles size={16} className="text-brand-500" /> ポーチに似たものはありません
-            </span>
+          <div className="rounded-2xl border border-ink-200 bg-white p-4 text-sm">
+            <p className="font-bold">ポーチに近いものはありません</p>
             <p className="mt-1 text-xs text-ink-400">
-              持っているコスメを登録しておくと、ここで「もう持ってる」を教えます。
+              持っていない色・処方なので、足りていない役割を埋められます。
             </p>
           </div>
         )}
-
-        {bestSaving && (
-          <div className="rounded-4xl border border-emerald-200 bg-emerald-50 p-5 shadow-card">
-            <div className="flex items-center gap-1.5 font-bold text-emerald-900">
-              <PiggyBank size={18} /> 似た中身で ¥{(bestSaving.savings ?? 0).toLocaleString()} 安いものがあります
-            </div>
-            <div className="mt-3 space-y-2">
-              {cheaper.map((row) => (
-                <DupeRowItem key={row.product_id} row={row} tone="save" />
-              ))}
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-2">
-        <h2 className="font-display text-lg font-bold">使い心地</h2>
-        <FeelChart axes={axes} values={feelValues} reviewCount={feelSummary?.feel_count ?? 0} />
       </section>
 
       {coverage.length > 1 && (
         <section className="space-y-2">
           <h2 className="font-display text-lg font-bold">手持ちで似た色が出せるか</h2>
-          <div className="rounded-4xl border border-white bg-white/90 p-4 shadow-card">
+          <div className="rounded-2xl border border-ink-200 bg-white p-4">
             <div className="text-sm">
-              <span className="text-lg font-bold text-brand-600">
+              <span className="text-lg font-bold">
                 {coverage.length} 色中 {covered.length} 色
               </span>
               <span className="ml-2 text-ink-600">は、持っているコスメでほぼ同じ色が作れます</span>
             </div>
             <ul className="mt-3 grid gap-2 sm:grid-cols-2">
               {coverage.map((c) => (
-                <li key={c.pos} className="flex items-center gap-2 rounded-2xl bg-brand-50/60 p-2 text-xs">
+                <li key={c.pos} className="flex items-center gap-2 rounded-xl bg-ink-50 p-2 text-xs">
                   <span className="swatch inline-block h-6 w-6 shrink-0 rounded-full" style={{ background: c.shade_hex }} />
                   <span className="w-24 shrink-0 truncate">{c.shade_name}</span>
                   {c.owned_product_id !== null ? (
@@ -233,7 +286,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           initialReviews={reviews ?? []}
           initialSummary={summary ?? null}
           canPost={canPost}
-          blockedReason={blockedReason}
+          viewer={{
+            skinType: profile?.skin_type ?? null,
+            skinToneHex: profile?.skin_tone_hex ?? null,
+          }}
         />
       </section>
     </div>

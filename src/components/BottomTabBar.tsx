@@ -17,7 +17,7 @@ export default function BottomTabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-white/70 glass md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-ink-200 bg-white/95 backdrop-blur md:hidden">
       <ul className="mx-auto flex max-w-5xl">
         {TABS.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -31,7 +31,7 @@ export default function BottomTabBar() {
               >
                 <span
                   className={`grid h-8 w-8 place-items-center rounded-xl ${
-                    active ? "bg-brand-gradient text-white shadow-card" : ""
+                    active ? "bg-brand-600 text-white" : ""
                   }`}
                 >
                   <Icon size={17} />

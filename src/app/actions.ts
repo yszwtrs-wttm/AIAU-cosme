@@ -62,7 +62,8 @@ export async function removeFromStash(productId: number): Promise<Result> {
 
 /**
  * 口コミ投稿。名前の手入力は廃止し、投稿者はログイン中のアカウントから決まる。
- * 「本アカウント」かつ「手持ちに登録済みの商品」だけが投稿できる（RLS でも同じ条件を掛けている）。
+ * 書けるのは本アカウント（お試しの匿名セッションは不可）だけ。RLS でも同じ条件を掛けている。
+ * 「持っているか」は自己申告で検証できないので投稿条件にはせず、集計の重みだけに使う。
  */
 export async function postReview(input: {
   productId: number;
@@ -77,16 +78,6 @@ export async function postReview(input: {
 
   if (!isRealAccount(user)) {
     return { ok: false, error: "口コミの投稿にはアカウント登録が必要です" };
-  }
-
-  const { data: owned } = await supabase
-    .from("user_items")
-    .select("product_id")
-    .eq("product_id", input.productId)
-    .maybeSingle();
-
-  if (!owned) {
-    return { ok: false, error: "ポーチに登録している商品にだけ口コミを書けます" };
   }
 
   const { data, error } = await supabase
@@ -135,24 +126,6 @@ export async function attachReviewImages(
 export async function reportReview(reviewId: number, reason: string): Promise<Result> {
   const supabase = await createClient();
   const { error } = await supabase.from("review_reports").insert({ review_id: reviewId, reason });
-  return { ok: !error, error: error?.message };
-}
-
-/** 「買わない」を選んだ記録。マイページの「買わなかった金額」に積む。 */
-export async function skipPurchase(productId: number, priceYen: number): Promise<Result> {
-  const supabase = await createClient();
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return { ok: false, error: "セッションがありません" };
-
-  const { error } = await supabase
-    .from("skipped_purchases")
-    .upsert(
-      { product_id: productId, price_yen: priceYen, user_id: userData.user.id },
-      { onConflict: "user_id,product_id" },
-    );
-
-  revalidatePath("/me");
-  revalidatePath(`/products/${productId}`);
   return { ok: !error, error: error?.message };
 }
 

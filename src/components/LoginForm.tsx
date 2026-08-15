@@ -71,7 +71,7 @@ export default function LoginForm({ anonymous }: { anonymous: boolean }) {
   };
 
   return (
-    <div className="space-y-4 rounded-4xl border border-white bg-white/90 p-5 shadow-card">
+    <div className="space-y-4 rounded-2xl border border-ink-200 bg-white p-5">
       {step === "email" ? (
         <form
           className="space-y-3"
@@ -91,7 +91,7 @@ export default function LoginForm({ anonymous }: { anonymous: boolean }) {
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full items-center justify-center gap-1.5 rounded-full bg-brand-gradient px-4 py-2.5 text-sm font-bold text-white shadow-card disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
           >
             <Mail size={15} /> {busy ? "送信中…" : "確認コードを送る"}
           </button>
@@ -117,7 +117,7 @@ export default function LoginForm({ anonymous }: { anonymous: boolean }) {
           <button
             type="submit"
             disabled={busy}
-            className="w-full rounded-full bg-brand-gradient px-4 py-2.5 text-sm font-bold text-white shadow-card disabled:opacity-50"
+            className="w-full rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
           >
             {busy ? "確認中…" : "ログインする"}
           </button>

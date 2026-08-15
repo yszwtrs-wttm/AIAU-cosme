@@ -76,12 +76,12 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
 
   return (
     <div className="space-y-4">
-      <section className="rounded-4xl border border-white bg-white/90 p-5 shadow-card">
+      <section className="rounded-2xl border border-ink-200 bg-white p-5">
         <div className="text-xs font-bold text-brand-600">STEP 1 ／ 写真を選ぶ</div>
         <p className="mt-1 text-sm text-ink-600">
           なりたい色が写っている写真（好きなメイク・服・小物など）を選んでください。
         </p>
-        <label className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-brand-gradient px-4 py-2.5 text-sm font-bold text-white shadow-card">
+        <label className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white">
           <ImagePlus size={15} /> 写真を選ぶ
           <input
             type="file"
@@ -92,13 +92,13 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
         </label>
         {preview && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="選んだ写真" className="mt-3 max-h-48 rounded-3xl" />
+          <img src={preview} alt="選んだ写真" className="mt-3 max-h-48 rounded-2xl" />
         )}
         <canvas ref={canvasRef} className="hidden" />
       </section>
 
       {extracted.length > 0 && (
-        <section className="rounded-4xl border border-white bg-white/90 p-5 shadow-card">
+        <section className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="text-xs font-bold text-brand-600">STEP 2 ／ 使いたい色を選ぶ</div>
           <div className="mt-3 flex flex-wrap gap-2">
             {extracted.map((c) => (
@@ -111,7 +111,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                 }}
                 className={`flex items-center gap-2 rounded-2xl border bg-white px-2.5 py-2 text-[11px] ${
                   hex?.toLowerCase() === c.hex.toLowerCase()
-                    ? "border-brand-400 shadow-card"
+                    ? "border-brand-400"
                     : "border-brand-100"
                 }`}
               >
@@ -135,7 +135,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                 }}
                 className={`rounded-full border px-3 py-1.5 text-sm ${
                   category === c.value
-                    ? "border-transparent bg-brand-gradient text-white"
+                    ? "border-transparent bg-brand-600 text-white"
                     : "border-brand-100 bg-white text-ink-600"
                 }`}
               >
@@ -152,7 +152,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
           {loading && <p className="text-sm text-ink-400">探しています…</p>}
 
           {best && (
-            <div className="rounded-4xl bg-brand-soft p-4 shadow-card">
+            <div className="rounded-2xl bg-brand-soft p-4">
               <div className="text-sm font-bold text-brand-700">
                 あなたに近いのは「{best.shade_name ?? best.name}」です
               </div>
@@ -173,7 +173,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
               <Link
                 key={`${m.product_id}-${m.shade_name ?? ""}`}
                 href={`/products/${m.product_id}`}
-                className="flex items-center gap-3 rounded-3xl border border-white bg-white/90 p-3 shadow-card transition hover:-translate-y-0.5 hover:shadow-pop"
+                className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-white p-3 transition "
               >
                 <span
                   className="swatch inline-block h-12 w-12 shrink-0 rounded-full"

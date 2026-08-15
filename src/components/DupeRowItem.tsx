@@ -8,7 +8,7 @@ export default function DupeRowItem({ row, tone }: { row: DupeRow; tone: "warn" 
   return (
     <Link
       href={`/products/${row.product_id}`}
-      className="flex items-center gap-3 rounded-2xl border border-white bg-white/90 p-3 shadow-card transition hover:-translate-y-0.5 hover:shadow-pop"
+      className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-white p-3 transition "
     >
       <div
         className="swatch h-12 w-12 shrink-0 rounded-2xl"

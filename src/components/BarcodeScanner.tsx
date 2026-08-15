@@ -91,7 +91,7 @@ export default function BarcodeScanner() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-4xl border border-white bg-white/90 p-5 shadow-card">
+      <div className="rounded-2xl border border-ink-200 bg-white p-5">
         <div className="flex flex-wrap items-center gap-2">
           {status === "scanning" ? (
             <button
@@ -105,7 +105,7 @@ export default function BarcodeScanner() {
             <button
               type="button"
               onClick={start}
-              className="flex items-center gap-1.5 rounded-full bg-brand-gradient px-4 py-2.5 text-sm font-bold text-white shadow-card"
+              className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white"
             >
               <Camera size={15} /> 続けてスキャンする
             </button>
@@ -136,13 +136,13 @@ export default function BarcodeScanner() {
         </p>
         <video
           ref={videoRef}
-          className={`mt-3 w-full rounded-3xl bg-black ${status === "scanning" ? "" : "hidden"}`}
+          className={`mt-3 w-full rounded-2xl bg-black ${status === "scanning" ? "" : "hidden"}`}
         />
         {message && <p className="mt-2 text-sm text-red-600">{message}</p>}
       </div>
 
       {registered.length > 0 && (
-        <div className="rounded-4xl border border-emerald-200 bg-emerald-50 p-5 shadow-card">
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
           <div className="font-bold text-emerald-900">{registered.length}点をポーチに入れました</div>
           <ul className="mt-2 space-y-1 text-sm text-emerald-900">
             {registered.map((p) => (
@@ -161,7 +161,7 @@ export default function BarcodeScanner() {
       )}
 
       {status === "found" && hit && !registered.some((p) => p.id === hit.id) && (
-        <div className="rounded-4xl border border-white bg-white/90 p-5 shadow-card">
+        <div className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="text-xs text-ink-400">読み取ったバーコード {jan}</div>
           <div className="mt-1 font-bold">
             {hit.brands?.name} {hit.name}
@@ -172,7 +172,7 @@ export default function BarcodeScanner() {
           <button
             type="button"
             onClick={() => void register(hit, "manual")}
-            className="mt-3 rounded-full bg-brand-gradient px-4 py-2 text-sm font-bold text-white shadow-card"
+            className="mt-3 rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white"
           >
             ポーチに入れる
           </button>
@@ -180,7 +180,7 @@ export default function BarcodeScanner() {
       )}
 
       {status === "unknown" && (
-        <div className="rounded-4xl border border-amber-300 bg-amber-50 p-5 shadow-card">
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
           <div className="font-bold text-amber-900">このバーコードは登録がありません</div>
           <p className="text-sm text-amber-900">似ている商品を下から選んで登録してください。</p>
           <div className="mt-3 grid max-h-72 gap-2 overflow-y-auto sm:grid-cols-2">
@@ -189,7 +189,7 @@ export default function BarcodeScanner() {
                 key={p.id}
                 type="button"
                 onClick={() => void register(p, "manual")}
-                className="flex items-center gap-2 rounded-2xl border border-white bg-white p-2 text-left text-sm shadow-card"
+                className="flex items-center gap-2 rounded-2xl border border-ink-200 bg-white p-2 text-left text-sm"
               >
                 <span
                   className="swatch inline-block h-8 w-8 rounded-full"

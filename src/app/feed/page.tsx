@@ -27,10 +27,10 @@ export default async function FeedPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-4xl bg-brand-gradient p-6 text-white shadow-pop">
+      <section className="border-b border-ink-200 pb-4">
         <h1 className="font-display text-2xl font-bold">みんなの投稿</h1>
-        <p className="mt-1.5 text-sm text-white/90">
-          実際に持っている人だけが投稿できます。写真とあわせて、使った感想が見られます。
+        <p className="mt-1.5 text-sm text-ink-600">
+          ログインしている人が書いた口コミです。写真とあわせて、使った感想が見られます。
         </p>
       </section>
 
@@ -39,7 +39,7 @@ export default async function FeedPage() {
           {withPhotos.map((r) => {
             const images = [...(r.review_images ?? [])].sort((a, b) => a.pos - b.pos);
             return (
-              <article key={r.id} className="overflow-hidden rounded-4xl border border-white bg-white/90 shadow-card">
+              <article key={r.id} className="overflow-hidden rounded-2xl border border-ink-200 bg-white">
                 <div className="flex gap-1 overflow-x-auto">
                   {images.map((img) => (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -83,7 +83,7 @@ export default async function FeedPage() {
         <h2 className="font-display text-lg font-bold">写真なしの投稿</h2>
         <ul className="space-y-2">
           {rest.map((r) => (
-            <li key={r.id} className="rounded-3xl border border-white bg-white/90 p-4 shadow-card">
+            <li key={r.id} className="rounded-2xl border border-ink-200 bg-white p-4">
               <div className="flex items-center gap-2 text-xs text-ink-400">
                 <span>{r.profiles?.display_name ?? r.author_name}</span>
                 <span className="text-amber-500">{"★".repeat(r.rating)}</span>
