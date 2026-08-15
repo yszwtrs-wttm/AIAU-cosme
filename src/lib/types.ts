@@ -46,6 +46,10 @@ export type Product = {
   price_yen: number;
   volume: number | null;
   volume_unit: string | null;
+  /** 価格の出典（メーカー公表価格など）。実売価格ではない。 */
+  price_source?: string | null;
+  /** 価格を確認した日（YYYY-MM-DD）。 */
+  price_checked_at?: string | null;
   jan: string | null;
   image_url: string | null;
   color_hex: string | null;

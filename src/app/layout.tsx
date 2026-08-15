@@ -5,6 +5,7 @@ import AnonAuth from "@/components/AnonAuth";
 import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
 import { getMyUser, isRealAccount } from "@/lib/auth";
+import { PRICE_DISCLAIMER } from "@/lib/price";
 
 const sans = Zen_Kaku_Gothic_New({
   subsets: ["latin"],
@@ -47,6 +48,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <p>
             デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
           </p>
+          <p>{PRICE_DISCLAIMER}</p>
           <p>© {new Date().getFullYear()} Team Cosme. All rights reserved.</p>
         </footer>
         <BottomTabBar isRealAccount={real} />
