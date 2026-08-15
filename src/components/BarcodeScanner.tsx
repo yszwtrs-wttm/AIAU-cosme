@@ -28,7 +28,6 @@ const CANDIDATE_CATEGORIES: Category[] = [
 const CHIP = "rounded-full border px-3 py-1 text-xs transition";
 const CHIP_ON = "border-ink-900 bg-ink-900 text-white";
 const CHIP_OFF = "border-ink-200 bg-white text-ink-600";
->>>>>>> origin/main
 
 /**
  * 連続スキャン。1本ごとにカメラを止めず、読めたらそのまま登録して次に進める。
