@@ -17,7 +17,10 @@ const GUEST_TABS = [
   { href: "/login", label: "ログイン", icon: UserRound },
 ];
 
-/** 店頭で片手で使うアプリなので、モバイルではタブバーを主導線にする。 */
+/**
+ * 店頭で片手で使うアプリなので、モバイルではタブバーを主導線にする。
+ * 動的ページは既定だと loading.tsx までしか先読みしないので、主導線は中身まで先読みする。
+ */
 export default function BottomTabBar({ isRealAccount }: { isRealAccount: boolean }) {
   const pathname = usePathname();
   const tabs = isRealAccount ? TABS : GUEST_TABS;
@@ -31,6 +34,7 @@ export default function BottomTabBar({ isRealAccount }: { isRealAccount: boolean
             <li key={href} className="flex-1">
               <Link
                 href={href}
+                prefetch
                 className={`flex flex-col items-center gap-0.5 py-2.5 text-[10px] ${
                   active ? "text-brand-600" : "text-ink-400"
                 }`}
