@@ -2,20 +2,27 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
+import { ImagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { deltaELabel, extractPalette, labArray, type ExtractedColor } from "@/lib/color";
+import { extractPalette, labArray, type ExtractedColor } from "@/lib/color";
 import { CATEGORY_LABEL, type ColorMatch } from "@/lib/types";
+import { colorMatchBadge, colorName, dedupeShades, hueGroup, sortBySkinTone } from "@/lib/wording";
 
-const PRESETS = [
-  { label: "Supabase Green", hex: "#3ECF8E" },
-  { label: "Devin", hex: "#1B1B1F" },
-  { label: "テラコッタ", hex: "#B8604A" },
+const CATEGORIES = [
+  { value: "lip", label: "リップ" },
+  { value: "eyeshadow", label: "アイシャドウ" },
+  { value: "foundation", label: "ファンデーション" },
+  { value: "all", label: "すべて" },
 ];
 
-export default function ColorLab() {
-  const [hex, setHex] = useState("#B8604A");
+/**
+ * 写真を選ぶ → 色を選ぶ → 近いコスメを見る、の3ステップ。
+ * HEX や ΔE は画面に出さず、色見本と言葉だけで選べるようにする。
+ */
+export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null }) {
+  const [hex, setHex] = useState<string | null>(null);
   const [matches, setMatches] = useState<ColorMatch[]>([]);
-  const [category, setCategory] = useState<string>("lip");
+  const [category, setCategory] = useState("lip");
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [extracted, setExtracted] = useState<ExtractedColor[]>([]);
@@ -45,7 +52,8 @@ export default function ColorLab() {
       canvas.height = h;
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, w, h);
-      const palette = extractPalette(ctx.getImageData(0, 0, w, h).data);
+      // ほぼ同じ色が並ぶと選べないので、見分けのつく色だけ残す。
+      const palette = dedupeShades(extractPalette(ctx.getImageData(0, 0, w, h).data), 4);
       setExtracted(palette);
       const first = palette[0]?.hex;
       if (first) {
@@ -56,122 +64,135 @@ export default function ColorLab() {
     img.src = url;
   };
 
+  // ファンデは「なりたい色」より肌の色に近いほうが正解なので、並べ替える。
+  const shown =
+    skinToneHex && category === "foundation"
+      ? sortBySkinTone(
+          matches.map((m) => ({ ...m, hex: m.shade_hex ?? m.color_hex ?? "#e9e2e6" })),
+          skinToneHex,
+        )
+      : matches;
+  const best = category === "foundation" ? shown[0] : null;
+
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-        <div className="flex flex-wrap items-center gap-3">
+      <section className="rounded-4xl border border-white bg-white/90 p-5 shadow-card">
+        <div className="text-xs font-bold text-brand-600">STEP 1 ／ 写真を選ぶ</div>
+        <p className="mt-1 text-sm text-ink-600">
+          なりたい色が写っている写真（好きなメイク・服・小物など）を選んでください。
+        </p>
+        <label className="mt-3 inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-brand-gradient px-4 py-2.5 text-sm font-bold text-white shadow-card">
+          <ImagePlus size={15} /> 写真を選ぶ
           <input
             type="file"
             accept="image/*"
+            className="hidden"
             onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
-            className="text-sm"
           />
-          <input
-            type="color"
-            value={hex}
-            onChange={(e) => setHex(e.target.value)}
-            className="h-9 w-14 rounded border border-neutral-300"
-          />
-          <code className="rounded bg-neutral-100 px-2 py-1 text-sm">{hex.toUpperCase()}</code>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="rounded-lg border border-neutral-300 px-2 py-1.5 text-sm"
-          >
-            <option value="lip">リップ</option>
-            <option value="eyeshadow">アイシャドウ</option>
-            <option value="foundation">ファンデーション</option>
-            <option value="all">すべて</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => search(hex, category)}
-            disabled={loading}
-            className="rounded-lg bg-neutral-900 px-3 py-2 text-sm text-white disabled:opacity-50"
-          >
-            {loading ? "検索中…" : "この色に近いコスメを探す"}
-          </button>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2 text-sm">
-          {PRESETS.map((p) => (
-            <button
-              key={p.hex}
-              type="button"
-              onClick={() => {
-                setHex(p.hex);
-                void search(p.hex, category);
-              }}
-              className="flex items-center gap-2 rounded-full border border-neutral-300 px-3 py-1"
-            >
-              <span className="h-4 w-4 rounded-full border" style={{ background: p.hex }} />
-              {p.label}
-            </button>
-          ))}
-        </div>
+        </label>
         {preview && (
-          <div className="mt-3 flex flex-wrap items-start gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="解析対象" className="max-h-48 rounded-xl border border-neutral-200" />
-            {extracted.length > 0 && (
-              <div className="min-w-56">
-                <div className="text-xs text-neutral-500">
-                  抽出した代表色 {extracted.length} 色（クリックでその色を検索）
-                </div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {extracted.map((c) => (
-                    <button
-                      key={c.hex}
-                      type="button"
-                      onClick={() => {
-                        setHex(c.hex);
-                        void search(c.hex, category);
-                      }}
-                      className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] ${
-                        hex.toLowerCase() === c.hex.toLowerCase()
-                          ? "border-neutral-900"
-                          : "border-neutral-300"
-                      }`}
-                    >
-                      <span className="h-4 w-4 rounded-full border" style={{ background: c.hex }} />
-                      {c.hex.toUpperCase()}
-                      <span className="text-neutral-400">{Math.round(c.share * 100)}%</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={preview} alt="選んだ写真" className="mt-3 max-h-48 rounded-3xl" />
         )}
         <canvas ref={canvasRef} className="hidden" />
-      </div>
+      </section>
 
-      <div className="grid gap-2 sm:grid-cols-2">
-        {matches.map((m) => (
-          <Link
-            key={m.product_id}
-            href={`/products/${m.product_id}`}
-            className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white p-3 hover:border-neutral-400"
-          >
-            <span
-              className="h-10 w-10 rounded-lg border"
-              style={{ background: m.shade_hex ?? m.color_hex ?? "#e5e5e5" }}
-            />
-            <span className="min-w-0 flex-1">
-              <span className="block text-xs text-neutral-500">
-                {m.brand} ・ {CATEGORY_LABEL[m.category]}
-              </span>
-              <span className="block truncate text-sm font-medium">
-                {m.name}
-                {m.shade_name && <span className="text-neutral-500"> / {m.shade_name}</span>}
-              </span>
-              <span className="text-xs tabular-nums text-neutral-600">
-                ΔE {m.delta_e.toFixed(2)}・{deltaELabel(m.delta_e)}
-              </span>
-            </span>
-            <span className="text-sm tabular-nums">¥{m.price_yen.toLocaleString()}</span>
-          </Link>
-        ))}
-      </div>
+      {extracted.length > 0 && (
+        <section className="rounded-4xl border border-white bg-white/90 p-5 shadow-card">
+          <div className="text-xs font-bold text-brand-600">STEP 2 ／ 使いたい色を選ぶ</div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {extracted.map((c) => (
+              <button
+                key={c.hex}
+                type="button"
+                onClick={() => {
+                  setHex(c.hex);
+                  void search(c.hex, category);
+                }}
+                className={`flex items-center gap-2 rounded-2xl border bg-white px-2.5 py-2 text-[11px] ${
+                  hex?.toLowerCase() === c.hex.toLowerCase()
+                    ? "border-brand-400 shadow-card"
+                    : "border-brand-100"
+                }`}
+              >
+                <span className="swatch inline-block h-8 w-8 rounded-full" style={{ background: c.hex }} />
+                <span className="text-left">
+                  <span className="block font-bold">{colorName(c.hex)}</span>
+                  <span className="text-ink-400">{hueGroup(c.hex)}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.value}
+                type="button"
+                onClick={() => {
+                  setCategory(c.value);
+                  if (hex) void search(hex, c.value);
+                }}
+                className={`rounded-full border px-3 py-1.5 text-sm ${
+                  category === c.value
+                    ? "border-transparent bg-brand-gradient text-white"
+                    : "border-brand-100 bg-white text-ink-600"
+                }`}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {hex && (
+        <section className="space-y-2">
+          <div className="text-xs font-bold text-brand-600">STEP 3 ／ 近いコスメ</div>
+          {loading && <p className="text-sm text-ink-400">探しています…</p>}
+
+          {best && (
+            <div className="rounded-4xl bg-brand-soft p-4 shadow-card">
+              <div className="text-sm font-bold text-brand-700">
+                あなたに近いのは「{best.shade_name ?? best.name}」です
+              </div>
+              <p className="mt-1 text-xs text-ink-600">
+                {skinToneHex
+                  ? "登録した肌の色に近い順で選んでいます。"
+                  : "プロフィールで肌の色を選ぶと、もっと近い番号を出せます。"}
+              </p>
+            </div>
+          )}
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            {shown.map((m) => (
+              <Link
+                key={`${m.product_id}-${m.shade_name ?? ""}`}
+                href={`/products/${m.product_id}`}
+                className="flex items-center gap-3 rounded-3xl border border-white bg-white/90 p-3 shadow-card transition hover:-translate-y-0.5 hover:shadow-pop"
+              >
+                <span
+                  className="swatch inline-block h-12 w-12 shrink-0 rounded-full"
+                  style={{ background: m.shade_hex ?? m.color_hex ?? "#e9e2e6" }}
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[11px] text-ink-400">
+                    {m.brand} ・ {CATEGORY_LABEL[m.category]}
+                  </span>
+                  <span className="block truncate text-sm font-bold">
+                    {m.name}
+                    {m.shade_name && <span className="text-ink-400"> / {m.shade_name}</span>}
+                  </span>
+                  <span className="mt-1 inline-block rounded-full bg-plum-100 px-2 py-0.5 text-[11px] text-plum-700">
+                    {colorMatchBadge(m.delta_e)}
+                  </span>
+                </span>
+                <span className="text-sm font-medium tabular-nums">¥{m.price_yen.toLocaleString()}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

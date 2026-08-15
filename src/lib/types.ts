@@ -68,9 +68,39 @@ export type StashOverlap = {
   score: number;
 };
 
+export type Profile = {
+  user_id: string;
+  handle: string;
+  display_name: string;
+  avatar_hue: number;
+  bio: string | null;
+  skin_tone_hex: string | null;
+  skin_type: SkinType | null;
+  stash_public: boolean;
+  created_at: string;
+};
+
+export type SkinType = "dry" | "normal" | "oily" | "combination" | "sensitive";
+
+export const SKIN_TYPE_LABEL: Record<SkinType, string> = {
+  dry: "乾燥しやすい",
+  normal: "ふつう",
+  oily: "皮脂が出やすい",
+  combination: "混合（部分的にテカる）",
+  sensitive: "ゆらぎやすい",
+};
+
+export type ReviewImage = {
+  id: number;
+  review_id: number;
+  path: string;
+  pos: number;
+};
+
 export type Review = {
   id: number;
   product_id: number;
+  user_id: string | null;
   author_name: string;
   rating: number;
   body: string;
@@ -79,6 +109,10 @@ export type Review = {
   excluded: boolean;
   flags: string[];
   image_phash: string | null;
+  feel: Record<string, number> | null;
+  report_count: number;
+  profiles?: Pick<Profile, "handle" | "display_name" | "avatar_hue"> | null;
+  review_images?: ReviewImage[];
 };
 
 export type RatingSummary = {
@@ -96,6 +130,13 @@ export const FLAG_LABEL: Record<string, string> = {
   brand_bias: "同一ブランドへの偏重投稿",
   pr_boilerplate: "PR・案件の定型表現",
   image_reuse: "画像の使い回し",
+  reported: "通報が多い",
+};
+
+export type FeelSummary = {
+  product_id: number;
+  feel_count: number;
+  feel: Record<string, number> | null;
 };
 
 export type ColorMatch = {

@@ -2,22 +2,49 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { isRealAccount } from "@/lib/auth";
+import type { SkinType } from "@/lib/types";
 
-export async function addToStash(productId: number) {
+type Result = { ok: boolean; error?: string };
+
+export async function addToStash(
+  productId: number,
+  source: "manual" | "scan" | "photo" | "quick" = "manual",
+): Promise<Result> {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   if (!userData.user) return { ok: false, error: "セッションがありません" };
 
   const { error } = await supabase
     .from("user_items")
-    .upsert({ product_id: productId, user_id: userData.user.id }, { onConflict: "user_id,product_id" });
+    .upsert(
+      { product_id: productId, user_id: userData.user.id, source },
+      { onConflict: "user_id,product_id" },
+    );
 
   revalidatePath("/stash");
   revalidatePath(`/products/${productId}`);
   return { ok: !error, error: error?.message };
 }
 
-export async function removeFromStash(productId: number) {
+export async function addManyToStash(
+  productIds: number[],
+  source: "manual" | "scan" | "photo" | "quick" = "quick",
+): Promise<Result> {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return { ok: false, error: "セッションがありません" };
+
+  const { error } = await supabase.from("user_items").upsert(
+    productIds.map((product_id) => ({ product_id, user_id: userData.user!.id, source })),
+    { onConflict: "user_id,product_id" },
+  );
+
+  revalidatePath("/stash");
+  return { ok: !error, error: error?.message };
+}
+
+export async function removeFromStash(productId: number): Promise<Result> {
   const supabase = await createClient();
   const { error } = await supabase.from("user_items").delete().eq("product_id", productId);
 
@@ -26,15 +53,132 @@ export async function removeFromStash(productId: number) {
   return { ok: !error, error: error?.message };
 }
 
-export async function postReview(productId: number, rating: number, body: string, authorName: string) {
+/**
+ * 口コミ投稿。名前の手入力は廃止し、投稿者はログイン中のアカウントから決まる。
+ * 「本アカウント」かつ「手持ちに登録済みの商品」だけが投稿できる（RLS でも同じ条件を掛けている）。
+ */
+export async function postReview(input: {
+  productId: number;
+  rating: number;
+  body: string;
+  feel?: Record<string, number>;
+}): Promise<Result & { reviewId?: number }> {
   const supabase = await createClient();
-  const { error } = await supabase.from("reviews").insert({
-    product_id: productId,
-    author_name: authorName || "guest",
-    author_key: authorName || "guest",
-    rating,
-    body,
-  });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!isRealAccount(user)) {
+    return { ok: false, error: "口コミの投稿にはアカウント登録が必要です" };
+  }
+
+  const { data: owned } = await supabase
+    .from("user_items")
+    .select("product_id")
+    .eq("product_id", input.productId)
+    .maybeSingle();
+
+  if (!owned) {
+    return { ok: false, error: "ポーチに登録している商品にだけ口コミを書けます" };
+  }
+
+  const { data, error } = await supabase
+    .from("reviews")
+    .insert({
+      product_id: input.productId,
+      user_id: user!.id,
+      author_name: "",
+      author_key: user!.id,
+      rating: input.rating,
+      body: input.body,
+      feel: input.feel ?? null,
+    })
+    .select("id")
+    .maybeSingle();
+
+  revalidatePath(`/products/${input.productId}`);
+  revalidatePath("/feed");
+  return { ok: !error, error: error?.message, reviewId: data?.id };
+}
+
+export async function attachReviewImages(
+  reviewId: number,
+  images: { path: string; phash?: string | null }[],
+): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "セッションがありません" };
+
+  const { error } = await supabase.from("review_images").insert(
+    images.map((img, pos) => ({
+      review_id: reviewId,
+      user_id: user.id,
+      path: img.path,
+      phash: img.phash ?? null,
+      pos,
+    })),
+  );
+
+  revalidatePath("/feed");
+  return { ok: !error, error: error?.message };
+}
+
+export async function reportReview(reviewId: number, reason: string): Promise<Result> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("review_reports").insert({ review_id: reviewId, reason });
+  return { ok: !error, error: error?.message };
+}
+
+/** 「買わない」を選んだ記録。マイページの「買わなかった金額」に積む。 */
+export async function skipPurchase(productId: number, priceYen: number): Promise<Result> {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return { ok: false, error: "セッションがありません" };
+
+  const { error } = await supabase
+    .from("skipped_purchases")
+    .upsert(
+      { product_id: productId, price_yen: priceYen, user_id: userData.user.id },
+      { onConflict: "user_id,product_id" },
+    );
+
+  revalidatePath("/me");
   revalidatePath(`/products/${productId}`);
+  return { ok: !error, error: error?.message };
+}
+
+export async function saveProfile(input: {
+  handle: string;
+  displayName: string;
+  bio?: string;
+  skinToneHex?: string | null;
+  skinType?: SkinType | null;
+  stashPublic?: boolean;
+  avatarHue?: number;
+}): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "セッションがありません" };
+
+  if (!/^[a-z0-9_]{3,20}$/.test(input.handle)) {
+    return { ok: false, error: "ユーザーIDは半角英小文字・数字・_ の3〜20文字で入力してください" };
+  }
+
+  const { error } = await supabase.from("profiles").upsert({
+    user_id: user.id,
+    handle: input.handle,
+    display_name: input.displayName || input.handle,
+    bio: input.bio ?? null,
+    skin_tone_hex: input.skinToneHex ?? null,
+    skin_type: input.skinType ?? null,
+    stash_public: input.stashPublic ?? true,
+    avatar_hue: input.avatarHue ?? 330,
+  });
+
+  revalidatePath("/me");
   return { ok: !error, error: error?.message };
 }

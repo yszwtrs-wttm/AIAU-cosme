@@ -1,9 +1,14 @@
 import Link from "next/link";
+import { Camera, Heart, Palette, Sparkles } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { createClient } from "@/lib/supabase/server";
 import { CATEGORY_LABEL, type Category, type Product } from "@/lib/types";
 
 const CATEGORIES: Category[] = ["lip", "eyeshadow", "foundation", "shampoo", "treatment"];
+
+const CHIP = "rounded-full border px-3 py-1.5 text-sm transition";
+const CHIP_ON = "border-transparent bg-brand-gradient text-white shadow-card";
+const CHIP_OFF = "border-brand-100 bg-white/80 text-ink-600 hover:border-brand-300";
 
 export default async function Home({
   searchParams,
@@ -22,38 +27,56 @@ export default async function Home({
   if (params.mens === "1") query = query.eq("is_mens", true);
   if (params.q) query = query.ilike("name", `%${params.q}%`);
 
-  const { data, error } = await query.returns<Product[]>();
+  const [{ data, error }, { count: stashCount }] = await Promise.all([
+    query.returns<Product[]>(),
+    supabase.from("user_items").select("product_id", { count: "exact", head: true }),
+  ]);
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl bg-neutral-900 p-6 text-white">
-        <h1 className="text-2xl font-bold leading-snug">
-          「買わなくていい」を、
-          <br />
-          成分と色の数値で証明する。
-        </h1>
-        <p className="mt-3 max-w-2xl text-sm text-neutral-300">
-          全成分表示の配合順から作った処方ベクトルの cosine 類似度と、CIELAB の ΔE(CIEDE2000)。
-          この2つで、あなたのポーチの中身と、いま買おうとしている商品を突き合わせます。
-          判定ロジックは全部 Supabase(Postgres) の中にあります。
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2 text-sm">
-          <Link href="/scan" className="rounded-lg bg-white px-3 py-2 font-medium text-neutral-900">
-            バーコードで手持ちを登録
-          </Link>
-          <Link href="/stash" className="rounded-lg border border-neutral-600 px-3 py-2">
-            手持ちの被りを見る
-          </Link>
-          <Link href="/color" className="rounded-lg border border-neutral-600 px-3 py-2">
-            画像の色から探す
-          </Link>
+    <div className="space-y-7">
+      <section className="relative overflow-hidden rounded-4xl bg-brand-gradient p-6 text-white shadow-pop">
+        <div className="absolute inset-0 bg-sheen opacity-60" />
+        <div className="relative">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-1 text-[11px] font-medium">
+            <Sparkles size={12} /> 買う前に3秒チェック
+          </span>
+          <h1 className="mt-3 font-display text-3xl font-bold leading-tight sm:text-4xl">
+            そのコスメ、
+            <br />
+            もう持ってるかも。
+          </h1>
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/90">
+            持っているコスメを登録しておくと、気になった商品が「色も中身もほぼ同じ」かどうかを
+            すぐに教えます。似ていれば、買わずに済みます。
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2 text-sm">
+            <Link
+              href="/scan"
+              className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2.5 font-bold text-brand-600 shadow-card"
+            >
+              <Camera size={16} /> 手持ちを登録する
+            </Link>
+            <Link
+              href="/stash"
+              className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-2.5 font-medium"
+            >
+              <Heart size={16} /> ポーチを見る
+              {stashCount ? <span className="tabular-nums">{stashCount}</span> : null}
+            </Link>
+            <Link
+              href="/color"
+              className="flex items-center gap-1.5 rounded-full bg-white/20 px-4 py-2.5 font-medium"
+            >
+              <Palette size={16} /> 写真の色から探す
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="flex flex-wrap items-center gap-2 text-sm">
+      <section className="flex flex-wrap items-center gap-2">
         <Link
           href="/"
-          className={`rounded-full border px-3 py-1 ${!params.category && params.mens !== "1" ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300 bg-white"}`}
+          className={`${CHIP} ${!params.category && params.mens !== "1" ? CHIP_ON : CHIP_OFF}`}
         >
           すべて
         </Link>
@@ -61,21 +84,18 @@ export default async function Home({
           <Link
             key={c}
             href={`/?category=${c}`}
-            className={`rounded-full border px-3 py-1 ${params.category === c ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300 bg-white"}`}
+            className={`${CHIP} ${params.category === c ? CHIP_ON : CHIP_OFF}`}
           >
             {CATEGORY_LABEL[c]}
           </Link>
         ))}
-        <Link
-          href="/?mens=1"
-          className={`rounded-full border px-3 py-1 ${params.mens === "1" ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300 bg-white"}`}
-        >
+        <Link href="/?mens=1" className={`${CHIP} ${params.mens === "1" ? CHIP_ON : CHIP_OFF}`}>
           メンズ
         </Link>
       </section>
 
       {error && (
-        <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p className="rounded-2xl bg-red-50 p-3 text-sm text-red-700">
           商品を取得できませんでした: {error.message}
         </p>
       )}
