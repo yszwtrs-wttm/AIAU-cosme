@@ -632,8 +632,37 @@ export type Database = {
           score: number
         }[]
       }
+      find_overlaps_in_set: {
+        Args: { p_min_score?: number; p_product_ids: number[] }
+        Returns: {
+          a_hex: string
+          a_id: number
+          a_label: string
+          a_price: number
+          b_hex: string
+          b_id: number
+          b_label: string
+          b_price: number
+          delta_e: number
+          ing_sim: number
+          score: number
+        }[]
+      }
       find_palette_coverage: {
         Args: { p_max_delta?: number; p_product_id: number }
+        Returns: {
+          delta_e: number
+          owned_hex: string
+          owned_label: string
+          owned_product_id: number
+          owned_shade: string
+          pos: number
+          shade_hex: string
+          shade_name: string
+        }[]
+      }
+      find_palette_coverage_in_set: {
+        Args: { p_max_delta?: number; p_product_id: number; p_product_ids: number[] }
         Returns: {
           delta_e: number
           owned_hex: string

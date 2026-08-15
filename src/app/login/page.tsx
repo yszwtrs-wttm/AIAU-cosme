@@ -40,6 +40,11 @@ export default async function LoginPage({
         <Link href="/search" className="ml-1 text-brand-600 underline">
           商品を探す
         </Link>
+        <br />
+        ポーチの被り検出は、サンプルのポーチであればログインなしで試せます。
+        <Link href="/demo" className="ml-1 text-brand-600 underline">
+          サンプルのポーチで試す
+        </Link>
       </p>
     </div>
   );

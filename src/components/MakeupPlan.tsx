@@ -1,27 +1,29 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { generateMakeupPlan } from "@/app/plan-actions";
+import { generateDemoMakeupPlan, generateMakeupPlan } from "@/app/plan-actions";
 import type { Plan } from "@/lib/makeup";
 import type { Product } from "@/lib/types";
 
 const PRESETS = ["清楚に見せたい", "華やかにしたい", "ナチュラルにまとめたい", "大人っぽくしたい"];
 
-export default function MakeupPlan({ products }: { products: Product[] }) {
+export default function MakeupPlan({ products, demo = false }: { products: Product[]; demo?: boolean }) {
   const [request, setRequest] = useState(PRESETS[0]);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [pending, startTransition] = useTransition();
 
   const run = (text: string) => {
     setRequest(text);
-    startTransition(async () => setPlan(await generateMakeupPlan(text)));
+    startTransition(async () =>
+      setPlan(await (demo ? generateDemoMakeupPlan(text) : generateMakeupPlan(text))),
+    );
   };
 
   return (
     <section className="space-y-3 rounded-2xl border border-neutral-200 bg-white p-4">
       <h2 className="text-base font-bold">今日のメイクを、手持ちだけで組む</h2>
       <p className="text-xs text-neutral-500">
-        候補は手持ち{products.length}点に限定されます。買い足しは提案しません。
+        候補は{demo ? "サンプルポーチの" : "手持ち"}{products.length}点に限定されます。買い足しは提案しません。
       </p>
       <div className="flex flex-wrap gap-2">
         {PRESETS.map((p) => (
