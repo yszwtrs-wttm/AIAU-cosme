@@ -24,11 +24,11 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-brand-300 bg-white p-4">
+      <div className="rounded-2xl border border-brand-300 bg-surface p-4">
         <ul className="space-y-1 text-sm leading-relaxed">
           {summarizeIngredientPoints(resolved).map((point) => (
             <li key={point} className="flex gap-1.5">
-              <span className="text-brand-600">・</span>
+              <span className="text-brand-fg">・</span>
               <span>{point}</span>
             </li>
           ))}
@@ -36,7 +36,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
       </div>
 
       {cautions.length > 0 && (
-        <ul className="space-y-1 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+        <ul className="space-y-1 rounded-2xl border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-4 text-xs text-amber-900 dark:text-amber-100">
           {cautions.map((c) => (
             <li key={c.inci} className="flex gap-1.5">
               <AlertTriangle size={13} className="mt-0.5 shrink-0" />
@@ -48,7 +48,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
         </ul>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-ink-200 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-ink-200 bg-surface">
         <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-ink-100 p-2">
           {groups.map((g) => (
             <TabButton
@@ -65,7 +65,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
 
         {current ? (
           <div role="tabpanel" className="p-4">
-            <div className="text-xs font-bold text-brand-600">{ROLE_LABEL[current.role]}</div>
+            <div className="text-xs font-bold text-brand-fg">{ROLE_LABEL[current.role]}</div>
             <ul className="mt-2 space-y-2">
               {current.items.map((item) => (
                 <li key={item.inci} className="text-sm">
@@ -73,7 +73,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
                     <span className="font-bold">{item.ja}</span>
                     {item.known && <span className="text-[10px] text-ink-400">{item.inci}</span>}
                     {item.pos <= 3 && (
-                      <span className="rounded-full bg-brand-50 px-1.5 text-[10px] text-brand-600">
+                      <span className="rounded-full bg-brand-50 px-1.5 text-[10px] text-brand-fg">
                         多く入っています
                       </span>
                     )}

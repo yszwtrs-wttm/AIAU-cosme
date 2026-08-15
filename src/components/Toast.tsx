@@ -48,7 +48,7 @@ export default function ToastProvider({ children }: { children: React.ReactNode 
             key={toast.id}
             role="status"
             className={`pointer-events-auto flex w-full max-w-sm items-start gap-2 rounded-2xl px-4 py-3 text-sm font-medium shadow-lg ${
-              toast.tone === "error" ? "bg-red-600 text-white" : "bg-ink-900 text-white"
+              toast.tone === "error" ? "bg-red-600 text-white" : "bg-strong text-white"
             }`}
           >
             {toast.tone === "error" ? (

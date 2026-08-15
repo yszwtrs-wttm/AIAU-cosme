@@ -1,5 +1,8 @@
 import type { Config } from "tailwindcss";
 
+/** CSS 変数のチャンネル値を、透過指定つきで使える色に変換する。 */
+const token = (name: string) => `rgb(var(${name}) / <alpha-value>)`;
+
 export default {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
@@ -11,31 +14,39 @@ export default {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        // 面と反転色。globals.css の CSS 変数を差し替えてダークモードにする。
+        surface: token("--surface"),
+        "surface-soft": token("--surface-soft"),
+        strong: token("--strong"),
         brand: {
-          50: "#fff1f6",
-          100: "#ffe3ee",
-          200: "#ffc7dd",
-          300: "#ff9ec5",
-          400: "#fb6ba6",
+          50: token("--brand-50"),
+          100: token("--brand-100"),
+          200: token("--brand-200"),
+          300: token("--brand-300"),
+          400: token("--brand-400"),
           500: "#ef4383",
           600: "#d92668",
-          700: "#b31852",
+          700: token("--brand-700"),
           800: "#8f1745",
           900: "#78173e",
+          // brand-600 は塗りに使うので、文字色は別トークンにする。
+          fg: token("--brand-fg"),
         },
         plum: {
-          100: "#f3e8ff",
+          100: token("--plum-100"),
           300: "#d8b4fe",
           500: "#a855f7",
-          700: "#7e22ce",
+          700: token("--plum-700"),
         },
         ink: {
-          50: "#f7f4f5",
-          100: "#ece7e9",
-          200: "#ddd5d9",
-          400: "#8b8189",
-          600: "#5b5158",
-          900: "#241d22",
+          50: token("--ink-50"),
+          100: token("--ink-100"),
+          200: token("--ink-200"),
+          400: token("--ink-400"),
+          500: token("--ink-500"),
+          600: token("--ink-600"),
+          700: token("--ink-700"),
+          900: token("--ink-900"),
         },
       },
       fontFamily: {
@@ -44,7 +55,7 @@ export default {
       },
       backgroundImage: {
         "brand-gradient": "linear-gradient(135deg, #ff8fbe 0%, #ef4383 45%, #a855f7 100%)",
-        "brand-soft": "linear-gradient(135deg, #fff1f6 0%, #f7f0ff 100%)",
+        "brand-soft": "var(--brand-soft)",
         "sheen": "linear-gradient(120deg, rgba(255,255,255,0.65) 0%, rgba(255,255,255,0) 60%)",
       },
       boxShadow: {

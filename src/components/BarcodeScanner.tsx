@@ -26,8 +26,8 @@ const CANDIDATE_CATEGORIES: Category[] = [
   "treatment",
 ];
 const CHIP = "rounded-full border px-3 py-1 text-xs transition";
-const CHIP_ON = "border-ink-900 bg-ink-900 text-white";
-const CHIP_OFF = "border-ink-200 bg-white text-ink-600";
+const CHIP_ON = "border-strong bg-strong text-white";
+const CHIP_OFF = "border-ink-200 bg-surface text-ink-600";
 
 /**
  * 連続スキャン。1本ごとにカメラを止めず、読めたらそのまま登録して次に進める。
@@ -157,13 +157,13 @@ export default function BarcodeScanner() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-ink-200 bg-white p-5">
+      <div className="rounded-2xl border border-ink-200 bg-surface p-5">
         <div className="flex flex-wrap items-center gap-2">
           {status === "scanning" ? (
             <button
               type="button"
               onClick={stop}
-              className="rounded-full border border-brand-200 bg-white px-4 py-2.5 text-sm font-bold text-brand-600"
+              className="rounded-full border border-brand-200 bg-surface px-4 py-2.5 text-sm font-bold text-brand-fg"
             >
               スキャンを終わる
             </button>
@@ -191,7 +191,7 @@ export default function BarcodeScanner() {
             />
             <button
               type="submit"
-              className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-brand-200 bg-white px-3 py-2.5 text-sm"
+              className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-brand-200 bg-surface px-3 py-2.5 text-sm"
             >
               <Search size={14} /> 探す
             </button>
@@ -204,13 +204,13 @@ export default function BarcodeScanner() {
           ref={videoRef}
           className={`mt-3 w-full rounded-2xl bg-black ${status === "scanning" ? "" : "hidden"}`}
         />
-        {message && <p className="mt-2 text-sm text-red-600">{message}</p>}
+        {message && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{message}</p>}
       </div>
 
       {registered.length > 0 && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-          <div className="font-bold text-emerald-900">{registered.length}点をポーチに入れました</div>
-          <ul className="mt-2 space-y-1 text-sm text-emerald-900">
+        <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 p-5">
+          <div className="font-bold text-emerald-900 dark:text-emerald-100">{registered.length}点をポーチに入れました</div>
+          <ul className="mt-2 space-y-1 text-sm text-emerald-900 dark:text-emerald-100">
             {registered.map((p) => (
               <li key={p.id} className="flex items-center gap-1.5">
                 <Check size={14} /> {p.brands?.name} {p.name}
@@ -227,7 +227,7 @@ export default function BarcodeScanner() {
       )}
 
       {status === "found" && hit && !registered.some((p) => p.id === hit.id) && (
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-5">
           <div className="text-xs text-ink-400">読み取ったバーコード {jan}</div>
           <div className="mt-1 font-bold">
             {hit.brands?.name} {hit.name}
@@ -246,11 +246,11 @@ export default function BarcodeScanner() {
       )}
 
       {status === "unknown" && (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
-          <div className="font-bold text-amber-900">
+        <div className="rounded-2xl border border-amber-300 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-5">
+          <div className="font-bold text-amber-900 dark:text-amber-100">
             このバーコード（{unknownJan}）は登録がありません
           </div>
-          <p className="text-sm text-amber-900">
+          <p className="text-sm text-amber-900 dark:text-amber-100">
             登録済みの商品から選んでポーチに入れてください。名前やカテゴリで絞り込めます。
           </p>
           <label className="relative mt-3 block">
@@ -263,7 +263,7 @@ export default function BarcodeScanner() {
               value={candidateQuery}
               onChange={(e) => setCandidateQuery(e.target.value)}
               placeholder="商品名で絞り込む"
-              className="w-full rounded-full border border-ink-200 bg-white py-2 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
+              className="w-full rounded-full border border-ink-200 bg-surface py-2 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
             />
           </label>
           <div className="mt-2 flex flex-wrap gap-1.5">
@@ -286,7 +286,7 @@ export default function BarcodeScanner() {
             ))}
           </div>
           {!searching && candidates.length === 0 && (
-            <p className="mt-3 text-sm text-amber-900">
+            <p className="mt-3 text-sm text-amber-900 dark:text-amber-100">
               条件に合う商品がありません。絞り込みを変えてください。
             </p>
           )}
@@ -296,7 +296,7 @@ export default function BarcodeScanner() {
                 key={p.id}
                 type="button"
                 onClick={() => void register(p, "manual")}
-                className="flex items-center gap-2 rounded-2xl border border-ink-200 bg-white p-2 text-left text-sm"
+                className="flex items-center gap-2 rounded-2xl border border-ink-200 bg-surface p-2 text-left text-sm"
               >
                 <span
                   className="swatch inline-block h-8 w-8 shrink-0 rounded-full"
@@ -310,7 +310,7 @@ export default function BarcodeScanner() {
                     {CATEGORY_LABEL[p.category]} ・ ¥{p.price_yen.toLocaleString()}
                   </span>
                   {sameMaker && (
-                    <span className="mt-0.5 block text-xs font-bold text-brand-600">
+                    <span className="mt-0.5 block text-xs font-bold text-brand-fg">
                       同じ事業者コード
                     </span>
                   )}

@@ -3,9 +3,9 @@ import { Check, CircleAlert, HelpCircle } from "lucide-react";
 import type { Fit } from "@/lib/fit";
 
 const TONE: Record<Fit["verdict"], { box: string; text: string }> = {
-  good: { box: "border-emerald-200 bg-emerald-50", text: "text-emerald-900" },
-  caution: { box: "border-amber-200 bg-amber-50", text: "text-amber-900" },
-  unknown: { box: "border-ink-200 bg-white", text: "text-ink-900" },
+  good: { box: "border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40", text: "text-emerald-900 dark:text-emerald-100" },
+  caution: { box: "border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40", text: "text-amber-900 dark:text-amber-100" },
+  unknown: { box: "border-ink-200 bg-surface", text: "text-ink-900" },
 };
 
 const ICON = {
@@ -32,9 +32,9 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
             <span
               className={
                 r.tone === "plus"
-                  ? "text-emerald-600"
+                  ? "text-emerald-600 dark:text-emerald-400"
                   : r.tone === "minus"
-                    ? "text-amber-600"
+                    ? "text-amber-600 dark:text-amber-400"
                     : "text-ink-400"
               }
             >
@@ -57,7 +57,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
       )}
 
       {!hasProfile && (
-        <Link href="/settings" className="mt-3 inline-block text-xs font-bold text-brand-600">
+        <Link href="/settings" className="mt-3 inline-block text-xs font-bold text-brand-fg">
           肌の状態と肌の色を登録する
         </Link>
       )}

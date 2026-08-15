@@ -47,7 +47,7 @@ export default function ProductList({
             type="button"
             onClick={loadMore}
             disabled={pending}
-            className="rounded-full border border-ink-200 bg-white px-5 py-2.5 text-sm font-bold disabled:opacity-50"
+            className="rounded-full border border-ink-200 bg-surface px-5 py-2.5 text-sm font-bold disabled:opacity-50"
           >
             {pending ? "読み込み中…" : "もっと見る"}
           </button>

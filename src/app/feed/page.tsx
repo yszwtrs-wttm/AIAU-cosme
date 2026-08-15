@@ -34,7 +34,7 @@ export default async function FeedPage() {
         {(reviews ?? []).map((r) => {
           const images = [...(r.review_images ?? [])].sort((a, b) => a.pos - b.pos);
           return (
-            <article key={r.id} className="overflow-hidden rounded-2xl border border-ink-200 bg-white">
+            <article key={r.id} className="overflow-hidden rounded-2xl border border-ink-200 bg-surface">
               {images.length > 0 && (
                 <div className="flex gap-1 overflow-x-auto">
                   {images.map((img) => (
@@ -56,7 +56,7 @@ export default async function FeedPage() {
                     size="sm"
                   />
                   {r.profiles?.handle ? (
-                    <Link href={`/u/${r.profiles.handle}`} className="font-bold hover:text-brand-600">
+                    <Link href={`/u/${r.profiles.handle}`} className="font-bold hover:text-brand-fg">
                       {r.profiles.display_name}
                     </Link>
                   ) : (
@@ -64,7 +64,7 @@ export default async function FeedPage() {
                   )}
                   <span className="text-amber-500">{"★".repeat(r.rating)}</span>
                 </div>
-                <Link href={`/products/${r.product_id}`} className="block text-sm font-bold hover:text-brand-600">
+                <Link href={`/products/${r.product_id}`} className="block text-sm font-bold hover:text-brand-fg">
                   {r.products?.brands?.name} {r.products?.name}
                 </Link>
                 <p className="text-sm leading-relaxed">{r.body}</p>

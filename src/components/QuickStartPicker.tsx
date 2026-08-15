@@ -27,7 +27,7 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
     setSelected((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   return (
-    <details className="rounded-2xl border border-ink-200 bg-white">
+    <details className="rounded-2xl border border-ink-200 bg-surface">
       <summary className="cursor-pointer px-5 py-4 font-display text-lg font-bold">
         リストから選んで登録
       </summary>
@@ -40,7 +40,7 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
 
         {Object.entries(groups).map(([category, items]) => (
           <div key={category} className="space-y-2">
-            <div className="text-xs font-bold text-brand-600">
+            <div className="text-xs font-bold text-brand-fg">
               {CATEGORY_LABEL[category as Category]}
             </div>
             <div className="flex flex-wrap gap-2">
@@ -52,7 +52,7 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
                     type="button"
                     onClick={() => toggle(p.id)}
                     className={`flex items-center gap-2 rounded-2xl border px-2.5 py-2 text-left text-xs ${
-                      on ? "border-brand-400 bg-brand-50" : "border-brand-100 bg-white"
+                      on ? "border-brand-400 bg-brand-50" : "border-brand-100 bg-surface"
                     }`}
                   >
                     <ProductThumb
@@ -66,7 +66,7 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
                       <span className="block text-[10px] text-ink-400">{p.brands?.name}</span>
                       <span className="block max-w-40 truncate font-bold">{p.name}</span>
                     </span>
-                    {on && <Check size={14} className="text-brand-600" />}
+                    {on && <Check size={14} className="text-brand-fg" />}
                   </button>
                 );
               })}
@@ -74,7 +74,7 @@ export default function QuickStartPicker({ products }: { products: Product[] }) 
           </div>
         ))}
 
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
 
         <button
           type="button"

@@ -95,11 +95,11 @@ export default function PasswordSettings({ hasPassword }: { hasPassword: boolean
           >
             {busy ? "設定中…" : hasPassword ? "変更する" : "パスワードを設定する"}
           </button>
-          {error && <p className="text-xs text-red-600">{error}</p>}
-          {message && <p className="text-xs text-emerald-600">{message}</p>}
+          {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+          {message && <p className="text-xs text-emerald-600 dark:text-emerald-400">{message}</p>}
         </div>
       )}
-      {!open && message && <p className="mt-2 text-xs text-emerald-600">{message}</p>}
+      {!open && message && <p className="mt-2 text-xs text-emerald-600 dark:text-emerald-400">{message}</p>}
     </section>
   );
 }

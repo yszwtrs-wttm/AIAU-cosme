@@ -58,7 +58,7 @@ function LandingPage({ products }: { products: Product[] }) {
     <div className="space-y-10">
       <section className="overflow-hidden rounded-3xl bg-brand-50 px-5 py-8 sm:px-10 sm:py-12">
         <div className="max-w-2xl">
-          <p className="mb-3 text-sm font-bold tracking-wide text-brand-600">KAWANAI</p>
+          <p className="mb-3 text-sm font-bold tracking-wide text-brand-fg">KAWANAI</p>
           <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl">
             そのコスメ、
             <br />
@@ -71,19 +71,19 @@ function LandingPage({ products }: { products: Product[] }) {
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
               href="/login?mode=signup"
-              className="flex items-center gap-1.5 rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-white"
+              className="flex items-center gap-1.5 rounded-full bg-strong px-5 py-3 text-sm font-bold text-white"
             >
               はじめる <ArrowRight size={16} />
             </Link>
             <Link
               href="/login"
-              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-surface px-5 py-3 text-sm font-bold"
             >
               ログイン
             </Link>
             <Link
               href="/search"
-              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-surface px-5 py-3 text-sm font-bold"
             >
               ログインせずに探す <Search size={16} />
             </Link>
@@ -122,7 +122,7 @@ function LandingPage({ products }: { products: Product[] }) {
               <h2 className="font-display text-2xl font-bold">人気の商品を少しだけ</h2>
               <p className="mt-1 text-sm text-ink-600">気になるものから、まずは見てみる。</p>
             </div>
-            <Link href="/search" className="shrink-0 text-sm font-bold text-brand-600">
+            <Link href="/search" className="shrink-0 text-sm font-bold text-brand-fg">
               すべて見る <ArrowRight className="inline" size={14} />
             </Link>
           </div>
@@ -147,8 +147,8 @@ function FeatureCard({
   text: string;
 }) {
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-4">
-      <span className="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-600">
+    <div className="rounded-2xl border border-ink-200 bg-surface p-4">
+      <span className="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-fg">
         {icon}
       </span>
       <h3 className="font-bold">{title}</h3>
@@ -189,7 +189,7 @@ function PersonalizedHome({
               <h2 className="font-display text-lg font-bold">あなたに合いそうなもの</h2>
               <p className="text-xs text-ink-400">登録した肌の状態・肌の色と、成分表・色番号から選んでいます。</p>
             </div>
-            <Link href="/search" className="shrink-0 text-xs font-bold text-brand-600">
+            <Link href="/search" className="shrink-0 text-xs font-bold text-brand-fg">
               商品を探す
             </Link>
           </div>
@@ -205,34 +205,34 @@ function PersonalizedHome({
               ))}
             </div>
           ) : (
-            <p className="rounded-2xl border border-ink-200 bg-white p-4 text-sm text-ink-600">
+            <p className="rounded-2xl border border-ink-200 bg-surface p-4 text-sm text-ink-600">
               条件に合う商品をまだ見つけられませんでした。検索から気になる商品を探してみてください。
             </p>
           )}
         </section>
       ) : (
-        <section className="rounded-2xl border border-ink-200 bg-white p-5">
+        <section className="rounded-2xl border border-ink-200 bg-surface p-5">
           <p className="font-bold">肌の状態と肌の色を登録すると、合いそうなものを出せます</p>
           <p className="mt-1 text-xs text-ink-600">
             登録は2項目だけです。手持ちのコスメが0件でも判定できます。
           </p>
-          <Link href="/settings" className="mt-3 inline-block text-sm font-bold text-brand-600">
+          <Link href="/settings" className="mt-3 inline-block text-sm font-bold text-brand-fg">
             肌情報を登録する <ArrowRight className="inline" size={14} />
           </Link>
         </section>
       )}
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-5">
           <div className="flex items-center gap-2 text-sm font-bold">
-            <Heart size={17} className="text-brand-600" /> Myポーチの状況
+            <Heart size={17} className="text-brand-fg" /> Myポーチの状況
           </div>
           <p className="mt-3 font-display text-3xl font-bold tabular-nums">{stashCount}点</p>
-          <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
+          <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-fg">
             Myポーチを見る <ArrowRight className="inline" size={14} />
           </Link>
         </div>
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-5">
           <div className="text-sm font-bold">すぐ使える機能</div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
             <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />

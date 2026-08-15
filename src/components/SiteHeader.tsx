@@ -17,7 +17,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
       ];
 
   return (
-    <header className="sticky top-0 z-20 border-b border-ink-200 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-ink-200 bg-surface/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
         <Link href="/" prefetch className="flex items-center gap-2">
           <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-600 text-white">
@@ -29,7 +29,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
 
         <nav className="ml-auto hidden items-center gap-4 text-sm text-ink-600 md:flex">
           {navLinks.map(({ href, label }) => (
-            <Link key={href} href={href} prefetch className="hover:text-brand-600">
+            <Link key={href} href={href} prefetch className="hover:text-brand-fg">
               {label}
             </Link>
           ))}
@@ -39,7 +39,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
           <Link
             href={profile ? "/me" : "/settings"}
             prefetch
-            className="ml-auto flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-2 py-1 text-sm md:ml-3"
+            className="ml-auto flex items-center gap-2 rounded-full border border-brand-200 bg-surface/80 px-2 py-1 text-sm md:ml-3"
           >
             <Avatar
               name={profile?.display_name ?? ""}

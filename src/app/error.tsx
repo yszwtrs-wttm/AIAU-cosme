@@ -23,14 +23,14 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <button
           type="button"
           onClick={reset}
-          className="flex items-center gap-1.5 rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-white"
+          className="flex items-center gap-1.5 rounded-full bg-strong px-5 py-3 text-sm font-bold text-white"
         >
           <RefreshCw size={16} />
           再試行する
         </button>
         <Link
           href="/search"
-          className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+          className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-surface px-5 py-3 text-sm font-bold"
         >
           <Search size={16} />
           商品を探す

@@ -31,13 +31,13 @@ export default function GlobalError({
             <button
               type="button"
               onClick={reset}
-              className="rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-white"
+              className="rounded-full bg-strong px-5 py-3 text-sm font-bold text-white"
             >
               再読み込みする
             </button>
             <Link
               href="/"
-              className="rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+              className="rounded-full border border-ink-200 bg-surface px-5 py-3 text-sm font-bold"
             >
               トップへ
             </Link>
