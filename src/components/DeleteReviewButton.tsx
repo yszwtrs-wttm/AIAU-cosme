@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { deleteReview } from "@/app/actions";
+import { japaneseError } from "@/lib/errors";
 
 /** マイページの「書いた口コミ」から誤投稿を消せるようにする。 */
 export default function DeleteReviewButton({ reviewId }: { reviewId: number }) {
@@ -22,7 +23,7 @@ export default function DeleteReviewButton({ reviewId }: { reviewId: number }) {
           startTransition(async () => {
             const res = await deleteReview(reviewId);
             if (!res.ok) {
-              setError(res.error ?? "削除できませんでした");
+              setError(japaneseError(res.error, "削除できませんでした"));
               return;
             }
             router.refresh();
