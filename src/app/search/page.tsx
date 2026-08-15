@@ -1,35 +1,25 @@
 import Link from "next/link";
 import { Search } from "lucide-react";
-import ProductCard from "@/components/ProductCard";
+import ProductList from "@/components/ProductList";
 import RecentlyViewed from "@/components/RecentlyViewed";
 import SearchMemory from "@/components/SearchMemory";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
-import { judgeFit } from "@/lib/fit";
+import {
+  PAGE_SIZE,
+  SORT_OPTIONS,
+  parseSort,
+  searchProducts,
+  withFitOrder,
+  type ProductQuery,
+  type ProductSort,
+} from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORY_LABEL, type Category, type Product, type ProductScore } from "@/lib/types";
+import { CATEGORY_LABEL, type Category } from "@/lib/types";
 
 const CATEGORIES: Category[] = ["lip", "eyeshadow", "foundation", "shampoo", "treatment"];
-const PRODUCT_SELECT =
-  "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 const CHIP = "rounded-full border px-3 py-1.5 text-sm transition";
 const CHIP_ON = "border-ink-900 bg-ink-900 text-white";
 const CHIP_OFF = "border-ink-200 bg-white text-ink-600 hover:border-ink-400";
-
-type Sort = "recommended" | "new" | "cheap" | "expensive" | "rating";
-
-const SORT_OPTIONS: { value: Sort; label: string }[] = [
-  { value: "recommended", label: "おすすめ" },
-  { value: "new", label: "新着" },
-  { value: "cheap", label: "安い順" },
-  { value: "expensive", label: "高い順" },
-  { value: "rating", label: "評価順" },
-];
-
-function parseSort(value?: string): Sort {
-  return SORT_OPTIONS.some((option) => option.value === value)
-    ? (value as Sort)
-    : "recommended";
-}
 
 function filterQuery({
   q,
@@ -40,7 +30,7 @@ function filterQuery({
   q?: string;
   category?: string;
   mens?: string;
-  sort?: Sort;
+  sort?: ProductSort;
 }) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
@@ -67,76 +57,35 @@ export default async function SearchPage({
   const realUser = user && isRealAccount(user) ? user : null;
   const real = Boolean(realUser);
 
-  let query = supabase.from("products").select(PRODUCT_SELECT);
-  if (params.category) query = query.eq("category", params.category);
-  if (params.mens === "1") query = query.eq("is_mens", true);
-  if (params.q) query = query.ilike("name", `%${params.q}%`);
-  if (sort === "new") {
-    query = query.order("created_at", { ascending: false }).order("id", { ascending: false });
-  }
+  const query: ProductQuery = {
+    q: params.q,
+    category: params.category,
+    mens: params.mens === "1",
+    sort,
+    limit: PAGE_SIZE,
+  };
 
-  const [
-    { data, error },
-    { data: scores },
-    profile,
-    { data: allergenRows },
-    { data: ownedRows },
-  ] = await Promise.all([
-    query.returns<Product[]>(),
-    supabase.from("product_score").select("*").returns<ProductScore[]>(),
+  const [page, profile, { count: allergenCount }, { count: ownedCount }] = await Promise.all([
+    searchProducts(supabase, query),
     sort === "recommended" && real ? getMyProfile() : Promise.resolve(null),
     sort === "recommended" && realUser
-      ? supabase.from("profile_allergens").select("ingredient_id").eq("user_id", realUser.id)
-      : Promise.resolve({ data: null }),
+      ? supabase
+          .from("profile_allergens")
+          .select("ingredient_id", { count: "exact", head: true })
+          .eq("user_id", realUser.id)
+      : Promise.resolve({ count: 0 }),
     sort === "recommended" && realUser
-      ? supabase.from("user_items").select("product_id").eq("user_id", realUser.id)
-      : Promise.resolve({ data: null }),
+      ? supabase
+          .from("user_items")
+          .select("product_id", { count: "exact", head: true })
+          .eq("user_id", realUser.id)
+      : Promise.resolve({ count: 0 }),
   ]);
 
-  const rank = new Map((scores ?? []).map((score) => [score.product_id, score.ranked_rating ?? 0]));
-  const allergenIds = (allergenRows ?? []).map((row) => row.ingredient_id);
-  const { data: allergenMaster } =
-    real && allergenIds.length > 0
-      ? await supabase.from("ingredients_master").select("id,inci").in("id", allergenIds)
-      : { data: [] };
-  const avoidedInci = new Set((allergenMaster ?? []).map((ingredient) => ingredient.inci.toUpperCase()));
-  const ownedIds = new Set((ownedRows ?? []).map((row) => row.product_id));
   const hasSkinInfo = Boolean(profile?.skin_type || profile?.skin_tone_hex);
-  const hasPersonalizationMaterial = hasSkinInfo || avoidedInci.size > 0 || ownedIds.size > 0;
-  const recommendationScores =
-    sort === "recommended"
-      ? new Map(
-          (data ?? []).map((product) => {
-            const fitScore = hasSkinInfo
-              ? { good: 3, unknown: 0, caution: -3 }[judgeFit(product, profile).verdict]
-              : 0;
-            const allergenScore = product.ingredients.some((ingredient) =>
-              avoidedInci.has(ingredient.toUpperCase()),
-            )
-              ? -10
-              : 0;
-            const ownedScore = ownedIds.has(product.id) ? -2 : 0;
-            return [
-              product.id,
-              fitScore + allergenScore + ownedScore + (rank.get(product.id) ?? 0),
-            ];
-          }),
-        )
-      : null;
-
-  const products = [...(data ?? [])].sort((a, b) => {
-    if (sort === "new") return 0;
-    if (sort === "cheap") return a.price_yen - b.price_yen || b.id - a.id;
-    if (sort === "expensive") return b.price_yen - a.price_yen || b.id - a.id;
-    if (sort === "rating") return (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0) || b.id - a.id;
-
-    return (
-      (recommendationScores?.get(b.id) ?? 0) -
-        (recommendationScores?.get(a.id) ?? 0) ||
-      (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0) ||
-      b.id - a.id
-    );
-  });
+  const hasPersonalizationMaterial =
+    hasSkinInfo || (allergenCount ?? 0) > 0 || (ownedCount ?? 0) > 0;
+  const products = sort === "recommended" ? withFitOrder(page.products, profile) : page.products;
 
   const description =
     sort === "new"
@@ -176,7 +125,7 @@ export default async function SearchPage({
               type="search"
               name="q"
               defaultValue={params.q ?? ""}
-              placeholder="商品名で探す"
+              placeholder="商品名・ブランド名で探す"
               className="w-full rounded-full border border-ink-200 bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
             />
           </label>
@@ -245,17 +194,18 @@ export default async function SearchPage({
 
       <RecentlyViewed />
 
-      {params.q && <p className="text-sm text-ink-600">「{params.q}」の検索結果：{products.length}件</p>}
-      {error && (
+      {params.q && <p className="text-sm text-ink-600">「{params.q}」の検索結果：{page.total}件</p>}
+      {page.error && (
         <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-          商品を取得できませんでした: {error.message}
+          商品を取得できませんでした: {page.error}
         </p>
       )}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      <ProductList
+        key={`${params.q ?? ""}|${params.category ?? ""}|${params.mens ?? ""}|${sort}`}
+        initial={products}
+        total={page.total}
+        query={query}
+      />
     </div>
   );
 }
