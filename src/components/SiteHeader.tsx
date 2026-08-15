@@ -47,7 +47,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
               size="sm"
             />
             <span className="max-w-24 truncate sm:max-w-48">
-              {profile?.display_name ?? "お試しで使っています"}
+              {profile?.display_name ?? "名前未設定"}
             </span>
           </Link>
         ) : (

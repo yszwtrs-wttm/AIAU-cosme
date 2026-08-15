@@ -13,6 +13,7 @@ export default async function MyPage() {
   const supabase = await createClient();
   const user = await getMyUser();
   const profile = await getMyProfile();
+  const real = isRealAccount(user);
 
   const [{ data: stash }, { data: myReviews }] = await Promise.all([
     supabase
@@ -44,10 +45,18 @@ export default async function MyPage() {
         />
         <div className="min-w-0 flex-1">
           <div className="font-display text-2xl font-bold">
-            {profile?.display_name ?? "お試しで使っています"}
+            {profile?.display_name ?? (real ? "名前未設定" : "お試しで使っています")}
           </div>
           <div className="text-xs text-ink-400">
-            {profile ? `@${profile.handle}` : "ログインすると、口コミが書けてポーチを引き継げます"}
+            {profile ? (
+              `@${profile.handle}`
+            ) : real ? (
+              <Link href="/settings" className="hover:text-brand-600">
+                プロフィールを作成すると、口コミを書いたり、ポーチを引き継げます
+              </Link>
+            ) : (
+              "ログインすると、口コミが書けてポーチを引き継げます"
+            )}
           </div>
           {profile?.personal_color && (
             <div className="mt-1 text-xs text-brand-700">
@@ -59,13 +68,13 @@ export default async function MyPage() {
           )}
         </div>
         <Link
-          href={isRealAccount(user) ? "/settings" : "/login"}
+          href={real ? "/settings" : "/login"}
           className="flex items-center gap-1.5 rounded-full border border-ink-200 px-4 py-2 text-sm font-bold text-brand-600"
         >
-          {isRealAccount(user) ? <Settings size={15} /> : null}
-          {isRealAccount(user) ? "設定" : "ログイン"}
+          {real ? <Settings size={15} /> : null}
+          {real ? (profile ? "設定" : "プロフィール作成") : "ログイン"}
         </Link>
-        {isRealAccount(user) && <LogoutButton />}
+        {real && <LogoutButton />}
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2">
