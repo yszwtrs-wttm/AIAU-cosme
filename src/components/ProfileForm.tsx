@@ -7,21 +7,13 @@ import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
 import {
   PERSONAL_COLOR_LABEL,
+  SKIN_TONES,
   SKIN_TYPE_LABEL,
   type IngredientMaster,
   type PersonalColor,
   type Profile,
   type SkinType,
 } from "@/lib/types";
-
-const SKIN_TONES = [
-  { hex: "#f6e0d2", label: "とても明るい" },
-  { hex: "#efd0bc", label: "明るい" },
-  { hex: "#e2b899", label: "標準（黄より）" },
-  { hex: "#dbb098", label: "標準（赤より）" },
-  { hex: "#c69476", label: "少し暗い" },
-  { hex: "#a8734f", label: "暗い" },
-];
 
 const HUES = [330, 300, 260, 200, 160, 20];
 
@@ -142,7 +134,8 @@ export default function ProfileForm({
             return;
           }
           setMessage("保存しました");
-          router.push("/me");
+          // 作ったばかりのときは、そのまま初回オンボーディングへ送る。
+          router.push(profile ? "/me" : "/onboarding");
           router.refresh();
         });
       }}

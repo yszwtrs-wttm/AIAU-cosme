@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   ArrowRight,
   Camera,
@@ -38,6 +39,10 @@ export default async function Home() {
   if (!isRealAccount(user)) {
     return <LandingPage products={await getRankedProducts(supabase)} />;
   }
+
+  const firstProfile = await getMyProfile();
+  // 初回は3ステップのウィザードへ。「あとでやる」や完了で done_at が入れば、以降は出さない。
+  if (firstProfile && !firstProfile.onboarding_done_at) redirect("/onboarding");
 
   const [{ data: products }, { data: scores }, { count: stashCount }, profile] =
     await Promise.all([
