@@ -25,6 +25,16 @@ export const metadata: Metadata = {
   title: "KAWANAI — そのコスメ、もう持ってるかも",
   description:
     "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
+  manifest: "/manifest.webmanifest",
+  applicationName: "KAWANAI",
+  // 古い iOS Safari は manifest の display を見ないので、standalone 指定を別に持たせる。
+  appleWebApp: {
+    capable: true,
+    title: "KAWANAI",
+    statusBarStyle: "default",
+  },
+  // Next は mobile-web-app-capable しか出さないが、古い iOS はこちらしか見ない。
+  other: { "apple-mobile-web-app-capable": "yes" },
 };
 
 // スマホ利用が前提なので、ノッチ端末でも下タブが安全領域に収まるようにする。
@@ -32,6 +42,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#d92668",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -44,8 +55,10 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <ToastProvider>
           <AnonAuth />
           <SiteHeader isRealAccount={real} />
-          <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">{children}</main>
-          <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-28 text-[11px] text-ink-400 md:pb-10">
+          <main className="mx-auto max-w-5xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5 md:pb-14">
+            {children}
+          </main>
+          <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] text-[11px] text-ink-400 md:pb-10">
             <p>
               デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
             </p>
