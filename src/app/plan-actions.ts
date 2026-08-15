@@ -1,8 +1,23 @@
 "use server";
 
-import { buildRulePlan, type Plan } from "@/lib/makeup";
+import { revalidatePath } from "next/cache";
+import { isRealAccount } from "@/lib/auth";
+import { buildRulePlan, type Plan, type PlanStep } from "@/lib/makeup";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
+
+/** LLM の答えは商品名の文字列なので、手持ちから同じ商品を引き当てて id を付ける。 */
+function attachProductIds(steps: PlanStep[], products: Product[]): PlanStep[] {
+  const norm = (s: string) => s.toLowerCase().replace(/[\s　]/g, "");
+  return steps.map((step) => {
+    const label = norm(step.product);
+    const hit = products.find((p) => {
+      const name = norm(p.name);
+      return label.includes(name) || name.includes(label);
+    });
+    return hit ? { ...step, product_id: hit.id } : step;
+  });
+}
 
 /**
  * 手持ちだけで組めるメイク手順を返す。
@@ -11,11 +26,16 @@ import type { Product } from "@/lib/types";
  */
 export async function generateMakeupPlan(request: string): Promise<Plan> {
   const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user) return buildRulePlan([], request);
+
   const { data } = await supabase
     .from("user_items")
     .select(
       "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name))",
     )
+    // 公開ポーチは他人の行も読めるので、提案の候補は自分の手持ちだけに絞る。
+    .eq("user_id", userData.user.id)
     .returns<{ products: Product }[]>();
 
   const products = (data ?? []).map((r) => r.products).filter(Boolean);
@@ -50,8 +70,36 @@ export async function generateMakeupPlan(request: string): Promise<Plan> {
     const json = await res.json();
     const parsed = JSON.parse(json.choices[0].message.content) as Omit<Plan, "source">;
     if (!Array.isArray(parsed.steps) || parsed.steps.length === 0) return fallback;
-    return { ...parsed, source: "llm" };
+    return { ...parsed, steps: attachProductIds(parsed.steps, products), source: "llm" };
   } catch {
     return fallback;
   }
+}
+
+/**
+ * 「この組み合わせで使った」の記録。日付とアイテムを残し、手持ちの使用回数に足す。
+ * 提案が当たったかどうかを後から見るために、そのときの要望も一緒に残す。
+ */
+export async function logMakeup(
+  productIds: number[],
+  request?: string,
+  usedOn?: string,
+): Promise<{ ok: boolean; error?: string }> {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData.user || !isRealAccount(userData.user)) {
+    return { ok: false, error: "記録にはアカウント登録が必要です" };
+  }
+  if (productIds.length === 0) {
+    return { ok: false, error: "記録するアイテムがありません" };
+  }
+
+  const { error } = await supabase.rpc("log_makeup", {
+    p_product_ids: productIds,
+    p_request: request ?? undefined,
+    p_used_on: usedOn ?? undefined,
+  });
+
+  revalidatePath("/stash");
+  return { ok: !error, error: error?.message };
 }

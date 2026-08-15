@@ -54,6 +54,33 @@ export type Product = {
   product_colors?: ProductColor[];
 };
 
+/** 手持ち1点と、その使用記録の集計。 */
+export type StashUsage = {
+  product_id: number;
+  use_count: number;
+  last_used_on: string | null;
+  products: Product;
+};
+
+/** 記録から集計した「よく使う色」。 */
+export type FrequentColor = {
+  product_id: number;
+  label: string;
+  color_hex: string;
+  use_count: number;
+};
+
+/** メイク記録1件（日付＋使ったアイテム）。 */
+export type MakeupLogEntry = {
+  id: number;
+  used_on: string;
+  request: string | null;
+  makeup_log_items: {
+    pos: number;
+    products: { id: number; name: string; brands: { name: string } | null } | null;
+  }[];
+};
+
 export type DupeRow = {
   product_id: number;
   brand: string;

@@ -121,6 +121,84 @@ export type Database = {
         }
         Relationships: []
       }
+      makeup_log_items: {
+        Row: {
+          log_id: number
+          pos: number
+          product_id: number
+        }
+        Insert: {
+          log_id: number
+          pos?: number
+          product_id: number
+        }
+        Update: {
+          log_id?: number
+          pos?: number
+          product_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "makeup_log_items_log_id_fkey"
+            columns: ["log_id"]
+            isOneToOne: false
+            referencedRelation: "makeup_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "makeup_log_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "makeup_log_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "makeup_log_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "makeup_log_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products_ranked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      makeup_logs: {
+        Row: {
+          created_at: string
+          id: number
+          request: string | null
+          used_on: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          request?: string | null
+          used_on?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          request?: string | null
+          used_on?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       product_colors: {
         Row: {
           hex: string
@@ -527,28 +605,34 @@ export type Database = {
         Row: {
           created_at: string
           id: number
+          last_used_on: string | null
           opened_at: string | null
           product_id: number
           remaining_pct: number
           source: string
+          use_count: number
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: never
+          last_used_on?: string | null
           opened_at?: string | null
           product_id: number
           remaining_pct?: number
           source?: string
+          use_count?: number
           user_id?: string
         }
         Update: {
           created_at?: string
           id?: never
+          last_used_on?: string | null
           opened_at?: string | null
           product_id?: number
           remaining_pct?: number
           source?: string
+          use_count?: number
           user_id?: string
         }
         Relationships: [
@@ -853,9 +937,26 @@ export type Database = {
         Args: { lab1: number[]; lab2: number[] }
         Returns: number
       }
+      log_makeup: {
+        Args: {
+          p_product_ids: number[]
+          p_request?: string
+          p_used_on?: string
+        }
+        Returns: number
+      }
       mod_deg: {
         Args: { x: number }
         Returns: number
+      }
+      my_frequent_colors: {
+        Args: { p_limit?: number }
+        Returns: {
+          color_hex: string
+          label: string
+          product_id: number
+          use_count: number
+        }[]
       }
       products_min_delta_e: {
         Args: { p_a: number; p_b: number }
