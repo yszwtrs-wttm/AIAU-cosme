@@ -149,20 +149,26 @@ def sql_text_array(items):
 
 
 products = []
-jan_counter = 4901234000000
+jan_counter = 490123400000
+
+
+def ean13(body12):
+    """EAN-13 のチェックディジットを付ける。印刷して実機で読めるようにするため。"""
+    total = sum(int(c) * (3 if i % 2 else 1) for i, c in enumerate(body12))
+    return body12 + str((10 - total % 10) % 10)
 
 
 def add_product(brand, name, category, price, volume, unit, ingredients,
                 shades=None, is_mens=False):
     """shades: [(色名, HEX)]。アイシャドウパレットのような複数色商品もここで表す。"""
     global jan_counter
-    jan_counter += 7
+    jan_counter += 1
     shades = shades or []
     products.append({
         "brand": brand, "name": name, "category": category, "price": price,
         "volume": volume, "unit": unit, "ingredients": ingredients,
         "shades": shades, "hex": shades[0][1] if shades else None,
-        "is_mens": is_mens, "jan": str(jan_counter),
+        "is_mens": is_mens, "jan": ean13(str(jan_counter)),
     })
 
 
