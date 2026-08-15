@@ -1,0 +1,33 @@
+name: 機能追加・改善の要望
+description: 新しい機能や、既存の画面を良くしたい要望を出す
+title: "[要望] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: want
+    attributes:
+      label: やりたいこと
+      placeholder: 例）ポーチのコスメを色味でフィルタできるようにしたい
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: 対象のページ / 機能
+      placeholder: 例）ポーチ、探す、プロフィール
+  - type: textarea
+    id: why
+    attributes:
+      label: なぜ必要か / 今どう困っているか
+      placeholder: 例）持っているコスメが増えると目当ての色を探すのが大変
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: どうなったら完成か（受け入れ条件）
+      placeholder: |
+        - ポーチ上部に色フィルタが出る
+        - 色を選ぶと該当コスメだけ表示される
+  - type: textarea
+    id: notes
+    attributes:
+      label: 参考画像・参考にしたいサービスなど

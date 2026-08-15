@@ -1,0 +1,81 @@
+name: Devin on issue
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  create-devin-session:
+    if: ${{ github.event.action == 'opened' || github.event.label.name == 'devin' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build prompt file
+        env:
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          REPO: ${{ github.repository }}
+          INSTRUCTIONS: |
+            手順:
+            1. Issueのタイトル・本文・コメントを読み、何が求められているか（バグ修正 / 機能追加 / 質問・相談）を判断する。
+            2. リポジトリをクローンして関連コードを調査し、原因や実装方針を特定する。DB調査が必要なら Supabase MCP を使う。
+            3. バグ修正・機能追加であれば、最小限で焦点の絞った変更を実装する。既存のコード規約・ディレクトリ構成に合わせること。スキーマ変更は supabase/migrations/ にマイグレーションとして追加する。
+            4. npm run lint と npx tsc --noEmit、npm run build が通ることを確認する。
+            5. 画面に関わる変更をした場合は、必ず npm run dev でアプリを起動しブラウザで該当画面を開いて動作確認し、変更後の画面のスクリーンショットを撮る（変更前との比較があれば両方）。撮ったスクリーンショットは ![説明](パス) の形でPR本文に貼り、レビュワーが見た目を確認できるようにする。動作確認できなかった場合はその理由をPR本文に明記する。
+            6. devin/issue-<Issue番号>-<短い説明> のブランチでPRを作成し、PR本文に Fixes #<Issue番号> を含める。main に直接pushしないこと。CIが失敗したら修正する。
+            7. 完了したらIssueに、原因・変更内容・PRのURL・未解決事項をコメントする。
+            8. 質問・相談・仕様が曖昧で実装方針が決められない場合は、コードを変更せず、調査結果と提案（考えられる原因、想定される修正案、必要な追加情報）をIssueにコメントする。推測でPRを作らないこと。
+        run: |
+          {
+            echo "リポジトリ ${REPO} のIssue #${ISSUE_NUMBER} に対応してください。"
+            echo "Issue URL: ${ISSUE_URL}"
+            echo "タイトル: ${ISSUE_TITLE}"
+            echo ""
+            echo "本文:"
+            echo "${ISSUE_BODY}"
+            echo ""
+            echo "${INSTRUCTIONS}"
+          } > prompt.txt
+
+      - name: Create Devin session
+        id: devin
+        env:
+          DEVIN_API_KEY: ${{ secrets.DEVIN_API_KEY }}
+          DEVIN_API_BASE: ${{ vars.DEVIN_API_BASE || 'https://aiau.devinenterprise.com/api' }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -eo pipefail
+          payload=$(jq -n --rawfile prompt prompt.txt \
+            --arg title "Issue #${ISSUE_NUMBER}: ${ISSUE_TITLE}" \
+            --arg repo "$REPO" \
+            --arg issue "$ISSUE_NUMBER" \
+            '{prompt: $prompt, title: $title, idempotent: true, max_acu_limit: 100,
+              tags: ["src:github", "repo:" + $repo, "issue:" + $issue]}')
+          if ! curl -sS --fail-with-body "$DEVIN_API_BASE/v1/sessions" \
+            -H "Authorization: Bearer $DEVIN_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "$payload" > resp.json; then
+            echo "Devin API request failed:"
+            cat resp.json
+            exit 1
+          fi
+          echo "url=$(jq -er '.url' resp.json)" >> "$GITHUB_OUTPUT"
+          echo "is_new_session=$(jq -r '.is_new_session // true' resp.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Comment session link on the issue
+        if: ${{ steps.devin.outputs.url != '' && steps.devin.outputs.is_new_session == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SESSION_URL: ${{ steps.devin.outputs.url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          printf 'Devinが対応を開始しました。\n\nセッション: %s\n' "$SESSION_URL" > body.md
+          gh issue comment "$ISSUE_NUMBER" --repo "$REPO" --body-file body.md

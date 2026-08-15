@@ -1,0 +1,51 @@
+name: バグ報告
+description: 動かない・表示がおかしいなどの不具合を報告する
+title: "[バグ] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        分かる範囲で埋めてください。空欄があっても構いません。
+  - type: textarea
+    id: summary
+    attributes:
+      label: 何が起きているか
+      placeholder: 例）ポーチにコスメを追加しても一覧に出てこない
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: 発生したページ / URL
+      placeholder: 例）/stash、https://...
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      placeholder: |
+        1. ログインする
+        2. 探すページで「そのコスメ自分に合ってる？」を開く
+        3. ...
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動作と実際の動作
+      placeholder: |
+        期待: 追加したコスメが一覧に表示される
+        実際: 一覧が空のまま
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 環境
+      options:
+        - スマホ (iPhone / Safari)
+        - スマホ (Android / Chrome)
+        - PC (Chrome)
+        - PC (Safari)
+        - その他・不明
+  - type: textarea
+    id: extra
+    attributes:
+      label: スクリーンショット・エラーメッセージなど
+      placeholder: 画像はここにドラッグ＆ドロップで貼れます

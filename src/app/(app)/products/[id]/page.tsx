@@ -7,7 +7,7 @@ import IngredientPanel from "@/components/IngredientPanel";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
-import { getMyProfile, isRealAccount } from "@/lib/auth";
+import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
@@ -28,9 +28,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   if (!Number.isFinite(productId)) notFound();
 
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getMyUser();
 
   const [
     { data: product },
