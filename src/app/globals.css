@@ -5,12 +5,14 @@
 :root {
   --font-sans: "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, -apple-system, sans-serif;
   --font-display: "Hiragino Mincho ProN", "Noto Serif JP", Georgia, serif;
+  --color-paper: oklch(98% 0.004 230);
+  --color-brand-600: oklch(48% 0.088 206);
 }
 
 body {
   font-family: var(--font-sans);
   /* 色は商品を見せるために使いたいので、背景は紙に近い無彩色にする。 */
-  background: #fdfcfc;
+  background: var(--color-paper);
 }
 
 /* 色を主役にしたいので、スウォッチには内側の影で厚みを出す。 */
@@ -20,11 +22,6 @@ body {
     inset 0 -4px 10px rgba(0, 0, 0, 0.18);
 }
 
-.glass {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(10px);
-}
-
 input[type="range"] {
-  accent-color: #ef4383;
+  accent-color: var(--color-brand-600);
 }

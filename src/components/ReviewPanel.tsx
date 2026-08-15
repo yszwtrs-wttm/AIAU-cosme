@@ -33,11 +33,11 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   const skin = review.profiles?.skin_type;
 
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-4">
+    <div className="rounded-xl border border-ink-200 bg-ink-0 p-4">
       <div className="flex items-center gap-2">
         <Avatar
           name={name}
-          hue={review.profiles?.avatar_hue ?? 330}
+          hue={review.profiles?.avatar_hue ?? 200}
           avatarUrl={review.profiles?.avatar_url}
           size="sm"
         />
@@ -60,7 +60,7 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
             await reportReview(review.id, "fake");
             setReported(true);
           }}
-          className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
+          className="flex shrink-0 items-center gap-1 text-[11px] text-ink-500 hover:text-brand-600 disabled:opacity-50"
         >
           <Flag size={12} /> {reported ? "報告しました" : "報告"}
         </button>
@@ -94,7 +94,7 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
               key={img.id}
               src={publicImageUrl(img.path)}
               alt=""
-              className="h-28 w-28 shrink-0 rounded-2xl object-cover"
+              className="h-28 w-28 shrink-0 rounded-xl object-cover"
             />
           ))}
         </div>
@@ -210,18 +210,18 @@ export default function ReviewPanel({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4">
+      <div className="flex items-center gap-4 rounded-xl border border-ink-200 bg-ink-0 p-4">
         <div>
-          <div className="font-display text-4xl font-bold tabular-nums">
+          <div className="font-mono text-4xl font-semibold tabular-nums">
             {rated?.toFixed(1) ?? "—"}
           </div>
-          <div className="text-[11px] text-ink-400">5点満点</div>
+          <div className="text-[11px] text-ink-500">5点満点</div>
         </div>
         <div className="text-sm text-ink-600">
           {summary?.review_count ? (
             <>
               点数に入っている口コミ {counted} 件
-              <p className="mt-0.5 text-[11px] text-ink-400">
+              <p className="mt-0.5 text-[11px] text-ink-500">
                 宣伝目的・使い回しと判断した投稿は点数に入れていません。実際に登録している人の声は、
                 少し重く見て平均を出しています。
               </p>
@@ -233,12 +233,12 @@ export default function ReviewPanel({
       </div>
 
       {hasViewerProfile && shown.some((s) => s.score > 0) && (
-        <p className="text-[11px] text-ink-400">あなたと肌が近い人の口コミを上に並べています。</p>
+        <p className="text-[11px] text-ink-500">あなたと肌が近い人の口コミを上に並べています。</p>
       )}
 
       {canPost ? (
         <form
-          className="space-y-3 rounded-2xl border border-ink-200 bg-white p-4"
+          className="space-y-3 rounded-xl border border-ink-200 bg-ink-0 p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (!body.trim()) return;
@@ -266,14 +266,14 @@ export default function ReviewPanel({
             onChange={(e) => setBody(e.target.value)}
             rows={3}
             placeholder="どんなときに使って、どう良かった（悪かった）かを書くと参考になります"
-            className="w-full rounded-2xl border border-brand-100 bg-white px-3 py-2 text-sm outline-none focus:border-brand-300"
+            className="w-full rounded-lg border border-brand-100 bg-ink-0 px-3 py-2 text-sm outline-none focus:border-brand-300"
           />
 
-          <div className="space-y-2 rounded-2xl bg-brand-50/60 p-3">
+          <div className="space-y-2 rounded-xl bg-brand-50/60 p-3">
             <div className="text-xs font-bold text-brand-700">使い心地（任意）</div>
             {axes.map((axis) => (
               <label key={axis.key} className="block">
-                <span className="flex justify-between text-[11px] text-ink-400">
+                <span className="flex justify-between text-[11px] text-ink-500">
                   <span>{axis.low}</span>
                   <span className="font-bold text-ink-900">{axis.label}</span>
                   <span>{axis.high}</span>
@@ -291,7 +291,7 @@ export default function ReviewPanel({
           </div>
 
           <div>
-            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-600">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand-200 bg-ink-0 px-3 py-1.5 text-xs font-medium text-brand-600">
               <ImagePlus size={14} /> 写真を追加（{files.length}/{MAX_IMAGES}）
               <input
                 ref={fileInput}
@@ -330,18 +330,18 @@ export default function ReviewPanel({
           <button
             type="submit"
             disabled={pending}
-            className="rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+            className="rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-ink-0 disabled:opacity-50"
           >
             {pending ? "投稿中…" : "投稿する"}
           </button>
         </form>
       ) : (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-ink-200 bg-white p-4 text-sm">
-          <Lock size={16} className="text-ink-400" />
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-ink-200 bg-ink-0 p-4 text-sm">
+          <Lock size={16} className="text-ink-500" />
           <span>口コミを書くにはログインが必要です。</span>
           <Link
             href="/login"
-            className="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-bold text-white"
+            className="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-bold text-ink-0"
           >
             ログイン
           </Link>

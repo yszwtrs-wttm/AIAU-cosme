@@ -23,7 +23,7 @@ const SKIN_TONES = [
   { hex: "#a8734f", label: "暗い" },
 ];
 
-const HUES = [330, 300, 260, 200, 160, 20];
+const HUES = [200, 170, 140, 220, 40, 20];
 
 export default function ProfileForm({
   profile,
@@ -43,7 +43,7 @@ export default function ProfileForm({
   const [personalColor, setPersonalColor] = useState<PersonalColor | "">(
     profile?.personal_color ?? "",
   );
-  const [hue, setHue] = useState(profile?.avatar_hue ?? 330);
+  const [hue, setHue] = useState(profile?.avatar_hue ?? 200);
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? null);
   const [stashPublic, setStashPublic] = useState(profile?.stash_public ?? true);
   const [selectedAllergenIds, setSelectedAllergenIds] = useState<number[]>(allergenIds);
@@ -119,7 +119,7 @@ export default function ProfileForm({
 
   return (
     <form
-      className="space-y-5 rounded-2xl border border-ink-200 bg-white p-5"
+      className="space-y-5 rounded-xl border border-ink-200 bg-ink-0 p-5"
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
@@ -183,7 +183,7 @@ export default function ProfileForm({
               <button
                 type="button"
                 onClick={() => setAvatarUrl(null)}
-                className="text-ink-400 underline"
+                className="text-ink-500 underline"
               >
                 デフォルトに戻す
               </button>
@@ -198,9 +198,9 @@ export default function ProfileForm({
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           placeholder="ニックネーム"
-          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
+          className="w-full rounded-lg border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
         />
-        <span className="text-[11px] text-ink-400">口コミには、この名前とアイコンが出ます。</span>
+        <span className="text-[11px] text-ink-500">口コミには、この名前とアイコンが出ます。</span>
       </label>
 
       <label className="block space-y-1">
@@ -209,9 +209,9 @@ export default function ProfileForm({
           value={handle}
           onChange={(e) => setHandle(e.target.value.toLowerCase())}
           placeholder="kawanai_user"
-          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
+          className="w-full rounded-lg border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
         />
-        <span className="text-[11px] text-ink-400">
+        <span className="text-[11px] text-ink-500">
           半角の小文字・数字・_ で3〜20文字。あとから変えられます。
         </span>
       </label>
@@ -222,13 +222,13 @@ export default function ProfileForm({
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={2}
-          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
+          className="w-full rounded-lg border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
         />
       </label>
 
       <div className="space-y-1">
         <span className="text-sm font-bold">肌のトーン（任意）</span>
-        <p className="text-[11px] text-ink-400">
+        <p className="text-[11px] text-ink-500">
           選んでおくと、肌のトーンに近い色の商品を見つけやすくなります。
         </p>
         <div className="mt-1 flex flex-wrap gap-2">
@@ -240,7 +240,7 @@ export default function ProfileForm({
               className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] ${
                 skinTone === tone.hex
                   ? "border-brand-400 bg-brand-50"
-                  : "border-brand-100 bg-white"
+                  : "border-brand-100 bg-ink-0"
               }`}
             >
               <span className="swatch inline-block h-5 w-5 rounded-full" style={{ background: tone.hex }} />
@@ -261,7 +261,7 @@ export default function ProfileForm({
               className={`rounded-full border px-3 py-1 text-[11px] ${
                 skinType === key
                   ? "border-brand-400 bg-brand-50 text-brand-700"
-                  : "border-brand-100 bg-white"
+                  : "border-brand-100 bg-ink-0"
               }`}
             >
               {SKIN_TYPE_LABEL[key]}
@@ -281,7 +281,7 @@ export default function ProfileForm({
               className={`rounded-full border px-3 py-1 text-[11px] ${
                 personalColor === key
                   ? "border-brand-400 bg-brand-50 text-brand-700"
-                  : "border-brand-100 bg-white"
+                  : "border-brand-100 bg-ink-0"
               }`}
             >
               {PERSONAL_COLOR_LABEL[key]}
@@ -292,7 +292,7 @@ export default function ProfileForm({
           <button
             type="button"
             onClick={() => setPersonalColor("")}
-            className="text-[11px] text-ink-400 underline"
+            className="text-[11px] text-ink-500 underline"
           >
             選択を解除
           </button>
@@ -302,7 +302,7 @@ export default function ProfileForm({
       <div className="space-y-2">
         <div>
           <span className="text-sm font-bold">避けたい成分（任意）</span>
-          <p className="text-[11px] text-ink-400">
+          <p className="text-[11px] text-ink-500">
             登録した成分が入っている商品に注意を表示します。
           </p>
         </div>
@@ -325,9 +325,9 @@ export default function ProfileForm({
           value={allergenQuery}
           onChange={(e) => setAllergenQuery(e.target.value)}
           placeholder="成分名またはINCI名で検索"
-          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
+        className="w-full rounded-lg border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
         />
-        <div className="max-h-48 overflow-y-auto rounded-2xl border border-ink-100">
+        <div className="max-h-48 overflow-y-auto rounded-lg border border-ink-100">
           {filteredIngredients.map((ingredient) => {
             const selected = selectedAllergenIds.includes(ingredient.id);
             return (
@@ -336,16 +336,16 @@ export default function ProfileForm({
                 type="button"
                 onClick={() => toggleAllergen(ingredient.id)}
                 className={`flex w-full items-center justify-between border-b border-ink-100 px-3 py-2 text-left text-xs last:border-b-0 ${
-                  selected ? "bg-brand-50 text-brand-700" : "bg-white"
+                  selected ? "bg-brand-50 text-brand-700" : "bg-ink-0"
                 }`}
               >
                 <span>{ingredient.name_ja || ingredient.inci}</span>
-                <span className="ml-2 text-[10px] text-ink-400">{ingredient.inci}</span>
+                <span className="ml-2 text-[10px] text-ink-500">{ingredient.inci}</span>
               </button>
             );
           })}
           {filteredIngredients.length === 0 && (
-            <p className="p-3 text-xs text-ink-400">一致する成分がありません。</p>
+            <p className="p-3 text-xs text-ink-500">一致する成分がありません。</p>
           )}
         </div>
       </div>
@@ -365,7 +365,7 @@ export default function ProfileForm({
       <button
         type="submit"
         disabled={pending || avatarBusy}
-        className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+        className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-ink-0 disabled:opacity-50"
       >
         {pending || avatarBusy ? "保存中…" : "保存する"}
       </button>

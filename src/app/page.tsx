@@ -2,13 +2,10 @@ import Link from "next/link";
 import {
   ArrowRight,
   Camera,
-  CircleDollarSign,
   Heart,
   Images,
   Palette,
   Search,
-  ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
@@ -72,9 +69,9 @@ export default async function Home() {
 function LandingPage({ products }: { products: Product[] }) {
   return (
     <div className="space-y-10">
-      <section className="overflow-hidden rounded-3xl bg-brand-50 px-5 py-8 sm:px-10 sm:py-12">
-        <div className="max-w-2xl">
-          <p className="mb-3 text-sm font-bold tracking-wide text-brand-600">KAWANAI</p>
+      <section className="border-y border-ink-200 px-1 py-8 sm:py-12">
+        <div className="max-w-3xl">
+          <p className="mb-3 font-mono text-xs font-semibold tracking-[0.18em] text-brand-600">KAWANAI</p>
           <h1 className="font-display text-4xl font-bold leading-tight sm:text-5xl">
             そのコスメ、
             <br />
@@ -87,19 +84,19 @@ function LandingPage({ products }: { products: Product[] }) {
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
               href="/login?mode=signup"
-              className="flex items-center gap-1.5 rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-white"
+              className="flex items-center gap-1.5 rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-ink-0"
             >
               はじめる <ArrowRight size={16} />
             </Link>
             <Link
               href="/login"
-              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-ink-0 px-5 py-3 text-sm font-bold"
             >
               ログイン
             </Link>
             <Link
               href="/search"
-              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-ink-0 px-5 py-3 text-sm font-bold"
             >
               ログインせずに探す <Search size={16} />
             </Link>
@@ -112,19 +109,19 @@ function LandingPage({ products }: { products: Product[] }) {
           <h2 className="font-display text-2xl font-bold">買う前に、3つの視点で確認</h2>
           <p className="mt-1 text-sm text-ink-600">「買わない」も含めて、自分で選べます。</p>
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-x-8 gap-y-5 sm:grid-cols-3">
           <FeatureCard
-            icon={<Sparkles size={20} />}
+            index="01"
             title="自分に合うか判定"
             text="成分と色から、肌の状態や肌の色に合いそうかを確認できます。"
           />
           <FeatureCard
-            icon={<CircleDollarSign size={20} />}
+            index="02"
             title="似たものを見つける"
             text="手持ちとの被りや、似ていてもっと手頃なものを見つけられます。"
           />
           <FeatureCard
-            icon={<ShieldCheck size={20} />}
+            index="03"
             title="口コミを見極める"
             text="信用できる口コミだけを集計して、商品の評判を見られます。"
           />
@@ -154,21 +151,19 @@ function LandingPage({ products }: { products: Product[] }) {
 }
 
 function FeatureCard({
-  icon,
+  index,
   title,
   text,
 }: {
-  icon: React.ReactNode;
+  index: string;
   title: string;
   text: string;
 }) {
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-4">
-      <span className="mb-3 grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-600">
-        {icon}
-      </span>
-      <h3 className="font-bold">{title}</h3>
-      <p className="mt-1.5 text-sm leading-relaxed text-ink-600">{text}</p>
+    <div className="border-t border-ink-200 pt-3">
+      <span className="font-mono text-xs font-semibold text-brand-600">{index}</span>
+      <h3 className="mt-4 font-display text-lg font-bold">{title}</h3>
+      <p className="mt-1.5 max-w-xs text-sm leading-relaxed text-ink-600">{text}</p>
     </div>
   );
 }
@@ -203,7 +198,7 @@ function PersonalizedHome({
           <div className="flex items-end justify-between gap-3">
             <div>
               <h2 className="font-display text-lg font-bold">あなたに合いそうなもの</h2>
-              <p className="text-xs text-ink-400">登録した肌の状態・肌の色と、成分表・色番号から選んでいます。</p>
+              <p className="text-xs text-ink-500">登録した肌の状態・肌の色と、成分表・色番号から選んでいます。</p>
             </div>
             <Link href="/search" className="shrink-0 text-xs font-bold text-brand-600">
               商品を探す
@@ -221,13 +216,13 @@ function PersonalizedHome({
               ))}
             </div>
           ) : (
-            <p className="rounded-2xl border border-ink-200 bg-white p-4 text-sm text-ink-600">
+            <p className="rounded-xl border border-ink-200 bg-ink-0 p-4 text-sm text-ink-600">
               条件に合う商品をまだ見つけられませんでした。検索から気になる商品を探してみてください。
             </p>
           )}
         </section>
       ) : (
-        <section className="rounded-2xl border border-ink-200 bg-white p-5">
+        <section className="rounded-xl border border-ink-200 bg-ink-0 p-5">
           <p className="font-bold">肌の状態と肌の色を登録すると、合いそうなものを出せます</p>
           <p className="mt-1 text-xs text-ink-600">
             登録は2項目だけです。手持ちのコスメが0件でも判定できます。
@@ -239,16 +234,16 @@ function PersonalizedHome({
       )}
 
       <section className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
+        <div className="rounded-xl border border-ink-200 bg-ink-0 p-5">
           <div className="flex items-center gap-2 text-sm font-bold">
             <Heart size={17} className="text-brand-600" /> Myポーチの状況
           </div>
-          <p className="mt-3 font-display text-3xl font-bold tabular-nums">{stashCount}点</p>
+          <p className="mt-3 font-mono text-3xl font-semibold tabular-nums">{stashCount}点</p>
           <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
             Myポーチを見る <ArrowRight className="inline" size={14} />
           </Link>
         </div>
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
+        <div className="rounded-xl border border-ink-200 bg-ink-0 p-5">
           <div className="text-sm font-bold">すぐ使える機能</div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
             <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />

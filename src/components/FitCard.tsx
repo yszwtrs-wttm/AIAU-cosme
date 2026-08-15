@@ -5,7 +5,7 @@ import type { Fit } from "@/lib/fit";
 const TONE: Record<Fit["verdict"], { box: string; text: string }> = {
   good: { box: "border-emerald-200 bg-emerald-50", text: "text-emerald-900" },
   caution: { box: "border-amber-200 bg-amber-50", text: "text-amber-900" },
-  unknown: { box: "border-ink-200 bg-white", text: "text-ink-900" },
+  unknown: { box: "border-ink-200 bg-ink-0", text: "text-ink-900" },
 };
 
 const ICON = {
@@ -20,7 +20,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
   const Icon = ICON[fit.verdict];
 
   return (
-    <div className={`rounded-2xl border p-4 ${tone.box}`}>
+    <div className={`rounded-xl border p-4 ${tone.box}`}>
       <div className={`flex items-center gap-2 text-base font-bold ${tone.text}`}>
         <Icon size={18} />
         {fit.headline}
@@ -35,7 +35,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
                   ? "text-emerald-600"
                   : r.tone === "minus"
                     ? "text-amber-600"
-                    : "text-ink-400"
+                    : "text-ink-500"
               }
             >
               {r.tone === "minus" ? "−" : r.tone === "plus" ? "＋" : "・"}
@@ -52,7 +52,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
             style={{ background: fit.shade.hex }}
           />
           <span className="font-bold">{fit.shade.shade_name}</span>
-          <span className="text-xs text-ink-400">肌の色にいちばん近い番号</span>
+          <span className="text-xs text-ink-500">肌の色にいちばん近い番号</span>
         </div>
       )}
 
@@ -62,7 +62,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
         </Link>
       )}
 
-      <p className="mt-3 text-[11px] leading-relaxed text-ink-400">
+      <p className="mt-3 text-[11px] leading-relaxed text-ink-500">
         成分表と色から言えることだけを書いています。肌に合うかは人によって違うので、心配な点は必ず現物で確かめてください。
       </p>
     </div>

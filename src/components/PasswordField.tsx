@@ -24,13 +24,13 @@ export default function PasswordField({
         autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-brand-100 px-3 py-2.5 pr-11 text-sm outline-none focus:border-brand-300"
+        className="w-full rounded-lg border border-brand-100 px-3 py-2.5 pr-11 text-sm outline-none focus:border-brand-300"
       />
       <button
         type="button"
         onClick={() => setShow((visible) => !visible)}
         aria-label={show ? "パスワードを隠す" : "パスワードを表示"}
-        className="absolute inset-y-0 right-3 text-ink-400"
+        className="absolute inset-y-0 right-3 text-ink-500"
       >
         {show ? <EyeOff size={17} /> : <Eye size={17} />}
       </button>

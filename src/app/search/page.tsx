@@ -10,8 +10,8 @@ const CATEGORIES: Category[] = ["lip", "eyeshadow", "foundation", "shampoo", "tr
 const PRODUCT_SELECT =
   "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 const CHIP = "rounded-full border px-3 py-1.5 text-sm transition";
-const CHIP_ON = "border-ink-900 bg-ink-900 text-white";
-const CHIP_OFF = "border-ink-200 bg-white text-ink-600 hover:border-ink-400";
+const CHIP_ON = "border-ink-900 bg-ink-900 text-ink-0";
+const CHIP_OFF = "border-ink-200 bg-ink-0 text-ink-600 hover:border-ink-400";
 
 type Sort = "recommended" | "new" | "cheap" | "expensive" | "rating";
 
@@ -156,14 +156,14 @@ export default async function SearchPage({
           <label className="relative min-w-0 flex-1">
             <Search
               size={16}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-500"
             />
             <input
               type="search"
               name="q"
               defaultValue={params.q ?? ""}
               placeholder="商品名で探す"
-              className="w-full rounded-full border border-ink-200 bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
+              className="w-full rounded-lg border border-ink-200 bg-ink-0 py-2.5 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
             />
           </label>
           {params.category && <input type="hidden" name="category" value={params.category} />}
@@ -171,7 +171,7 @@ export default async function SearchPage({
           {sort !== "recommended" && <input type="hidden" name="sort" value={sort} />}
           <button
             type="submit"
-            className="rounded-full bg-ink-900 px-4 py-2.5 text-sm font-bold text-white"
+            className="rounded-full bg-ink-900 px-4 py-2.5 text-sm font-bold text-ink-0"
           >
             検索
           </button>
@@ -200,7 +200,7 @@ export default async function SearchPage({
           </Link>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-ink-400">並び替え</span>
+          <span className="text-xs font-bold text-ink-500">並び替え</span>
           {SORT_OPTIONS.map((option) => (
             <Link
               key={option.value}
@@ -221,7 +221,7 @@ export default async function SearchPage({
       </section>
 
       {sort === "recommended" && !hasPersonalizationMaterial && (
-        <p className="rounded-2xl border border-ink-200 bg-white p-4 text-sm text-ink-600">
+        <p className="rounded-xl border border-ink-200 bg-ink-0 p-4 text-sm text-ink-600">
           まだあなた向けに並べる材料がありません。{" "}
           <Link href={real ? "/settings" : "/login"} className="font-bold text-brand-600 underline">
             {real ? "肌情報や避けたい成分を登録する" : "ログインして自分向けに探す"}

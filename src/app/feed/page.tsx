@@ -33,7 +33,7 @@ export default async function FeedPage() {
         {(reviews ?? []).map((r) => {
           const images = [...(r.review_images ?? [])].sort((a, b) => a.pos - b.pos);
           return (
-            <article key={r.id} className="overflow-hidden rounded-2xl border border-ink-200 bg-white">
+            <article key={r.id} className="overflow-hidden rounded-xl border border-ink-200 bg-ink-0">
               {images.length > 0 && (
                 <div className="flex gap-1 overflow-x-auto">
                   {images.map((img) => (
@@ -51,7 +51,7 @@ export default async function FeedPage() {
                 <div className="flex items-center gap-2 text-xs">
                   <Avatar
                     name={r.profiles?.display_name ?? ""}
-                    hue={r.profiles?.avatar_hue ?? 330}
+                    hue={r.profiles?.avatar_hue ?? 200}
                     avatarUrl={r.profiles?.avatar_url}
                     size="sm"
                   />
