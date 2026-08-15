@@ -11,6 +11,7 @@
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
     "seed:gen": "python3 scripts/generate_seed.py > supabase/seed.sql",
+    "smoke:demo": "bash scripts/demo_smoke.sh",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

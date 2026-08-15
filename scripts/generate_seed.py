@@ -334,6 +334,32 @@ for brand, name, price, base, palette, dev in eye_specs:
                 formula + pigments, shades)
 
 
+# --- デモ用アカウント ---------------------------------------------------------
+# 審査員に見せる導線を固定するため、ポーチの中身まで決め打ちで入れる。
+# ここを変えるとデモ手順（README）と scripts/demo_smoke.sql も直す必要がある。
+DEMO_USER_ID = "d0000000-0000-4000-8000-000000000001"
+DEMO_EMAIL = "demo@kawanai.test"
+DEMO_PASSWORD = "kawanai-demo"
+DEMO_HANDLE = "kawanai_demo"
+
+# (ブランド, 商品名の先頭)。この5点がポーチに入る。
+DEMO_STASH = [
+    ("LUMINA", "グロウリップスティック"),      # 被り元（PRICO メルティリップと同処方・同色）
+    ("DAILY+", "うるおいリップ"),              # ポーチ内の被り相手
+    ("LUMINA", "スキンフィットファンデーション"),  # 安い代替（PRICO カバーリキッド）の対象
+    ("LUMINA", "デイリーアイパレット"),         # 色カバレッジの元になるパレット
+    ("GRIT", "スカルプシャンプー クール"),      # メンズ導線
+]
+
+
+def product_id(brand, name_prefix):
+    """seed.sql は identity を restart するので、挿入順 = products.id。"""
+    for idx, p in enumerate(products, start=1):
+        if p["brand"] == brand and p["name"].startswith(name_prefix):
+            return idx
+    raise SystemExit("デモ用の商品が見つからない: %s %s" % (brand, name_prefix))
+
+
 # --- 口コミ ------------------------------------------------------------------
 # 「サクラが湧いている商品」を1つ作る。文体が近い / 同日バースト / 同ブランド偏重 / PR表記 / 画像使い回し。
 SAKURA_TARGET_BRAND = "mode noir"
@@ -418,5 +444,53 @@ w("select refresh_ingredient_idf();")
 w("")
 w("-- 不正判定を初期化")
 w("select recompute_review_trust(id) from products;")
+w("")
+
+# --- デモ用アカウント + ポーチ -------------------------------------------------
+dupe_target = product_id("PRICO", "メルティリップ")
+cheaper_target = product_id("LUMINA", "スキンフィットファンデーション")
+coverage_target = product_id("PRICO", "9色アイパレット")
+sakura_target = product_id(SAKURA_TARGET_BRAND, SAKURA_TARGET_NAME)
+
+w("-- ---------------------------------------------------------------- デモ用アカウント")
+w("-- 審査員に見せる導線を固定する。ログインは %s / %s。" % (DEMO_EMAIL, DEMO_PASSWORD))
+w("--   被り        : /products/%d" % dupe_target)
+w("--   安い代替    : /products/%d" % cheaper_target)
+w("--   色カバレッジ: /products/%d" % coverage_target)
+w("--   サクラ除外  : /products/%d" % sakura_target)
+w("--   ポーチ      : /stash")
+w("delete from auth.users where id = %s;" % sql_str(DEMO_USER_ID))
+w("insert into auth.users (")
+w("  instance_id, id, aud, role, email, encrypted_password,")
+w("  email_confirmed_at, created_at, updated_at,")
+w("  raw_app_meta_data, raw_user_meta_data, is_anonymous,")
+w("  -- GoTrue は token 系の列を NULL で読めないので空文字で埋める。")
+w("  confirmation_token, recovery_token, email_change_token_new, email_change,")
+w("  email_change_token_current, phone_change, phone_change_token, reauthentication_token")
+w(") values (")
+w("  '00000000-0000-0000-0000-000000000000', %s, 'authenticated', 'authenticated'," % sql_str(DEMO_USER_ID))
+w("  %s, extensions.crypt(%s, extensions.gen_salt('bf'))," % (sql_str(DEMO_EMAIL), sql_str(DEMO_PASSWORD)))
+w("  now(), now(), now(),")
+w("  '{\"provider\": \"email\", \"providers\": [\"email\"]}'::jsonb, '{}'::jsonb, false,")
+w("  '', '', '', '', '', '', '', ''")
+w(");")
+w("")
+w("insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)")
+w("values (")
+w("  %s, %s," % (sql_str(DEMO_USER_ID), sql_str(DEMO_USER_ID)))
+w("  jsonb_build_object('sub', %s, 'email', %s, 'email_verified', true)," % (
+    sql_str(DEMO_USER_ID), sql_str(DEMO_EMAIL)))
+w("  'email', now(), now(), now()")
+w(");")
+w("")
+w("insert into profiles (user_id, handle, display_name, avatar_hue, bio, skin_tone_hex, skin_type, personal_color, stash_public) values")
+w("  (%s, %s, 'デモ用アカウント', 340, '審査用のデモアカウント。ポーチに5点入っています。', '#E8C4A2', 'combination', 'autumn', true);" % (
+    sql_str(DEMO_USER_ID), sql_str(DEMO_HANDLE)))
+w("")
+w("insert into user_items (user_id, product_id, source, remaining_pct) values")
+rows = []
+for brand, name_prefix in DEMO_STASH:
+    rows.append("  (%s, %d, 'quick', 80)" % (sql_str(DEMO_USER_ID), product_id(brand, name_prefix)))
+w(",\n".join(rows) + ";")
 
 print("\n".join(lines))
