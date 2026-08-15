@@ -9,6 +9,9 @@ import { z } from "zod";
 import { FEEL_KEYS, FEEL_MAX, FEEL_MIN } from "./feel";
 import type { PersonalColor, SkinType } from "./types";
 
+// 個別メッセージを書いていない項目も、既定のエラー文が日本語で返るようにする。
+z.config(z.locales.ja());
+
 export const REVIEW_BODY_MAX = 2000;
 const MAX_IMAGES = 4;
 
@@ -43,9 +46,10 @@ export const postReviewSchema = z.object({
     .trim()
     .min(1, "口コミの本文を入力してください")
     .max(REVIEW_BODY_MAX, `口コミは${REVIEW_BODY_MAX}文字以内で入力してください`),
+  // 送られてくる軸はカテゴリごとに違うので、既知の軸の部分集合を許す。
   feel: z
-    .record(
-      z.enum(FEEL_KEYS),
+    .partialRecord(
+      z.enum(FEEL_KEYS, { error: "使用感の軸名が不正です" }),
       z.number().int().min(FEEL_MIN, "使用感の値が範囲外です").max(FEEL_MAX, "使用感の値が範囲外です"),
     )
     .optional(),
