@@ -42,13 +42,16 @@ export default function UseUpFirstNotice({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs text-ink-400">{item.product.brands?.name}</span>
-                  <span className="block line-clamp-2 text-sm font-bold">{item.product.name}</span>
-                  <span className="block text-[11px] text-ink-600">
-                    {status.label}・残り{remainingLabel(item.remaining_pct)}
+                  {/* line-clamp は display を上書きするので block と併用しない */}
+                  <span className="line-clamp-2 text-sm font-bold">{item.product.name}</span>
+                  <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-600">
+                    <span className="rounded-full border border-amber-300 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                      {USE_UP_BADGE[status.state]}
+                    </span>
+                    <span>
+                      {status.label}・残り{remainingLabel(item.remaining_pct)}
+                    </span>
                   </span>
-                </span>
-                <span className="shrink-0 rounded-full border border-amber-300 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                  {USE_UP_BADGE[status.state]}
                 </span>
               </Link>
             </li>
