@@ -13,7 +13,7 @@
  * 数値は「これを過ぎたら危険」ではなく「そろそろ使い切りたい」の線引きとして扱う。
  */
 
-import { CATEGORY_LABEL, type Category } from "./types";
+import type { Category } from "./types";
 
 /** カテゴリ別・開封後に使い切りたい月数の目安。 */
 export const SHELF_LIFE_MONTHS: Record<Category, number> = {
