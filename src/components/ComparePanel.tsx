@@ -38,15 +38,15 @@ export default function ComparePanel({
 
   return (
     <div className="overflow-hidden rounded-2xl border-2 border-brand-500 bg-white">
-      <div className="grid grid-cols-[1fr_minmax(112px,0.9fr)_1fr] items-stretch gap-1 bg-brand-50 p-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)] items-stretch gap-1 bg-brand-50 p-4">
         <SideHead side={high} caption="この商品" />
-        <div className="pt-6">
+        <div className="pt-9">
           {priceDiff > 0 && (
-            <div className="flex w-full items-baseline justify-center gap-1 whitespace-nowrap rounded-xl border-2 border-ink-900 bg-white px-2 py-2 text-ink-900">
-              <span className="text-2xl font-bold tabular-nums leading-none">
+            <div className="flex w-full items-baseline justify-center gap-1 whitespace-nowrap rounded-xl border-2 border-ink-900 bg-white px-1 py-2 text-ink-900">
+              <span className="text-xl font-bold tabular-nums leading-none">
                 ¥{priceDiff.toLocaleString()}
               </span>
-              <span className="text-xs font-bold">おトク</span>
+              <span className="text-[11px] font-bold">おトク</span>
             </div>
           )}
         </div>
