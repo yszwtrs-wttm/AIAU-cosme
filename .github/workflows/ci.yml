@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  node:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,14 +20,55 @@ jobs:
       - run: npm test
       - run: npm run build
 
-  database:
+  db-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
+      - uses: actions/setup-node@v4
         with:
-          version: latest
-      - name: Start local database
-        run: supabase start -x studio,realtime,storage-api,imgproxy,inbucket,edge-runtime,logflare,vector,supavisor,mailpit
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # pgTAP は DB に直接つなぐので、Postgres 以外は起動しない
+      - name: Start local Supabase (database only)
+        run: >
+          npx supabase start
+          -x edge-runtime,gotrue,imgproxy,kong,logflare,mailpit,postgres-meta,postgrest,realtime,storage-api,studio,supavisor,vector
+
       - name: Run pgTAP tests
-        run: supabase test db
+        run: npm run test:db
+
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop --no-backup
+
+  db-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # gen types typescript --local は DB に直接つなぐので、Postgres 以外は起動しない
+      - name: Start local Supabase (database only)
+        run: >
+          npx supabase start
+          -x edge-runtime,gotrue,imgproxy,kong,logflare,mailpit,postgres-meta,postgrest,realtime,storage-api,studio,supavisor,vector
+
+      - name: Regenerate database types
+        run: npm run db:types
+
+      - name: Check database.types.ts is up to date
+        run: |
+          if ! git diff --exit-code -- src/lib/supabase/database.types.ts; then
+            echo "::error file=src/lib/supabase/database.types.ts::supabase/migrations と型定義がずれています。npm run db:types を実行して結果をコミットしてください。"
+            exit 1
+          fi
+
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop --no-backup

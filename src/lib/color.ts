@@ -41,7 +41,28 @@ export function rgbToHex(r: number, g: number, b: number): string {
 
 type Bucket = { r: number; g: number; b: number; n: number };
 
-function collectBuckets(data: Uint8ClampedArray): Bucket[] {
+/**
+ * 画素を捨てる基準。彩度だけで切るとベージュ・グレージュ・肌色のような
+ * 低彩度の色まで落ちるので、明度と彩度の2軸で「明るくて無彩色（=背景）」を除く。
+ */
+export type ColorFilter = {
+  /** これより低い彩度は無彩色として捨てる。 */
+  minSat: number;
+  /** 背景と見なす明るさの下限（0-255）。 */
+  bgValue: number;
+  /** 背景と見なす彩度の上限。 */
+  bgSat: number;
+};
+
+const DEFAULT_FILTER: ColorFilter = { minSat: 0.05, bgValue: 232, bgSat: 0.06 };
+
+/** ファンデーション・肌色向け。ベージュ〜グレージュを残す。 */
+export const SKIN_FILTER: ColorFilter = { minSat: 0.02, bgValue: 240, bgSat: 0.04 };
+
+/** 0色になったときの再試行用。ほぼ純白だけを背景として捨てる。 */
+const LOOSE_FILTER: ColorFilter = { minSat: 0, bgValue: 248, bgSat: 0.03 };
+
+function collectBuckets(data: Uint8ClampedArray, filter: ColorFilter = DEFAULT_FILTER): Bucket[] {
   const buckets = new Map<string, Bucket>();
 
   for (let i = 0; i < data.length; i += 4) {
@@ -50,9 +71,9 @@ function collectBuckets(data: Uint8ClampedArray): Bucket[] {
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     const sat = max === 0 ? 0 : (max - min) / max;
-    if (max > 245 && sat < 0.12) continue; // 白背景
     if (max < 25) continue; // 黒つぶれ
-    if (sat < 0.08) continue; // 無彩色
+    if (max > filter.bgValue && sat < filter.bgSat) continue; // 明るい無彩色（白背景）
+    if (sat < filter.minSat) continue; // 無彩色
 
     const key = `${r >> 4}-${g >> 4}-${b >> 4}`;
     const cur = buckets.get(key) ?? { r: 0, g: 0, b: 0, n: 0 };
@@ -84,8 +105,21 @@ export function extractPalette(
   data: Uint8ClampedArray,
   maxColors = 6,
   minDelta = 12,
+  filter: ColorFilter = DEFAULT_FILTER,
 ): ExtractedColor[] {
-  const buckets = collectBuckets(data);
+  const found = pickColors(data, maxColors, minDelta, filter);
+  if (found.length > 0) return found;
+  // 低彩度ばかりの写真で全部落ちることがあるので、背景判定だけ残して緩め直す。
+  return pickColors(data, maxColors, minDelta, LOOSE_FILTER);
+}
+
+function pickColors(
+  data: Uint8ClampedArray,
+  maxColors: number,
+  minDelta: number,
+  filter: ColorFilter,
+): ExtractedColor[] {
+  const buckets = collectBuckets(data, filter);
   const total = buckets.reduce((sum, b) => sum + b.n, 0);
   if (total === 0) return [];
 
@@ -101,14 +135,21 @@ export function extractPalette(
     picked.push({ hex, n: bucket.n });
   }
 
-  return picked
-    .filter((p) => p.n / total >= 0.02)
-    .sort((a, b) => b.n - a.n)
-    .map((p) => ({ hex: p.hex, share: p.n / total }));
+  const sorted = picked.sort((a, b) => b.n - a.n);
+  const kept = sorted.filter((p) => p.n / total >= 0.02);
+  return (kept.length > 0 ? kept : sorted.slice(0, 1)).map((p) => ({
+    hex: p.hex,
+    share: p.n / total,
+  }));
 }
 
 /** 画像の主要色（最頻の1色）。 */
-export function dominantColorFromImageData(data: Uint8ClampedArray): string {
-  const [best] = collectBuckets(data);
-  return best ? bucketHex(best) : "#808080";
+export function dominantColorFromImageData(
+  data: Uint8ClampedArray,
+  filter: ColorFilter = DEFAULT_FILTER,
+): string {
+  const [best] = collectBuckets(data, filter);
+  if (best) return bucketHex(best);
+  const [loose] = collectBuckets(data, LOOSE_FILTER);
+  return loose ? bucketHex(loose) : "#808080";
 }
