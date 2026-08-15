@@ -6,6 +6,7 @@ import FitCard from "@/components/FitCard";
 import IngredientPanel from "@/components/IngredientPanel";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
+import RecordProductView from "@/components/RecordProductView";
 import StashButton from "@/components/StashButton";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
@@ -174,6 +175,16 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="space-y-6">
+      <RecordProductView
+        product={{
+          id: product.id,
+          name: product.name,
+          brand: product.brands?.name ?? "",
+          category: product.category,
+          imageUrl: product.image_url,
+          colors: shades,
+        }}
+      />
       <section className="flex flex-wrap items-start gap-4 rounded-2xl border border-ink-200 bg-white p-5">
         <ProductThumb
           category={product.category}
