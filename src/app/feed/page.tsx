@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { PenLine } from "lucide-react";
 import Avatar from "@/components/Avatar";
+import { getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import ReviewImage from "@/components/ReviewImage";
 import { THUMB_WIDTH } from "@/lib/storage";
@@ -13,6 +15,7 @@ type FeedReview = Review & {
 /** 口コミを新しい順に並べる、みんなの投稿。 */
 export default async function FeedPage() {
   const supabase = await createClient();
+  const canPost = isRealAccount(await getMyUser());
 
   const { data: reviews } = await supabase
     .from("reviews")
@@ -26,8 +29,15 @@ export default async function FeedPage() {
 
   return (
     <div className="space-y-6">
-      <section className="border-b border-ink-200 pb-4">
+      <section className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-200 pb-4">
         <h1 className="font-display text-2xl font-bold">みんなの投稿</h1>
+        <Link
+          href={canPost ? "/feed/new" : "/login"}
+          prefetch
+          className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white"
+        >
+          <PenLine size={15} /> 口コミを投稿
+        </Link>
       </section>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
