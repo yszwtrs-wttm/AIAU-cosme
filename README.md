@@ -15,7 +15,7 @@ LIPS や @cosme は「何を買うか」を決めるアプリ。KAWANAI は手�
 | 安い代替 | `find_cheaper_dupes`（類似スコア閾値 × 価格差） |
 | 口コミ信頼度 | `recompute_review_trust`。スコアと除外理由は内部で使い、UI には出さない |
 | 画像から色検出 | `/color`。主要色を抽出 → Lab 変換 → `find_by_color`。色名・系統・肌トーン順で提示 |
-| 手持ちだけのメイク提案 | `/stash`（本アカウント限定）。`OPENAI_API_KEY` があれば LLM、無ければルールベース |
+| 手持ちだけのメイク提案 | `/stash`（本アカウント限定）。Edge Function `makeup-plan` が LLM で組む（1日10回まで）。呼べない・失敗時はルールベース |
 | 認証 / プロフィール | `/login`（初回はメールのリンクで確認し、プロフィール作成画面でパスワードを設定。以降はメールアドレス＋パスワードでログイン）、`/settings`、`/me`、`/u/[handle]` |
 | 画像つき口コミ | `/feed`。1投稿4枚まで、Supabase Storage の `review-images` に保存 |
 | 成分の日本語化 | `src/lib/ingredients.ts` の辞書で日本語名・役割・効果に変換 |
@@ -61,6 +61,22 @@ npx supabase start             # Docker が必要
 npm run db:reset               # マイグレーション + シード投入
 npm run dev
 ```
+
+### メイク提案（Edge Function）
+
+OpenAI の呼び出しは Edge Function `supabase/functions/makeup-plan` にあり、キーはアプリ側には置かない。
+
+```bash
+# ローカル: supabase/functions/.env に OPENAI_API_KEY を書いて
+npx supabase functions serve makeup-plan --env-file supabase/functions/.env
+
+# 本番
+npx supabase secrets set OPENAI_API_KEY=... MAKEUP_PLAN_DAILY_LIMIT=10
+npx supabase functions deploy makeup-plan
+```
+
+- `verify_jwt` で JWT を要求し、関数内で匿名セッション（`is_anonymous`）を弾く。
+- 回数は `claim_makeup_plan_quota` が `makeup_plan_usage` を数えて制限する（既定 1日10回）。上限に達したらUIに理由を出してルールベースで組む。
 
 シードを作り直す場合は `npm run seed:gen`（`scripts/generate_seed.py` が決定論的に生成）。
 

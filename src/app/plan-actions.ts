@@ -1,12 +1,32 @@
 "use server";
 
+import { getMyUser, isRealAccount } from "@/lib/auth";
 import { buildRulePlan, type Plan } from "@/lib/makeup";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
 
+type FunctionPlan = Omit<Plan, "source" | "notice"> & { used?: number; quota?: number };
+type FunctionError = { error?: string; used?: number; quota?: number };
+
+async function readError(error: unknown): Promise<FunctionError> {
+  const context = (error as { context?: unknown }).context;
+  if (!(context instanceof Response)) return {};
+  return (await context.json().catch(() => ({}))) as FunctionError;
+}
+
+/** レート制限やLLM不調でルールベースに落ちたとき、理由をUIに出す。 */
+function noticeFor(body: FunctionError): string | undefined {
+  if (body.error === "rate_limited") {
+    return `今日のAI提案の上限（${body.quota ?? 0}回）に達したので、ルールベースで組みました。日付が変わるとまた使えます。`;
+  }
+  if (body.error === "llm_unavailable") return undefined;
+  return "AI提案が使えなかったので、ルールベースで組みました。";
+}
+
 /**
  * 手持ちだけで組めるメイク手順を返す。
- * OPENAI_API_KEY があれば LLM に組ませ、無ければ色相・明度ベースのルールで組む。
+ * LLM 経路は Supabase Edge Function（makeup-plan）に置いてあり、本アカウントのみ・日次回数制限つき。
+ * 呼べない・失敗した場合は色相・明度ベースのルールで組む。
  * どちらの場合も候補は「手持ちに登録済みの商品」に限定する。
  */
 export async function generateMakeupPlan(request: string): Promise<Plan> {
@@ -21,37 +41,22 @@ export async function generateMakeupPlan(request: string): Promise<Plan> {
   const products = (data ?? []).map((r) => r.products).filter(Boolean);
   const fallback = buildRulePlan(products, request);
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || products.length === 0) return fallback;
+  // 匿名セッションは LLM 経路に入れない（費用が読めないため）。Edge Function 側でも弾いている。
+  const user = await getMyUser();
+  if (!isRealAccount(user) || products.length === 0) return fallback;
 
-  const inventory = products
-    .map((p) => `- ${p.brands?.name} ${p.name} (${p.category}, ${p.color_hex ?? "色情報なし"}, ¥${p.price_yen})`)
-    .join("\n");
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session) return fallback;
 
-  try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content:
-              "あなたはコスメの提案をするアシスタントです。ユーザーが所有している商品だけを使い、買い足しを勧めてはいけません。" +
-              'JSON で {"headline": string, "steps": [{"order": number, "product": string, "reason": string}], "note": string} を返してください。',
-          },
-          { role: "user", content: `やりたいこと: ${request}\n手持ち:\n${inventory}` },
-        ],
-      }),
-    });
-    if (!res.ok) return fallback;
-    const json = await res.json();
-    const parsed = JSON.parse(json.choices[0].message.content) as Omit<Plan, "source">;
-    if (!Array.isArray(parsed.steps) || parsed.steps.length === 0) return fallback;
-    return { ...parsed, source: "llm" };
-  } catch {
-    return fallback;
-  }
+  const { data: plan, error } = await supabase.functions.invoke<FunctionPlan>("makeup-plan", {
+    body: { request },
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+
+  if (error) return { ...fallback, notice: noticeFor(await readError(error)) };
+  if (!plan || !Array.isArray(plan.steps) || plan.steps.length === 0) return fallback;
+
+  return { headline: plan.headline, steps: plan.steps, note: plan.note, source: "llm" };
 }

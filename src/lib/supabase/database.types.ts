@@ -85,6 +85,24 @@ export type Database = {
         }
         Relationships: []
       }
+      makeup_plan_usage: {
+        Row: {
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: []
+      }
       product_colors: {
         Row: {
           hex: string
@@ -581,6 +599,14 @@ export type Database = {
       build_ingredient_vec: {
         Args: { p_ingredients: string[] }
         Returns: string
+      }
+      claim_makeup_plan_quota: {
+        Args: { p_limit?: number }
+        Returns: {
+          allowed: boolean
+          quota: number
+          used: number
+        }[]
       }
       dupe_score: {
         Args: { delta_e: number; ing_sim: number }

@@ -2,7 +2,14 @@ import { hexToLab } from "./color";
 import { CATEGORY_LABEL, type Product } from "./types";
 
 export type PlanStep = { order: number; product: string; reason: string };
-export type Plan = { headline: string; steps: PlanStep[]; note: string; source: "llm" | "rule" };
+export type Plan = {
+  headline: string;
+  steps: PlanStep[];
+  note: string;
+  source: "llm" | "rule";
+  /** AI提案が使えなかった理由（回数上限など）。ルールベースに落ちたときだけ入る。 */
+  notice?: string;
+};
 
 type Mood = { key: string; label: string; match: (lab: { l: number; a: number; b: number }) => number };
 
