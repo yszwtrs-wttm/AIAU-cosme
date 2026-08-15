@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Settings } from "lucide-react";
+import Avatar from "@/components/Avatar";
+import LogoutButton from "@/components/LogoutButton";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -35,10 +37,14 @@ export default async function MyPage() {
     <div className="space-y-6">
       <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-ink-200 bg-white p-5">
         <span
-          className="grid h-16 w-16 place-items-center rounded-full bg-ink-100 text-2xl font-bold text-white"
-          style={profile ? { background: `hsl(${profile.avatar_hue} 70% 62%)` } : undefined}
+          className="shrink-0"
         >
-          {(profile?.display_name ?? "?").slice(0, 1)}
+          <Avatar
+            name={profile?.display_name ?? "?"}
+            hue={profile?.avatar_hue ?? 330}
+            avatarUrl={profile?.avatar_url}
+            size="lg"
+          />
         </span>
         <div className="min-w-0 flex-1">
           <div className="font-display text-2xl font-bold">
@@ -47,6 +53,15 @@ export default async function MyPage() {
           <div className="text-xs text-ink-400">
             {profile ? `@${profile.handle}` : "ログインすると、口コミが書けてポーチを引き継げます"}
           </div>
+          {user?.email && <div className="mt-1 text-[11px] text-ink-400">{user.email}</div>}
+          {profile?.personal_color && (
+            <div className="mt-1 text-xs text-brand-700">
+              {profile.personal_color === "spring" && "イエベ春"}
+              {profile.personal_color === "summer" && "ブルベ夏"}
+              {profile.personal_color === "autumn" && "イエベ秋"}
+              {profile.personal_color === "winter" && "ブルベ冬"}
+            </div>
+          )}
         </div>
         <Link
           href={isRealAccount(user) ? "/settings" : "/login"}
@@ -55,6 +70,7 @@ export default async function MyPage() {
           {isRealAccount(user) ? <Settings size={15} /> : null}
           {isRealAccount(user) ? "設定" : "ログイン"}
         </Link>
+        {isRealAccount(user) && <LogoutButton />}
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2">

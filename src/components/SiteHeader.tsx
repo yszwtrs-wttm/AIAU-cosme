@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Sparkles, UserRound } from "lucide-react";
+import Avatar from "@/components/Avatar";
 import { getMyProfile } from "@/lib/auth";
 
 export default async function SiteHeader({ isRealAccount: real }: { isRealAccount: boolean }) {
@@ -40,13 +41,20 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
             href="/me"
             className="ml-auto flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-2 py-1 text-sm md:ml-3"
           >
-            <span
-              className="grid h-6 w-6 place-items-center rounded-full text-[11px] font-bold text-white"
-              style={{ background: `hsl(${profile.avatar_hue} 70% 62%)` }}
-            >
-              {profile.display_name.slice(0, 1)}
-            </span>
+            <Avatar
+              name={profile.display_name}
+              hue={profile.avatar_hue}
+              avatarUrl={profile.avatar_url}
+              size="sm"
+            />
             <span className="max-w-24 truncate">{profile.display_name}</span>
+          </Link>
+        ) : real ? (
+          <Link
+            href="/settings"
+            className="ml-auto rounded-full bg-brand-600 px-3 py-1.5 text-sm font-medium text-white md:ml-3"
+          >
+            プロフィール作成
           </Link>
         ) : (
           <Link

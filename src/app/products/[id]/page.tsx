@@ -64,7 +64,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     supabase
       .from("reviews")
       .select(
-        "*,profiles(handle,display_name,avatar_hue,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
+        "*,profiles(handle,display_name,avatar_hue,avatar_url,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
       )
       .eq("product_id", productId)
       .order("posted_at", { ascending: false })
@@ -75,6 +75,25 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   ]);
 
   if (!product) notFound();
+
+  let avoidedIngredientLabels: string[] = [];
+  if (user && product.ingredients.length > 0) {
+    const { data: allergenRows } = await supabase
+      .from("profile_allergens")
+      .select("ingredient_id")
+      .eq("user_id", user.id);
+    const ingredientIds = (allergenRows ?? []).map((row) => row.ingredient_id);
+    if (ingredientIds.length > 0) {
+      const { data: masters } = await supabase
+        .from("ingredients_master")
+        .select("id,inci,name_ja")
+        .in("id", ingredientIds);
+      const productIngredients = new Set(product.ingredients.map((ingredient) => ingredient.toUpperCase()));
+      avoidedIngredientLabels = (masters ?? [])
+        .filter((ingredient) => productIngredients.has(ingredient.inci.toUpperCase()))
+        .map((ingredient) => ingredient.name_ja || ingredient.inci);
+    }
+  }
 
   const dupes = (dupeRes.data ?? []) as DupeRow[];
   const cheaper = (cheaperRes.data ?? []) as DupeRow[];
@@ -156,6 +175,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             )}
           </div>
           <h1 className="font-display text-2xl font-bold">{product.name}</h1>
+          {avoidedIngredientLabels.length > 0 && (
+            <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
+              避けたい成分が入っています: {avoidedIngredientLabels.join("、")}
+            </p>
+          )}
           <div className="mt-1 text-lg font-bold tabular-nums">
             ¥{product.price_yen.toLocaleString()}
             {product.volume && (

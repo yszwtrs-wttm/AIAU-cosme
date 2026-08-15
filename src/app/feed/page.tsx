@@ -1,10 +1,11 @@
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/server";
 import { publicImageUrl } from "@/lib/storage";
 import type { Profile, Review } from "@/lib/types";
 
 type FeedReview = Review & {
-  profiles: Pick<Profile, "handle" | "display_name" | "avatar_hue"> | null;
+  profiles: Pick<Profile, "handle" | "display_name" | "avatar_hue" | "avatar_url"> | null;
   products: { id: number; name: string; brands: { name: string } | null } | null;
 };
 
@@ -15,7 +16,7 @@ export default async function FeedPage() {
   const { data: reviews } = await supabase
     .from("reviews")
     .select(
-      "*,profiles(handle,display_name,avatar_hue),review_images(id,review_id,path,pos),products(id,name,brands(name))",
+      "*,profiles(handle,display_name,avatar_hue,avatar_url),review_images(id,review_id,path,pos),products(id,name,brands(name))",
     )
     .eq("excluded", false)
     .order("posted_at", { ascending: false })
@@ -53,12 +54,12 @@ export default async function FeedPage() {
                 </div>
                 <div className="space-y-1.5 p-4">
                   <div className="flex items-center gap-2 text-xs">
-                    <span
-                      className="grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold text-white"
-                      style={{ background: `hsl(${r.profiles?.avatar_hue ?? 330} 70% 62%)` }}
-                    >
-                      {(r.profiles?.display_name ?? "?").slice(0, 1)}
-                    </span>
+                    <Avatar
+                      name={r.profiles?.display_name ?? "?"}
+                      hue={r.profiles?.avatar_hue ?? 330}
+                      avatarUrl={r.profiles?.avatar_url}
+                      size="sm"
+                    />
                     {r.profiles?.handle ? (
                       <Link href={`/u/${r.profiles.handle}`} className="font-bold hover:text-brand-600">
                         {r.profiles.display_name}

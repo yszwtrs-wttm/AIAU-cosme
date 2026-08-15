@@ -199,10 +199,12 @@ export type Database = {
       profiles: {
         Row: {
           avatar_hue: number
+          avatar_url: string | null
           bio: string | null
           created_at: string
           display_name: string
           handle: string
+          personal_color: string | null
           skin_tone_hex: string | null
           skin_type: string | null
           stash_public: boolean
@@ -210,10 +212,12 @@ export type Database = {
         }
         Insert: {
           avatar_hue?: number
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string
           display_name: string
           handle: string
+          personal_color?: string | null
           skin_tone_hex?: string | null
           skin_type?: string | null
           stash_public?: boolean
@@ -221,16 +225,44 @@ export type Database = {
         }
         Update: {
           avatar_hue?: number
+          avatar_url?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string
           handle?: string
+          personal_color?: string | null
           skin_tone_hex?: string | null
           skin_type?: string | null
           stash_public?: boolean
           user_id?: string
         }
         Relationships: []
+      }
+      profile_allergens: {
+        Row: {
+          created_at: string
+          ingredient_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ingredient_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          ingredient_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_allergens_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients_master"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       review_images: {
         Row: {
@@ -908,4 +940,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
