@@ -128,6 +128,8 @@ export type Review = {
   image_phash: string | null;
   feel: Record<string, number> | null;
   report_count: number;
+  /** 「参考になった」の票数。1人1票 */
+  helpful_count: number;
   /** 投稿時にポーチに登録していたか。集計の重みと表示に使う（投稿条件ではない） */
   owner_verified: boolean;
   profiles?: Pick<

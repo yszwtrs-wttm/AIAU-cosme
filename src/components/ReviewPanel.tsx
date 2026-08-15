@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Flag, ImagePlus, Lock, X } from "lucide-react";
+import { Flag, ImagePlus, Lock, ThumbsUp, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { attachReviewImages, postReview, reportReview } from "@/app/actions";
+import { attachReviewImages, postReview, reportReview, voteReviewHelpful } from "@/app/actions";
 import Avatar from "@/components/Avatar";
 import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
@@ -17,6 +17,13 @@ type Viewer = { skinType: SkinType | null; skinToneHex: string | null };
 
 const MAX_IMAGES = 4;
 
+type SortKey = "fit" | "helpful";
+
+const SORT_LABEL: Record<SortKey, string> = {
+  fit: "肌が近い人",
+  helpful: "参考になった順",
+};
+
 function Stars({ value }: { value: number }) {
   return (
     <span className="text-amber-500" aria-label={`${value}点`}>
@@ -26,7 +33,64 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-function ReviewCard({ review, close }: { review: Review; close: boolean }) {
+function HelpfulButton({
+  review,
+  canVote,
+  voted,
+  onToggle,
+}: {
+  review: Review;
+  canVote: boolean;
+  voted: boolean;
+  onToggle: (helpful: boolean) => void;
+}) {
+  const [pending, setPending] = useState(false);
+  const label = `参考になった${review.helpful_count > 0 ? ` ${review.helpful_count}` : ""}`;
+
+  if (!canVote) {
+    return (
+      <span className="flex items-center gap-1 rounded-full border border-ink-200 px-3 py-1 text-[11px] text-ink-400">
+        <ThumbsUp size={12} /> {label}
+      </span>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      aria-pressed={voted}
+      onClick={async () => {
+        setPending(true);
+        onToggle(!voted);
+        const res = await voteReviewHelpful(review.id, !voted);
+        if (!res.ok) onToggle(voted);
+        setPending(false);
+      }}
+      className={`flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-medium disabled:opacity-50 ${
+        voted
+          ? "border-brand-300 bg-brand-50 text-brand-700"
+          : "border-ink-200 text-ink-600 hover:border-brand-200 hover:text-brand-600"
+      }`}
+    >
+      <ThumbsUp size={12} /> {label}
+    </button>
+  );
+}
+
+function ReviewCard({
+  review,
+  close,
+  canVote,
+  voted,
+  onToggleVote,
+}: {
+  review: Review;
+  close: boolean;
+  canVote: boolean;
+  voted: boolean;
+  onToggleVote: (helpful: boolean) => void;
+}) {
   const [reported, setReported] = useState(false);
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
@@ -99,6 +163,10 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
           ))}
         </div>
       )}
+
+      <div className="mt-3">
+        <HelpfulButton review={review} canVote={canVote} voted={voted} onToggle={onToggleVote} />
+      </div>
     </div>
   );
 }
@@ -110,6 +178,8 @@ export default function ReviewPanel({
   initialSummary,
   canPost,
   viewer,
+  viewerUserId = null,
+  votedReviewIds = [],
 }: {
   productId: number;
   category: Category;
@@ -117,9 +187,14 @@ export default function ReviewPanel({
   initialSummary: RatingSummary | null;
   canPost: boolean;
   viewer: Viewer;
+  viewerUserId?: string | null;
+  /** 閲覧者がすでに「参考になった」を押している口コミ */
+  votedReviewIds?: number[];
 }) {
   const axes = axesFor(category);
   const [reviews, setReviews] = useState(initialReviews);
+  const [voted, setVoted] = useState<Set<number>>(() => new Set(votedReviewIds));
+  const [sort, setSort] = useState<SortKey>("fit");
   const [summary, setSummary] = useState(initialSummary);
   const [body, setBody] = useState("");
   const [rating, setRating] = useState(5);
@@ -130,6 +205,23 @@ export default function ReviewPanel({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // サーバーの結果を待たずに票数を動かす。失敗したら呼び出し側が元に戻す。
+  const toggleVote = (review: Review, helpful: boolean) => {
+    setVoted((prev) => {
+      const next = new Set(prev);
+      if (helpful) next.add(review.id);
+      else next.delete(review.id);
+      return next;
+    });
+    setReviews((prev) =>
+      prev.map((r) =>
+        r.id === review.id
+          ? { ...r, helpful_count: Math.max(0, r.helpful_count + (helpful ? 1 : -1)) }
+          : r,
+      ),
+    );
+  };
 
   // 不正判定は Postgres の trigger が走らせる。結果は Realtime で降ってくる。
   useEffect(() => {
@@ -164,11 +256,16 @@ export default function ReviewPanel({
     };
   }, [productId]);
 
-  // 自分と近い肌の人の声を上に出す。同じ近さなら新しい順（元の並び）。
+  // 既定は自分と近い肌の人の声を上に出す。同じ近さなら新しい順（元の並び）。
+  // 「参考になった順」を選んだときは票数を優先し、同数なら肌の近さ→新着。
   const shown = reviews
     .filter((r) => !r.excluded)
     .map((r) => ({ review: r, score: closenessScore(viewer, r.profiles) }))
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) =>
+      sort === "helpful"
+        ? b.review.helpful_count - a.review.helpful_count || b.score - a.score
+        : b.score - a.score,
+    );
   const rated = summary?.adjusted_rating ?? null;
   const counted = summary?.counted_count ?? 0;
   const hasViewerProfile = Boolean(viewer.skinType || viewer.skinToneHex);
@@ -232,7 +329,28 @@ export default function ReviewPanel({
         </div>
       </div>
 
-      {hasViewerProfile && shown.some((s) => s.score > 0) && (
+      {reviews.some((r) => !r.excluded) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] text-ink-400">並び順</span>
+          {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setSort(key)}
+              aria-pressed={sort === key}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium ${
+                sort === key
+                  ? "border-brand-300 bg-brand-50 text-brand-700"
+                  : "border-ink-200 text-ink-600 hover:border-brand-200 hover:text-brand-600"
+              }`}
+            >
+              {SORT_LABEL[key]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {sort === "fit" && hasViewerProfile && shown.some((s) => s.score > 0) && (
         <p className="text-[11px] text-ink-400">あなたと肌が近い人の口コミを上に並べています。</p>
       )}
 
@@ -350,7 +468,14 @@ export default function ReviewPanel({
 
       <div className="space-y-2">
         {shown.map(({ review, score }) => (
-          <ReviewCard key={review.id} review={review} close={score > 0} />
+          <ReviewCard
+            key={review.id}
+            review={review}
+            close={score > 0}
+            canVote={canPost && review.user_id !== viewerUserId}
+            voted={voted.has(review.id)}
+            onToggleVote={(helpful) => toggleVote(review, helpful)}
+          />
         ))}
       </div>
     </div>

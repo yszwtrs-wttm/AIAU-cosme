@@ -132,6 +132,33 @@ export async function attachReviewImages(
   return { ok: !error, error: error?.message };
 }
 
+/**
+ * 「参考になった」投票。1人1票（主キーで担保）で、押し直すと取り消せる。
+ * 自分の口コミへの投票と匿名セッションからの投票は RLS で弾く。
+ */
+export async function voteReviewHelpful(reviewId: number, helpful: boolean): Promise<Result> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!isRealAccount(user)) {
+    return { ok: false, error: "投票にはアカウント登録が必要です" };
+  }
+
+  const { error } = helpful
+    ? await supabase
+        .from("review_votes")
+        .upsert({ review_id: reviewId, user_id: user!.id }, { onConflict: "review_id,user_id" })
+    : await supabase
+        .from("review_votes")
+        .delete()
+        .eq("review_id", reviewId)
+        .eq("user_id", user!.id);
+
+  return { ok: !error, error: error?.message };
+}
+
 export async function reportReview(reviewId: number, reason: string): Promise<Result> {
   const supabase = await createClient();
   const { error } = await supabase.from("review_reports").insert({ review_id: reviewId, reason });

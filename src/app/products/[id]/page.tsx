@@ -74,6 +74,20 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   if (!product) notFound();
 
+  // 自分がすでに「参考になった」を押した口コミを押した状態で見せる。
+  let votedReviewIds: number[] = [];
+  if (user && (reviews ?? []).length > 0) {
+    const { data: voteRows } = await supabase
+      .from("review_votes")
+      .select("review_id")
+      .eq("user_id", user.id)
+      .in(
+        "review_id",
+        (reviews ?? []).map((review) => review.id),
+      );
+    votedReviewIds = (voteRows ?? []).map((row) => row.review_id);
+  }
+
   let avoidedIngredientLabels: string[] = [];
   if (user && product.ingredients.length > 0) {
     const { data: allergenRows } = await supabase
@@ -338,6 +352,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             skinType: profile?.skin_type ?? null,
             skinToneHex: profile?.skin_tone_hex ?? null,
           }}
+          viewerUserId={user?.id ?? null}
+          votedReviewIds={votedReviewIds}
         />
       </section>
 
