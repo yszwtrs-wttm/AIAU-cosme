@@ -46,20 +46,29 @@ export async function skipPurchase(input: {
       ? Math.max(0, price - evidencePrice)
       : price;
 
-  const { error } = await supabase.from("skipped_purchases").upsert(
-    {
-      user_id: user!.id,
-      product_id: input.productId,
-      price_yen: price,
-      saved_yen: saved,
-      reason: input.reason,
-      evidence_product_id: input.evidenceProductId ?? null,
-      evidence_price_yen: evidencePrice,
-      evidence_delta_e: input.deltaE ?? null,
-      evidence_ing_sim: input.ingSim ?? null,
-    },
-    { onConflict: "user_id,product_id" },
-  );
+  const upsert = () =>
+    supabase.from("skipped_purchases").upsert(
+      {
+        user_id: user!.id,
+        product_id: input.productId,
+        price_yen: price,
+        saved_yen: saved,
+        reason: input.reason,
+        evidence_product_id: input.evidenceProductId ?? null,
+        evidence_price_yen: evidencePrice,
+        evidence_delta_e: input.deltaE ?? null,
+        evidence_ing_sim: input.ingSim ?? null,
+      },
+      { onConflict: "user_id,product_id" },
+    );
+
+  let { error } = await upsert();
+  if (error?.code === "42501") {
+    // お試し（匿名）から登録した直後はトークンの is_anonymous が古いままで RLS に弾かれる。
+    // トークンを更新して一度だけやり直す。
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (!refreshError) ({ error } = await upsert());
+  }
 
   revalidatePath("/savings");
   revalidatePath(`/products/${input.productId}`);
