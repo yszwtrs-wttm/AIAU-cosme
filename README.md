@@ -148,7 +148,7 @@ npx supabase start             # ローカルDBが起動していること
 npm run db:types
 ```
 
-再生成し忘れると CI（`.github/workflows/ci.yml` の `db-types` ジョブ）が差分を検出して落ちる。Docker が無い環境では `npx supabase gen types typescript --linked > src/lib/supabase/database.types.ts` でリンク済みプロジェクトから生成できる。
+Docker が無い環境では `npx supabase gen types typescript --linked > src/lib/supabase/database.types.ts` でリンク済みプロジェクトから生成できる。
 
 ## 検証
 
