@@ -307,7 +307,7 @@ export type Database = {
           path: string
           phash: string | null
           phash_algo: string | null
-          phash_bits: string | null
+          phash_bits: unknown | null
           pos: number
           review_id: number
           user_id: string
@@ -318,6 +318,7 @@ export type Database = {
           path: string
           phash?: string | null
           phash_algo?: string | null
+          phash_bits?: unknown | null
           pos?: number
           review_id: number
           user_id?: string
@@ -328,6 +329,7 @@ export type Database = {
           path?: string
           phash?: string | null
           phash_algo?: string | null
+          phash_bits?: unknown | null
           pos?: number
           review_id?: number
           user_id?: string
@@ -432,7 +434,7 @@ export type Database = {
           id: number
           image_phash: string | null
           image_phash_algo: string | null
-          image_phash_bits: string | null
+          image_phash_bits: unknown | null
           owner_verified: boolean
           posted_at: string
           product_id: number
@@ -452,6 +454,7 @@ export type Database = {
           id?: never
           image_phash?: string | null
           image_phash_algo?: string | null
+          image_phash_bits?: unknown | null
           owner_verified?: boolean
           posted_at?: string
           product_id: number
@@ -471,6 +474,7 @@ export type Database = {
           id?: never
           image_phash?: string | null
           image_phash_algo?: string | null
+          image_phash_bits?: unknown | null
           owner_verified?: boolean
           posted_at?: string
           product_id?: number
@@ -802,12 +806,12 @@ export type Database = {
         Returns: number
       }
       phash_distance: {
-        Args: { a: string; b: string }
+        Args: { a: unknown; b: unknown }
         Returns: number
       }
       phash_hex_to_bits: {
         Args: { p_hex: string }
-        Returns: string
+        Returns: unknown
       }
       phash_reuse_threshold: {
         Args: { p_algo: string }
