@@ -13,19 +13,19 @@ export default async function LoginPage() {
   return (
     <div className="mx-auto max-w-md space-y-5">
       <section className="border-b border-ink-200 pb-4">
-        <h1 className="font-display text-2xl font-bold">アカウントを作る</h1>
+        <h1 className="font-display text-2xl font-bold">ログイン / アカウントを作る</h1>
         <p className="mt-2 text-sm text-ink-600">
-          ログインすると、ポーチを別の端末でも見られて、口コミも書けるようになります。
-          いま登録したポーチの中身は、そのまま引き継がれます。
+          ログインすると、手持ちの登録とポーチが使えて、別の端末でも見られます。口コミも書けるようになります。
         </p>
       </section>
 
       <LoginForm anonymous={Boolean(user?.is_anonymous)} />
 
       <p className="text-xs leading-relaxed text-ink-400">
-        ログインしなくても、商品の検索・成分・口コミの閲覧・写真から色を探す機能は使えます。
-        <Link href="/" className="ml-1 text-brand-600 underline">
-          そのまま見る
+        商品の検索・成分・口コミの閲覧・写真から色を探す機能はログイン不要です。
+        手持ち登録とポーチの利用、口コミの投稿にはログインが必要です。
+        <Link href="/search" className="ml-1 text-brand-600 underline">
+          商品を探す
         </Link>
       </p>
     </div>

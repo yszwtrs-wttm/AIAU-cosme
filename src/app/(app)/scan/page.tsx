@@ -1,9 +1,14 @@
 import BarcodeScanner from "@/components/BarcodeScanner";
 import QuickStartPicker from "@/components/QuickStartPicker";
+import { getMyUser, isRealAccount } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
 
 export default async function ScanPage() {
+  const user = await getMyUser();
+  if (!isRealAccount(user)) redirect("/login");
+
   const supabase = await createClient();
   const { data: popular } = await supabase
     .from("products")

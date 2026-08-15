@@ -134,7 +134,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   const fit = judgeFit(product, profile);
   const isOwned = Boolean(owned);
-  const canPost = isRealAccount(user);
+  const canUseStash = isRealAccount(user);
+  const canPost = canUseStash;
 
   return (
     <div className="space-y-6">
@@ -177,7 +178,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </ul>
           )}
           <div className="mt-4">
-            <StashButton productId={product.id} owned={isOwned} />
+            <StashButton productId={product.id} owned={isOwned} canUse={canUseStash} />
           </div>
         </div>
       </section>
