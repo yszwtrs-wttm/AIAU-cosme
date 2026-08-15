@@ -10,6 +10,7 @@ import StashButton from "@/components/StashButton";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
+import { REVIEW_SELECT, REVIEWS_PAGE_SIZE } from "@/lib/reviews";
 import { createClient } from "@/lib/supabase/server";
 import {
   CATEGORY_LABEL,
@@ -61,11 +62,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     supabase.rpc("find_palette_coverage", { p_product_id: productId }),
     supabase
       .from("reviews")
-      .select(
-        "*,profiles(handle,display_name,avatar_hue,avatar_url,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
-      )
+      .select(REVIEW_SELECT)
       .eq("product_id", productId)
+      .eq("excluded", false)
       .order("posted_at", { ascending: false })
+      .range(0, REVIEWS_PAGE_SIZE - 1)
       .returns<Review[]>(),
     supabase.from("product_rating_summary").select("*").eq("product_id", productId).maybeSingle<RatingSummary>(),
     supabase.from("product_feel_summary").select("*").eq("product_id", productId).maybeSingle<FeelSummary>(),
