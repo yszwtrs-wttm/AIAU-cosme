@@ -174,7 +174,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-wrap items-start gap-4 rounded-2xl border border-ink-200 bg-white p-5">
+      <section className="flex flex-wrap items-start gap-4 rounded-2xl border border-ink-200 bg-surface p-5">
         <ProductThumb
           category={product.category}
           colors={shades}
@@ -187,7 +187,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <span>{product.brands?.name}</span>
             <span>{CATEGORY_LABEL[product.category]}</span>
             {product.is_mens && (
-              <span className="rounded bg-ink-900 px-1.5 py-0.5 text-[10px] text-white">MEN</span>
+              <span className="rounded bg-strong px-1.5 py-0.5 text-[10px] text-white">MEN</span>
             )}
           </div>
           <h1 className="font-display text-2xl font-bold">{product.name}</h1>
@@ -201,7 +201,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </span>
           </div>
           {avoidedIngredientLabels.length > 0 && (
-            <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
+            <p className="mt-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-xs font-bold text-rose-700 dark:text-rose-200">
               避けたい成分が入っています: {avoidedIngredientLabels.join("、")}
             </p>
           )}
@@ -255,7 +255,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <>
           <section className="space-y-2">
             {topDupe ? (
-              <div className="rounded-2xl border border-ink-200 bg-white p-4">
+              <div className="rounded-2xl border border-ink-200 bg-surface p-4">
                 <p className="text-sm leading-relaxed">
                   ポーチの「{topDupe.brand} {topDupe.name}」と{formulaMatchText(topDupe.ing_sim)}。
                   {topDupe.delta_e !== null && `色は${colorMatchText(topDupe.delta_e).title}。`}
@@ -274,7 +274,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-ink-200 bg-white p-4 text-sm">
+              <div className="rounded-2xl border border-ink-200 bg-surface p-4 text-sm">
                 <p className="font-bold">ポーチに近いものはありません</p>
                 <p className="mt-1 text-xs text-ink-400">
                   持っていない色・処方なので、足りていない役割を埋められます。
@@ -286,7 +286,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {coverage.length > 1 && (
             <section className="space-y-2">
               <h2 className="font-display text-lg font-bold">手持ちで似た色が出せるか</h2>
-              <div className="rounded-2xl border border-ink-200 bg-white p-4">
+              <div className="rounded-2xl border border-ink-200 bg-surface p-4">
                 <div className="text-sm">
                   <span className="text-lg font-bold">
                     {coverage.length} 色中 {covered.length} 色
@@ -299,7 +299,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                       <span className="swatch inline-block h-6 w-6 shrink-0 rounded-full" style={{ background: c.shade_hex }} />
                       <span className="w-24 shrink-0 truncate">{c.shade_name}</span>
                       {c.owned_product_id !== null ? (
-                        <span className="flex min-w-0 items-center gap-1.5 text-emerald-800">
+                        <span className="flex min-w-0 items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
                           <span
                             className="swatch inline-block h-4 w-4 shrink-0 rounded-full"
                             style={{ background: c.owned_hex ?? undefined }}

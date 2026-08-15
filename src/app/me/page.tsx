@@ -36,7 +36,7 @@ export default async function MyPage() {
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-ink-200 bg-white p-5">
+      <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-ink-200 bg-surface p-5">
         <Avatar
           name={profile?.display_name ?? ""}
           hue={profile?.avatar_hue ?? 330}
@@ -51,7 +51,7 @@ export default async function MyPage() {
             {profile ? (
               `@${profile.handle}`
             ) : real ? (
-              <Link href="/settings" className="hover:text-brand-600">
+              <Link href="/settings" className="hover:text-brand-fg">
                 プロフィールを作成すると、口コミが書けます
               </Link>
             ) : (
@@ -69,7 +69,7 @@ export default async function MyPage() {
         </div>
         <Link
           href={real ? "/settings" : "/login"}
-          className="flex items-center gap-1.5 rounded-full border border-ink-200 px-4 py-2 text-sm font-bold text-brand-600"
+          className="flex items-center gap-1.5 rounded-full border border-ink-200 px-4 py-2 text-sm font-bold text-brand-fg"
         >
           {real ? <Settings size={15} /> : null}
           {real ? (profile ? "設定" : "プロフィール作成") : "ログイン"}
@@ -78,11 +78,11 @@ export default async function MyPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-ink-200 bg-white p-4">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-4">
           <div className="text-xs font-bold text-ink-400">Myポーチの数</div>
           <div className="mt-1 font-display text-3xl font-bold tabular-nums">{items.length}</div>
         </div>
-        <div className="rounded-2xl border border-ink-200 bg-white p-4">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-4">
           <div className="text-xs font-bold text-ink-400">書いた口コミ</div>
           <div className="mt-1 font-display text-3xl font-bold tabular-nums">
             {(myReviews ?? []).length}
@@ -93,13 +93,13 @@ export default async function MyPage() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">Myポーチの中身</h2>
-          <div className="flex items-center gap-3 text-xs font-bold text-brand-600">
+          <div className="flex items-center gap-3 text-xs font-bold text-brand-fg">
             {items.length > 4 && <Link href="/stash">すべて見る</Link>}
             <Link href="/stash">追加する</Link>
           </div>
         </div>
         {items.length === 0 ? (
-          <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
+          <p className="rounded-2xl border border-ink-200 bg-surface p-5 text-sm text-ink-600">
             まだ登録がありません。よく使うものを2〜3個登録すると、調べた商品との違いを出せるようになります。
           </p>
         ) : (
@@ -116,8 +116,8 @@ export default async function MyPage() {
           <h2 className="font-display text-lg font-bold">書いた口コミ</h2>
           <ul className="space-y-2">
             {(myReviews ?? []).map((r) => (
-              <li key={r.id} className="rounded-2xl border border-ink-200 bg-white p-4">
-                <Link href={`/products/${r.product_id}`} className="text-xs text-brand-600">
+              <li key={r.id} className="rounded-2xl border border-ink-200 bg-surface p-4">
+                <Link href={`/products/${r.product_id}`} className="text-xs text-brand-fg">
                   この商品を見る
                 </Link>
                 <div className="text-amber-500">{"★".repeat(r.rating)}</div>

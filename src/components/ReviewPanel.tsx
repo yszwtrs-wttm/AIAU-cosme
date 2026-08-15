@@ -21,7 +21,7 @@ function Stars({ value }: { value: number }) {
   return (
     <span className="text-amber-500" aria-label={`${value}点`}>
       {"★".repeat(value)}
-      <span className="text-amber-200">{"★".repeat(5 - value)}</span>
+      <span className="text-amber-200 dark:text-ink-200">{"★".repeat(5 - value)}</span>
     </span>
   );
 }
@@ -33,7 +33,7 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   const skin = review.profiles?.skin_type;
 
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-4">
+    <div className="rounded-2xl border border-ink-200 bg-surface p-4">
       <div className="flex items-center gap-2">
         <Avatar
           name={name}
@@ -44,7 +44,7 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-bold">
             {review.profiles?.handle ? (
-              <Link href={`/u/${review.profiles.handle}`} className="hover:text-brand-600">
+              <Link href={`/u/${review.profiles.handle}`} className="hover:text-brand-fg">
                 {name}
               </Link>
             ) : (
@@ -60,7 +60,7 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
             await reportReview(review.id, "fake");
             setReported(true);
           }}
-          className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
+          className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-fg disabled:opacity-50"
         >
           <Flag size={12} /> {reported ? "報告しました" : "報告"}
         </button>
@@ -210,7 +210,7 @@ export default function ReviewPanel({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-white p-4">
+      <div className="flex items-center gap-4 rounded-2xl border border-ink-200 bg-surface p-4">
         <div>
           <div className="font-display text-4xl font-bold tabular-nums">
             {rated?.toFixed(1) ?? "—"}
@@ -238,7 +238,7 @@ export default function ReviewPanel({
 
       {canPost ? (
         <form
-          className="space-y-3 rounded-2xl border border-ink-200 bg-white p-4"
+          className="space-y-3 rounded-2xl border border-ink-200 bg-surface p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (!body.trim()) return;
@@ -253,7 +253,7 @@ export default function ReviewPanel({
                 key={n}
                 type="button"
                 onClick={() => setRating(n)}
-                className={`text-2xl leading-none ${n <= rating ? "text-amber-500" : "text-amber-200"}`}
+                className={`text-2xl leading-none ${n <= rating ? "text-amber-500" : "text-amber-200 dark:text-ink-200"}`}
                 aria-label={`${n}点`}
               >
                 ★
@@ -266,7 +266,7 @@ export default function ReviewPanel({
             onChange={(e) => setBody(e.target.value)}
             rows={3}
             placeholder="どんなときに使って、どう良かった（悪かった）かを書くと参考になります"
-            className="w-full rounded-2xl border border-brand-100 bg-white px-3 py-2 text-sm outline-none focus:border-brand-300"
+            className="w-full rounded-2xl border border-brand-100 bg-surface px-3 py-2 text-sm outline-none focus:border-brand-300"
           />
 
           <div className="space-y-2 rounded-2xl bg-brand-50/60 p-3">
@@ -291,7 +291,7 @@ export default function ReviewPanel({
           </div>
 
           <div>
-            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand-200 bg-white px-3 py-1.5 text-xs font-medium text-brand-600">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-brand-200 bg-surface px-3 py-1.5 text-xs font-medium text-brand-fg">
               <ImagePlus size={14} /> 写真を追加（{files.length}/{MAX_IMAGES}）
               <input
                 ref={fileInput}
@@ -325,7 +325,7 @@ export default function ReviewPanel({
             )}
           </div>
 
-          {error && <p className="text-xs text-red-600">{error}</p>}
+          {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
 
           <button
             type="submit"
@@ -336,7 +336,7 @@ export default function ReviewPanel({
           </button>
         </form>
       ) : (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-ink-200 bg-white p-4 text-sm">
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-ink-200 bg-surface p-4 text-sm">
           <Lock size={16} className="text-ink-400" />
           <span>口コミを書くにはログインが必要です。</span>
           <Link

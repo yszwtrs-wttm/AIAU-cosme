@@ -16,7 +16,7 @@ export default function FeelChart({
   const estimated = reviewCount === 0;
 
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-4">
+    <div className="rounded-2xl border border-ink-200 bg-surface p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm font-bold">使い心地</div>
         <span

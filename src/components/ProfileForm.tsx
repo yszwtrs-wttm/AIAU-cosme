@@ -119,7 +119,7 @@ export default function ProfileForm({
 
   return (
     <form
-      className="space-y-5 rounded-2xl border border-ink-200 bg-white p-5"
+      className="space-y-5 rounded-2xl border border-ink-200 bg-surface p-5"
       onSubmit={(e) => {
         e.preventDefault();
         setError(null);
@@ -240,7 +240,7 @@ export default function ProfileForm({
               className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] ${
                 skinTone === tone.hex
                   ? "border-brand-400 bg-brand-50"
-                  : "border-brand-100 bg-white"
+                  : "border-brand-100 bg-surface"
               }`}
             >
               <span className="swatch inline-block h-5 w-5 rounded-full" style={{ background: tone.hex }} />
@@ -261,7 +261,7 @@ export default function ProfileForm({
               className={`rounded-full border px-3 py-1 text-[11px] ${
                 skinType === key
                   ? "border-brand-400 bg-brand-50 text-brand-700"
-                  : "border-brand-100 bg-white"
+                  : "border-brand-100 bg-surface"
               }`}
             >
               {SKIN_TYPE_LABEL[key]}
@@ -281,7 +281,7 @@ export default function ProfileForm({
               className={`rounded-full border px-3 py-1 text-[11px] ${
                 personalColor === key
                   ? "border-brand-400 bg-brand-50 text-brand-700"
-                  : "border-brand-100 bg-white"
+                  : "border-brand-100 bg-surface"
               }`}
             >
               {PERSONAL_COLOR_LABEL[key]}
@@ -336,7 +336,7 @@ export default function ProfileForm({
                 type="button"
                 onClick={() => toggleAllergen(ingredient.id)}
                 className={`flex w-full items-center justify-between border-b border-ink-100 px-3 py-2 text-left text-xs last:border-b-0 ${
-                  selected ? "bg-brand-50 text-brand-700" : "bg-white"
+                  selected ? "bg-brand-50 text-brand-700" : "bg-surface"
                 }`}
               >
                 <span>{ingredient.name_ja || ingredient.inci}</span>
@@ -359,8 +359,8 @@ export default function ProfileForm({
         ポーチの中身を、ユーザーページで公開する
       </label>
 
-      {error && <p className="text-xs text-red-600">{error}</p>}
-      {message && <p className="text-xs text-emerald-600">{message}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
+      {message && <p className="text-xs text-emerald-600 dark:text-emerald-400">{message}</p>}
 
       <button
         type="submit"

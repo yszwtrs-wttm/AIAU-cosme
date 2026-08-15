@@ -8,7 +8,7 @@ export default function DupeRowItem({ row, tone }: { row: DupeRow; tone: "warn" 
   return (
     <Link
       href={`/products/${row.product_id}`}
-      className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-white p-3 transition "
+      className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-surface p-3 transition "
     >
       <div
         className="swatch h-12 w-12 shrink-0 rounded-2xl"
@@ -27,7 +27,7 @@ export default function DupeRowItem({ row, tone }: { row: DupeRow; tone: "warn" 
             </span>
           )}
           {row.color_hex && (
-            <span className="rounded-full bg-white px-2 py-0.5 text-ink-400">
+            <span className="rounded-full bg-surface px-2 py-0.5 text-ink-400">
               {colorName(row.color_hex)}
             </span>
           )}
@@ -37,7 +37,7 @@ export default function DupeRowItem({ row, tone }: { row: DupeRow; tone: "warn" 
         <div className="text-sm font-medium tabular-nums">¥{row.price_yen.toLocaleString()}</div>
         {saving > 0 && (
           <div
-            className={`text-xs font-bold tabular-nums ${tone === "save" ? "text-emerald-600" : "text-ink-400"}`}
+            className={`text-xs font-bold tabular-nums ${tone === "save" ? "text-emerald-600 dark:text-emerald-400" : "text-ink-400"}`}
           >
             −¥{saving.toLocaleString()}
           </div>

@@ -130,7 +130,7 @@ export default function LoginForm({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-ink-200 bg-white p-5">
+    <div className="space-y-4 rounded-2xl border border-ink-200 bg-surface p-5">
       <div>
         <h2 className="font-display text-xl font-bold">
           {mode === "signup" ? "新規登録" : resetPassword ? "パスワードを再設定" : "ログイン"}
@@ -198,7 +198,7 @@ export default function LoginForm({
             <button
               type="button"
               onClick={startPasswordReset}
-              className="w-full text-xs text-brand-600 underline"
+              className="w-full text-xs text-brand-fg underline"
             >
               パスワードを忘れた場合・まだ設定していない場合
             </button>
@@ -236,13 +236,13 @@ export default function LoginForm({
         </div>
       )}
 
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-red-600 dark:text-red-400">{error}</p>}
 
       {step === "email" && !resetPassword && (
         <button
           type="button"
           onClick={() => switchMode(mode === "login" ? "signup" : "login")}
-          className="w-full text-xs text-brand-600 underline"
+          className="w-full text-xs text-brand-fg underline"
         >
           {mode === "login" ? "新規登録はこちら" : "ログインはこちら"}
         </button>

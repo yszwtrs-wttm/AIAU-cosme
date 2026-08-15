@@ -76,8 +76,8 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl border border-ink-200 bg-white p-5">
-        <div className="text-xs font-bold text-brand-600">STEP 1 ／ 写真を選ぶ</div>
+      <section className="rounded-2xl border border-ink-200 bg-surface p-5">
+        <div className="text-xs font-bold text-brand-fg">STEP 1 ／ 写真を選ぶ</div>
         <p className="mt-1 text-sm text-ink-600">
           なりたい色が写っている写真（好きなメイク・服・小物など）を選んでください。
         </p>
@@ -98,8 +98,8 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
       </section>
 
       {extracted.length > 0 && (
-        <section className="rounded-2xl border border-ink-200 bg-white p-5">
-          <div className="text-xs font-bold text-brand-600">STEP 2 ／ 使いたい色を選ぶ</div>
+        <section className="rounded-2xl border border-ink-200 bg-surface p-5">
+          <div className="text-xs font-bold text-brand-fg">STEP 2 ／ 使いたい色を選ぶ</div>
           <div className="mt-3 flex flex-wrap gap-2">
             {extracted.map((c) => (
               <button
@@ -109,7 +109,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                   setHex(c.hex);
                   void search(c.hex, category);
                 }}
-                className={`flex items-center gap-2 rounded-2xl border bg-white px-2.5 py-2 text-[11px] ${
+                className={`flex items-center gap-2 rounded-2xl border bg-surface px-2.5 py-2 text-[11px] ${
                   hex?.toLowerCase() === c.hex.toLowerCase()
                     ? "border-brand-400"
                     : "border-brand-100"
@@ -136,7 +136,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
                 className={`rounded-full border px-3 py-1.5 text-sm ${
                   category === c.value
                     ? "border-transparent bg-brand-600 text-white"
-                    : "border-brand-100 bg-white text-ink-600"
+                    : "border-brand-100 bg-surface text-ink-600"
                 }`}
               >
                 {c.label}
@@ -148,7 +148,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
 
       {hex && (
         <section className="space-y-2">
-          <div className="text-xs font-bold text-brand-600">STEP 3 ／ 近いコスメ</div>
+          <div className="text-xs font-bold text-brand-fg">STEP 3 ／ 近いコスメ</div>
           {loading && <p className="text-sm text-ink-400">探しています…</p>}
 
           {best && (
@@ -173,7 +173,7 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
               <Link
                 key={`${m.product_id}-${m.shade_name ?? ""}`}
                 href={`/products/${m.product_id}`}
-                className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-white p-3 transition "
+                className="flex items-center gap-3 rounded-2xl border border-ink-200 bg-surface p-3 transition "
               >
                 <span
                   className="swatch inline-block h-12 w-12 shrink-0 rounded-full"

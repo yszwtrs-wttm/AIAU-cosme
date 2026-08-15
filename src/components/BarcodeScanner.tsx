@@ -91,13 +91,13 @@ export default function BarcodeScanner() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-ink-200 bg-white p-5">
+      <div className="rounded-2xl border border-ink-200 bg-surface p-5">
         <div className="flex flex-wrap items-center gap-2">
           {status === "scanning" ? (
             <button
               type="button"
               onClick={stop}
-              className="rounded-full border border-brand-200 bg-white px-4 py-2.5 text-sm font-bold text-brand-600"
+              className="rounded-full border border-brand-200 bg-surface px-4 py-2.5 text-sm font-bold text-brand-fg"
             >
               スキャンを終わる
             </button>
@@ -125,7 +125,7 @@ export default function BarcodeScanner() {
             />
             <button
               type="submit"
-              className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-brand-200 bg-white px-3 py-2.5 text-sm"
+              className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-brand-200 bg-surface px-3 py-2.5 text-sm"
             >
               <Search size={14} /> 探す
             </button>
@@ -138,13 +138,13 @@ export default function BarcodeScanner() {
           ref={videoRef}
           className={`mt-3 w-full rounded-2xl bg-black ${status === "scanning" ? "" : "hidden"}`}
         />
-        {message && <p className="mt-2 text-sm text-red-600">{message}</p>}
+        {message && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{message}</p>}
       </div>
 
       {registered.length > 0 && (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-          <div className="font-bold text-emerald-900">{registered.length}点をポーチに入れました</div>
-          <ul className="mt-2 space-y-1 text-sm text-emerald-900">
+        <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50 dark:bg-emerald-950/40 p-5">
+          <div className="font-bold text-emerald-900 dark:text-emerald-100">{registered.length}点をポーチに入れました</div>
+          <ul className="mt-2 space-y-1 text-sm text-emerald-900 dark:text-emerald-100">
             {registered.map((p) => (
               <li key={p.id} className="flex items-center gap-1.5">
                 <Check size={14} /> {p.brands?.name} {p.name}
@@ -161,7 +161,7 @@ export default function BarcodeScanner() {
       )}
 
       {status === "found" && hit && !registered.some((p) => p.id === hit.id) && (
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
+        <div className="rounded-2xl border border-ink-200 bg-surface p-5">
           <div className="text-xs text-ink-400">読み取ったバーコード {jan}</div>
           <div className="mt-1 font-bold">
             {hit.brands?.name} {hit.name}
@@ -180,16 +180,16 @@ export default function BarcodeScanner() {
       )}
 
       {status === "unknown" && (
-        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5">
-          <div className="font-bold text-amber-900">このバーコードは登録がありません</div>
-          <p className="text-sm text-amber-900">似ている商品を下から選んで登録してください。</p>
+        <div className="rounded-2xl border border-amber-300 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/40 p-5">
+          <div className="font-bold text-amber-900 dark:text-amber-100">このバーコードは登録がありません</div>
+          <p className="text-sm text-amber-900 dark:text-amber-100">似ている商品を下から選んで登録してください。</p>
           <div className="mt-3 grid max-h-72 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2">
             {candidates.map((p) => (
               <button
                 key={p.id}
                 type="button"
                 onClick={() => void register(p, "manual")}
-                className="flex items-center gap-2 rounded-2xl border border-ink-200 bg-white p-2 text-left text-sm"
+                className="flex items-center gap-2 rounded-2xl border border-ink-200 bg-surface p-2 text-left text-sm"
               >
                 <span
                   className="swatch inline-block h-8 w-8 rounded-full"

@@ -42,7 +42,7 @@ export default function StashButton({
         })
       }
       className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition disabled:opacity-50 ${
-        owned ? "border border-brand-200 bg-white text-brand-600" : "bg-brand-600 text-white"
+        owned ? "border border-brand-200 bg-surface text-brand-fg" : "bg-brand-600 text-white"
       }`}
     >
       {owned ? <Check size={15} /> : <Heart size={15} />}

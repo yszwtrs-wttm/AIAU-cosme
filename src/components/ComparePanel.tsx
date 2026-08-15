@@ -37,12 +37,12 @@ export default function ComparePanel({
   const estimated = !high.measured || !low.measured;
 
   return (
-    <div className="overflow-hidden rounded-2xl border-2 border-brand-500 bg-white">
+    <div className="overflow-hidden rounded-2xl border-2 border-brand-500 bg-surface">
       <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch gap-2 bg-brand-50 p-4">
         <SideHead side={high} caption="この商品" />
         <div className="pt-9">
           {priceDiff > 0 && (
-            <div className="mx-auto flex items-baseline gap-1 whitespace-nowrap border-2 border-ink-900 bg-white px-2 py-1.5 text-ink-900 sm:px-3">
+            <div className="mx-auto flex items-baseline gap-1 whitespace-nowrap border-2 border-strong bg-surface px-2 py-1.5 text-ink-900 sm:px-3">
               <span className="text-base font-bold tabular-nums leading-none sm:text-lg">
                 ¥{priceDiff.toLocaleString()}
               </span>
@@ -100,7 +100,7 @@ function SideHead({
 }) {
   return (
     <div className={`min-w-0 ${align === "right" ? "text-right" : ""}`}>
-      <div className="whitespace-nowrap text-[10px] font-bold tracking-wider text-brand-600">
+      <div className="whitespace-nowrap text-[10px] font-bold tracking-wider text-brand-fg">
         {caption}
       </div>
       <div
@@ -132,7 +132,7 @@ function SideHead({
         </div>
       </div>
       <div className="mt-1.5 truncate text-[10px] text-ink-400">{side.brand}</div>
-      <span className="mt-1 inline-block rounded-full border border-ink-100 bg-white px-2 py-0.5 text-[10px] text-ink-400">
+      <span className="mt-1 inline-block rounded-full border border-ink-100 bg-surface px-2 py-0.5 text-[10px] text-ink-400">
         {side.measured ? `口コミ${side.reviewCount}人の平均` : "成分からの予想"}
       </span>
     </div>

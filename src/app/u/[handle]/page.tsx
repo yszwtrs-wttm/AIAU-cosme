@@ -50,7 +50,7 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-ink-200 bg-white p-6">
+      <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-ink-200 bg-surface p-6">
         <Avatar
           name={profile.display_name}
           hue={profile.avatar_hue}
@@ -89,7 +89,7 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
         <section className="space-y-3">
           <h2 className="font-display text-lg font-bold">公開しているポーチ（{stash.length}点）</h2>
           {stash.length === 0 ? (
-            <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
+            <p className="rounded-2xl border border-ink-200 bg-surface p-5 text-sm text-ink-600">
               まだ登録がありません。
             </p>
           ) : (
@@ -105,15 +105,15 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
       <section className="space-y-3">
         <h2 className="font-display text-lg font-bold">投稿した口コミ</h2>
         {(reviews ?? []).length === 0 ? (
-          <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
+          <p className="rounded-2xl border border-ink-200 bg-surface p-5 text-sm text-ink-600">
             まだ投稿がありません。
           </p>
         ) : (
           <ul className="space-y-2">
             {(reviews ?? []).map((r) => (
-              <li key={r.id} className="rounded-2xl border border-ink-200 bg-white p-4">
+              <li key={r.id} className="rounded-2xl border border-ink-200 bg-surface p-4">
                 <div className="text-xs text-ink-400">{r.products?.brands?.name}</div>
-                <Link href={`/products/${r.product_id}`} className="text-sm font-bold hover:text-brand-600">
+                <Link href={`/products/${r.product_id}`} className="text-sm font-bold hover:text-brand-fg">
                   {r.products?.name}
                 </Link>
                 <div className="text-amber-500">{"★".repeat(r.rating)}</div>

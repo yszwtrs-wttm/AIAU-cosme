@@ -10,8 +10,8 @@ const CATEGORIES: Category[] = ["lip", "eyeshadow", "foundation", "shampoo", "tr
 const PRODUCT_SELECT =
   "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 const CHIP = "rounded-full border px-3 py-1.5 text-sm transition";
-const CHIP_ON = "border-ink-900 bg-ink-900 text-white";
-const CHIP_OFF = "border-ink-200 bg-white text-ink-600 hover:border-ink-400";
+const CHIP_ON = "border-strong bg-strong text-white";
+const CHIP_OFF = "border-ink-200 bg-surface text-ink-600 hover:border-ink-400";
 
 type Sort = "recommended" | "new" | "cheap" | "expensive" | "rating";
 
@@ -163,7 +163,7 @@ export default async function SearchPage({
               name="q"
               defaultValue={params.q ?? ""}
               placeholder="商品名で探す"
-              className="w-full rounded-full border border-ink-200 bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
+              className="w-full rounded-full border border-ink-200 bg-surface py-2.5 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
             />
           </label>
           {params.category && <input type="hidden" name="category" value={params.category} />}
@@ -171,7 +171,7 @@ export default async function SearchPage({
           {sort !== "recommended" && <input type="hidden" name="sort" value={sort} />}
           <button
             type="submit"
-            className="rounded-full bg-ink-900 px-4 py-2.5 text-sm font-bold text-white"
+            className="rounded-full bg-strong px-4 py-2.5 text-sm font-bold text-white"
           >
             検索
           </button>
@@ -221,9 +221,9 @@ export default async function SearchPage({
       </section>
 
       {sort === "recommended" && !hasPersonalizationMaterial && (
-        <p className="rounded-2xl border border-ink-200 bg-white p-4 text-sm text-ink-600">
+        <p className="rounded-2xl border border-ink-200 bg-surface p-4 text-sm text-ink-600">
           まだあなた向けに並べる材料がありません。{" "}
-          <Link href={real ? "/settings" : "/login"} className="font-bold text-brand-600 underline">
+          <Link href={real ? "/settings" : "/login"} className="font-bold text-brand-fg underline">
             {real ? "肌情報や避けたい成分を登録する" : "ログインして自分向けに探す"}
           </Link>
         </p>
@@ -231,7 +231,7 @@ export default async function SearchPage({
 
       {params.q && <p className="text-sm text-ink-600">「{params.q}」の検索結果：{products.length}件</p>}
       {error && (
-        <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
+        <p className="rounded-xl bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-700 dark:text-red-200">
           商品を取得できませんでした: {error.message}
         </p>
       )}
