@@ -1,5 +1,5 @@
 /**
- * 一覧の取得。絞り込み・並び替え・ページングは Postgres の search_products に任せる。
+ * 一覧の取得。絞り込み・並び替え・ページングは Postgres の search_products_page に任せる。
  * 商品数が増えても取得件数は 1 ページぶんで固定される。
  */
 
@@ -54,7 +54,7 @@ export async function searchProducts(
   supabase: Awaited<ReturnType<typeof createClient>>,
   query: ProductQuery,
 ): Promise<ProductPage> {
-  const { data, error } = await supabase.rpc("search_products", {
+  const { data, error } = await supabase.rpc("search_products_page", {
     p_q: query.q ?? "",
     p_category: query.category ?? "",
     p_mens: query.mens ?? false,

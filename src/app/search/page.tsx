@@ -111,7 +111,7 @@ export default async function SearchPage({
               type="search"
               name="q"
               defaultValue={params.q ?? ""}
-              placeholder="商品名で探す"
+              placeholder="商品名・ブランド名で探す"
               className="w-full rounded-full border border-ink-200 bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
             />
           </label>

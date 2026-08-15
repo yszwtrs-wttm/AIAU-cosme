@@ -826,6 +826,18 @@ export type Database = {
           p_category?: string
           p_limit?: number
           p_mens?: boolean
+          p_q: string
+        }
+        Returns: {
+          product_id: number
+          score: number
+        }[]
+      }
+      search_products_page: {
+        Args: {
+          p_category?: string
+          p_limit?: number
+          p_mens?: boolean
           p_offset?: number
           p_q?: string
           p_sort?: string

@@ -1,11 +1,11 @@
 -- 一覧の全件取得をやめる。
 --   * products_ranked: products に product_score を join したビュー。並び替えの材料をDB側に持つ。
---   * search_products: 絞り込み・並び替え・ページングをDBで完結させる RPC。
+--   * search_products_page: 絞り込み・並び替え・ページングをDBで完結させる RPC。
+--     商品名・ブランド名のあいまい一致は既存の search_products（pg_trgm）に委ねる。
 --     おすすめ順の「避けたい成分」「ポーチに登録済み」の減点も auth.uid() を使ってDB側で計算する。
 --     肌情報との相性（判定はアプリ側の色計算）だけは取得した範囲に対して掛ける。
 
 create index if not exists products_created_at_idx on products (created_at desc);
-create index if not exists products_name_trgm_idx on products using gin (name gin_trgm_ops);
 
 drop view if exists products_ranked;
 
@@ -31,9 +31,9 @@ select
 from products p
 left join product_score s on s.product_id = p.id;
 
-drop function if exists search_products(text, text, boolean, text, int, int);
+drop function if exists search_products_page(text, text, boolean, text, int, int);
 
-create function search_products(
+create function search_products_page(
   p_q text default null,
   p_category text default null,
   p_mens boolean default false,
@@ -75,9 +75,25 @@ as $$
     from user_items ui
     where ui.user_id = auth.uid()
   ),
+  input as (
+    select nullif(btrim(coalesce(p_q, '')), '') as term
+  ),
+  -- 商品名 + ブランド名のあいまい一致は既存の RPC に任せる（候補だけを引く）。
+  hits as (
+    select sp.product_id, sp.score
+    from input i
+    cross join lateral search_products(
+      i.term,
+      nullif(p_category, ''),
+      nullif(coalesce(p_mens, false), false),
+      500
+    ) sp
+    where i.term is not null
+  ),
   matched as (
     select
       pr.*,
+      coalesce(h.score, 0) as search_score,
       exists (select 1 from owned_items o where o.product_id = pr.id) as owned,
       exists (
         select 1
@@ -85,7 +101,8 @@ as $$
         join avoided_inci a on a.inci = upper(ing)
       ) as avoided
     from products_ranked pr
-    where (p_q is null or p_q = '' or pr.name ilike '%' || p_q || '%')
+    left join hits h on h.product_id = pr.id
+    where ((select i.term from input i) is null or h.product_id is not null)
       and (p_category is null or p_category = '' or pr.category = p_category)
       and (not coalesce(p_mens, false) or pr.is_mens)
   ),
@@ -129,6 +146,10 @@ as $$
   from scored s
   join brands b on b.id = s.brand_id
   order by
+    -- 検索語がある場合のおすすめ順は、まず一致度の高いものから。
+    case
+      when p_sort not in ('cheap', 'expensive', 'new', 'rating') then s.search_score
+    end desc nulls last,
     case when p_sort = 'cheap' then s.price_yen end asc nulls last,
     case when p_sort = 'expensive' then s.price_yen end desc nulls last,
     case when p_sort = 'new' then s.created_at end desc nulls last,
