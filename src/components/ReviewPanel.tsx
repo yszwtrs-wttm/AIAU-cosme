@@ -26,8 +26,20 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-function ReviewCard({ review, close }: { review: Review; close: boolean }) {
-  const [reported, setReported] = useState(false);
+function ReviewCard({
+  review,
+  close,
+  canReport,
+  alreadyReported,
+}: {
+  review: Review;
+  close: boolean;
+  canReport: boolean;
+  alreadyReported: boolean;
+}) {
+  const [reported, setReported] = useState(alreadyReported);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [reporting, setReporting] = useState(false);
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
   const skin = review.profiles?.skin_type;
@@ -55,16 +67,37 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
         </div>
         <button
           type="button"
-          disabled={reported}
+          disabled={reported || reporting}
           onClick={async () => {
-            await reportReview(review.id, "fake");
-            setReported(true);
+            setReportError(null);
+            setReporting(true);
+            const res = await reportReview(review.id, "fake");
+            setReporting(false);
+            if (res.ok) {
+              setReported(true);
+              return;
+            }
+            setReportError(res.error ?? "報告できませんでした");
           }}
           className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
         >
-          <Flag size={12} /> {reported ? "報告しました" : "報告"}
+          <Flag size={12} /> {reported ? "報告を受け付けました" : reporting ? "送信中…" : "報告"}
         </button>
       </div>
+
+      {reportError && (
+        <p className="mt-1 text-right text-[11px] text-red-600">
+          {reportError}
+          {!canReport && (
+            <>
+              {" "}
+              <Link href="/login" className="font-bold underline">
+                ログイン
+              </Link>
+            </>
+          )}
+        </p>
+      )}
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
         {close && (
@@ -109,6 +142,7 @@ export default function ReviewPanel({
   initialReviews,
   initialSummary,
   canPost,
+  reportedReviewIds,
   viewer,
 }: {
   productId: number;
@@ -116,6 +150,7 @@ export default function ReviewPanel({
   initialReviews: Review[];
   initialSummary: RatingSummary | null;
   canPost: boolean;
+  reportedReviewIds: number[];
   viewer: Viewer;
 }) {
   const axes = axesFor(category);
@@ -350,7 +385,13 @@ export default function ReviewPanel({
 
       <div className="space-y-2">
         {shown.map(({ review, score }) => (
-          <ReviewCard key={review.id} review={review} close={score > 0} />
+          <ReviewCard
+            key={review.id}
+            review={review}
+            close={score > 0}
+            canReport={canPost}
+            alreadyReported={reportedReviewIds.includes(review.id)}
+          />
         ))}
       </div>
     </div>

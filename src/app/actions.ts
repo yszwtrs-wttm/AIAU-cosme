@@ -132,10 +132,32 @@ export async function attachReviewImages(
   return { ok: !error, error: error?.message };
 }
 
+/**
+ * 口コミの通報。書く操作なので本アカウント限定（RLS でも同じ条件を掛けている）。
+ * 同じ口コミへの二重通報は DB の unique 制約で弾き、日本語の理由を返す。
+ */
 export async function reportReview(reviewId: number, reason: string): Promise<Result> {
   const supabase = await createClient();
-  const { error } = await supabase.from("review_reports").insert({ review_id: reviewId, reason });
-  return { ok: !error, error: error?.message };
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!isRealAccount(user)) {
+    return { ok: false, error: "口コミの報告にはアカウント登録が必要です" };
+  }
+
+  const { error } = await supabase
+    .from("review_reports")
+    .insert({ review_id: reviewId, user_id: user!.id, reason });
+
+  if (error) {
+    if (error.code === "23505") {
+      return { ok: false, error: "この口コミはすでに報告しています" };
+    }
+    return { ok: false, error: error.message };
+  }
+
+  return { ok: true };
 }
 
 export async function saveProfile(input: {
