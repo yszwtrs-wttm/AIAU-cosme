@@ -201,3 +201,22 @@ export type PaletteCoverage = {
   owned_hex: string | null;
   delta_e: number | null;
 };
+
+/** 手持ちのうち、避けたい成分を含む1点。hit_ingredients は当たった成分の日本語名。 */
+export type StashAllergenHit = {
+  product_id: number;
+  brand: string;
+  name: string;
+  category: Category;
+  price_yen: number;
+  color_hex: string | null;
+  image_url: string | null;
+  hit_ingredients: string[];
+};
+
+/** 避けたい成分を含まない代替候補。owned なら手持ちで置き換えられる。 */
+export type AllergenFreeAlternative = DupeRow & {
+  category: Category;
+  price_diff: number;
+  owned: boolean;
+};
