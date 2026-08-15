@@ -201,7 +201,6 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-display text-lg font-bold">持っているものと近いか</h2>
         {topDupe ? (
           <div className="rounded-2xl border border-ink-200 bg-white p-4">
             <p className="text-sm leading-relaxed">
