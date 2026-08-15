@@ -29,6 +29,19 @@ export const ROLE_LABEL: Record<Role, string> = {
   fragrance: "香り",
 };
 
+/** タブなど幅の狭い場所で使う短い名前。 */
+export const ROLE_SHORT_LABEL: Record<Role, string> = {
+  base: "ベース",
+  moisture: "うるおい",
+  active: "効果",
+  color: "色のもと",
+  texture: "質感",
+  cleanse: "洗浄・補修",
+  uv: "紫外線カット",
+  preserve: "品質保持",
+  fragrance: "香り",
+};
+
 /** 表示順。上に来るものほどユーザーの関心が高い。 */
 export const ROLE_ORDER: Role[] = [
   "active",
