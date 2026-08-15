@@ -9,6 +9,7 @@ import Avatar from "@/components/Avatar";
 import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
 import { averageHash } from "@/lib/phash";
+import { REVIEW_BODY_MAX, normalizeReviewBody } from "@/lib/review";
 import { publicImageUrl } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
@@ -16,6 +17,7 @@ import { SKIN_TYPE_LABEL } from "@/lib/types";
 type Viewer = { skinType: SkinType | null; skinToneHex: string | null };
 
 const MAX_IMAGES = 4;
+const DRAFT_PREFIX = "kawanai:review-draft:";
 
 function Stars({ value }: { value: number }) {
   return (
@@ -130,6 +132,21 @@ export default function ReviewPanel({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
+  const draftKey = `${DRAFT_PREFIX}${productId}`;
+  const draftLoaded = useRef(false);
+
+  // 投稿に失敗したり、書きかけで別のページに移っても本文が残るように下書きを保持する。
+  useEffect(() => {
+    const saved = window.localStorage.getItem(draftKey);
+    if (saved) setBody(saved.slice(0, REVIEW_BODY_MAX));
+    draftLoaded.current = true;
+  }, [draftKey]);
+
+  useEffect(() => {
+    if (!draftLoaded.current) return;
+    if (body) window.localStorage.setItem(draftKey, body);
+    else window.localStorage.removeItem(draftKey);
+  }, [body, draftKey]);
 
   // 不正判定は Postgres の trigger が走らせる。結果は Realtime で降ってくる。
   useEffect(() => {
@@ -173,10 +190,10 @@ export default function ReviewPanel({
   const counted = summary?.counted_count ?? 0;
   const hasViewerProfile = Boolean(viewer.skinType || viewer.skinToneHex);
 
-  const submit = () => {
+  const submit = (text: string) => {
     setError(null);
     startTransition(async () => {
-      const res = await postReview({ productId, rating, body, feel });
+      const res = await postReview({ productId, rating, body: text, feel });
       if (!res.ok || !res.reviewId) {
         setError(res.error ?? "投稿できませんでした");
         return;
@@ -241,8 +258,9 @@ export default function ReviewPanel({
           className="space-y-3 rounded-2xl border border-ink-200 bg-white p-4"
           onSubmit={(e) => {
             e.preventDefault();
-            if (!body.trim()) return;
-            submit();
+            const text = normalizeReviewBody(body);
+            if (!text || text.length > REVIEW_BODY_MAX) return;
+            submit(text);
           }}
         >
           <div className="text-sm font-bold">使ってみた感想を書く</div>
@@ -261,13 +279,26 @@ export default function ReviewPanel({
             ))}
           </div>
 
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            rows={3}
-            placeholder="どんなときに使って、どう良かった（悪かった）かを書くと参考になります"
-            className="w-full rounded-2xl border border-brand-100 bg-white px-3 py-2 text-sm outline-none focus:border-brand-300"
-          />
+          <div>
+            <textarea
+              value={body}
+              onChange={(e) => setBody(e.target.value.slice(0, REVIEW_BODY_MAX))}
+              rows={3}
+              maxLength={REVIEW_BODY_MAX}
+              aria-describedby="review-body-count"
+              placeholder="どんなときに使って、どう良かった（悪かった）かを書くと参考になります"
+              className="w-full rounded-2xl border border-brand-100 bg-white px-3 py-2 text-sm outline-none focus:border-brand-300"
+            />
+            <div className="mt-1 flex justify-between text-[11px] text-ink-400">
+              <span>書きかけの内容はこの端末に残ります</span>
+              <span
+                id="review-body-count"
+                className={`tabular-nums ${body.length >= REVIEW_BODY_MAX ? "font-bold text-red-600" : ""}`}
+              >
+                {body.length}/{REVIEW_BODY_MAX}文字
+              </span>
+            </div>
+          </div>
 
           <div className="space-y-2 rounded-2xl bg-brand-50/60 p-3">
             <div className="text-xs font-bold text-brand-700">使い心地（任意）</div>
@@ -329,7 +360,7 @@ export default function ReviewPanel({
 
           <button
             type="submit"
-            disabled={pending}
+            disabled={pending || !normalizeReviewBody(body)}
             className="rounded-full bg-brand-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
           >
             {pending ? "投稿中…" : "投稿する"}

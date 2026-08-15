@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
+import { REVIEW_BODY_MAX, normalizeReviewBody } from "@/lib/review";
 import type { PersonalColor, SkinType } from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
@@ -89,6 +90,12 @@ export async function postReview(input: {
     return { ok: false, error: "口コミの投稿にはアカウント登録が必要です" };
   }
 
+  const body = normalizeReviewBody(input.body);
+  if (!body) return { ok: false, error: "本文を入力してください" };
+  if (body.length > REVIEW_BODY_MAX) {
+    return { ok: false, error: `本文は${REVIEW_BODY_MAX}文字までです` };
+  }
+
   const { data, error } = await supabase
     .from("reviews")
     .insert({
@@ -97,7 +104,7 @@ export async function postReview(input: {
       author_name: "",
       author_key: user!.id,
       rating: input.rating,
-      body: input.body,
+      body,
       feel: input.feel ?? null,
     })
     .select("id")
