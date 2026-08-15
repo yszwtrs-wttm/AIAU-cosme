@@ -4,9 +4,13 @@ import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { judgeFit } from "@/lib/fit";
 import { createClient } from "@/lib/supabase/server";
-import { CATEGORY_LABEL, type Category, type Product, type ProductScore } from "@/lib/types";
+import {
+  CATEGORY_LABEL,
+  SEARCH_CATEGORIES,
+  type Product,
+  type ProductScore,
+} from "@/lib/types";
 
-const CATEGORIES: Category[] = ["lip", "eyeshadow", "foundation", "shampoo", "treatment"];
 const PRODUCT_SELECT =
   "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 const CHIP = "rounded-full border px-3 py-1.5 text-sm transition";
@@ -183,7 +187,7 @@ export default async function SearchPage({
           >
             すべて
           </Link>
-          {CATEGORIES.map((category) => (
+          {SEARCH_CATEGORIES.map((category) => (
             <Link
               key={category}
               href={filterHref({ q: params.q, category, mens: params.mens, sort })}

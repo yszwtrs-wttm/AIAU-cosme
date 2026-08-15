@@ -66,10 +66,15 @@ npm run dev
 
 シードの商品・ブランド・口コミはすべて架空。実在商品のデータは使っていない。
 
+## カテゴリ
+
+カテゴリは `src/lib/types.ts` の `CATEGORY_DEFS` が唯一の正。追加するときはここに1行足し、`products_category_check` を更新するマイグレーションを `supabase/migrations/` に追加する。各画面のカテゴリ一覧（`/search` のチップ、`/color` の絞り込み、ラベル）はこの定義から派生する。
+
 ## 検証
 
 ```bash
 npm run lint
 npm run typecheck
+npm run check:categories   # カテゴリ定義と DB 制約の整合
 npm run build
 ```

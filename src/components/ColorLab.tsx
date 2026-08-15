@@ -5,13 +5,11 @@ import { useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { extractPalette, labArray, type ExtractedColor } from "@/lib/color";
-import { CATEGORY_LABEL, type ColorMatch } from "@/lib/types";
+import { CATEGORY_LABEL, COLOR_CATEGORIES, type ColorMatch } from "@/lib/types";
 import { colorName, colorSearchBadge, dedupeShades, hueGroup, sortBySkinTone } from "@/lib/wording";
 
-const CATEGORIES = [
-  { value: "lip", label: "リップ" },
-  { value: "eyeshadow", label: "アイシャドウ" },
-  { value: "foundation", label: "ファンデーション" },
+const CATEGORIES: { value: string; label: string }[] = [
+  ...COLOR_CATEGORIES.map((value) => ({ value, label: CATEGORY_LABEL[value] })),
   { value: "all", label: "すべて" },
 ];
 

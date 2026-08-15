@@ -10,7 +10,8 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "seed:gen": "python3 scripts/generate_seed.py > supabase/seed.sql",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:categories": "node scripts/check-categories.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

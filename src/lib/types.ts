@@ -1,21 +1,45 @@
-export type Category =
-  | "lip"
-  | "foundation"
-  | "shampoo"
-  | "treatment"
-  | "sunscreen"
-  | "bb"
-  | "eyeshadow";
-
-export const CATEGORY_LABEL: Record<Category, string> = {
-  lip: "リップ",
-  foundation: "ファンデーション",
-  shampoo: "シャンプー",
-  treatment: "トリートメント",
-  sunscreen: "日焼け止め",
-  bb: "BBクリーム",
-  eyeshadow: "アイシャドウ",
+type CategoryDef = {
+  value: string;
+  label: string;
+  /** 色で近い商品を探せる（/color の絞り込みに出す） */
+  color?: boolean;
+  /** 商品を探す（/search）のカテゴリ絞り込みに出す */
+  search?: boolean;
 };
+
+/**
+ * カテゴリ定義の唯一の正。追加・変更はここだけを直せばよく、
+ * 画面のカテゴリ一覧はすべてここから派生させる。
+ * DB の products_category_check との整合は
+ * `npm run check:categories` で確認する。
+ */
+export const CATEGORY_DEFS = [
+  { value: "lip", label: "リップ", color: true, search: true },
+  { value: "eyeshadow", label: "アイシャドウ", color: true, search: true },
+  { value: "foundation", label: "ファンデーション", color: true, search: true },
+  { value: "shampoo", label: "シャンプー", search: true },
+  { value: "treatment", label: "トリートメント", search: true },
+  { value: "sunscreen", label: "日焼け止め" },
+  { value: "bb", label: "BBクリーム" },
+] as const satisfies readonly CategoryDef[];
+
+export type Category = (typeof CATEGORY_DEFS)[number]["value"];
+
+export const CATEGORIES: Category[] = CATEGORY_DEFS.map((def) => def.value);
+
+export const CATEGORY_LABEL = Object.fromEntries(
+  CATEGORY_DEFS.map((def) => [def.value, def.label]),
+) as Record<Category, string>;
+
+/** 商品を探すのカテゴリ絞り込み */
+export const SEARCH_CATEGORIES: Category[] = CATEGORY_DEFS.filter(
+  (def) => "search" in def && def.search,
+).map((def) => def.value);
+
+/** 色で探せるカテゴリ */
+export const COLOR_CATEGORIES: Category[] = CATEGORY_DEFS.filter(
+  (def) => "color" in def && def.color,
+).map((def) => def.value);
 
 export type ProductColor = {
   pos: number;
