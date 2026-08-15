@@ -78,11 +78,11 @@ export default async function SearchPage({
   ] = await Promise.all([
     query.returns<Product[]>(),
     supabase.from("product_score").select("*").returns<ProductScore[]>(),
-    real ? getMyProfile() : Promise.resolve(null),
-    realUser
+    sort === "recommended" && real ? getMyProfile() : Promise.resolve(null),
+    sort === "recommended" && realUser
       ? supabase.from("profile_allergens").select("ingredient_id").eq("user_id", realUser.id)
       : Promise.resolve({ data: null }),
-    realUser
+    sort === "recommended" && realUser
       ? supabase.from("user_items").select("product_id").eq("user_id", realUser.id)
       : Promise.resolve({ data: null }),
   ]);
@@ -97,6 +97,26 @@ export default async function SearchPage({
   const ownedIds = new Set((ownedRows ?? []).map((row) => row.product_id));
   const hasSkinInfo = Boolean(profile?.skin_type || profile?.skin_tone_hex);
   const hasPersonalizationMaterial = hasSkinInfo || avoidedInci.size > 0 || ownedIds.size > 0;
+  const recommendationScores =
+    sort === "recommended"
+      ? new Map(
+          (data ?? []).map((product) => {
+            const fitScore = hasSkinInfo
+              ? { good: 3, unknown: 0, caution: -3 }[judgeFit(product, profile).verdict]
+              : 0;
+            const allergenScore = product.ingredients.some((ingredient) =>
+              avoidedInci.has(ingredient.toUpperCase()),
+            )
+              ? -10
+              : 0;
+            const ownedScore = ownedIds.has(product.id) ? -2 : 0;
+            return [
+              product.id,
+              fitScore + allergenScore + ownedScore + (rank.get(product.id) ?? 0),
+            ];
+          }),
+        )
+      : null;
 
   const products = [...(data ?? [])].sort((a, b) => {
     if (sort === "new") return 0;
@@ -104,19 +124,12 @@ export default async function SearchPage({
     if (sort === "expensive") return b.price_yen - a.price_yen || b.id - a.id;
     if (sort === "rating") return (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0) || b.id - a.id;
 
-    const score = (product: Product) => {
-      const fitScore = hasSkinInfo
-        ? { good: 3, unknown: 0, caution: -3 }[judgeFit(product, profile).verdict]
-        : 0;
-      const allergenScore = product.ingredients.some((ingredient) =>
-        avoidedInci.has(ingredient.toUpperCase()),
-      )
-        ? -10
-        : 0;
-      const ownedScore = ownedIds.has(product.id) ? -2 : 0;
-      return fitScore + allergenScore + ownedScore + (rank.get(product.id) ?? 0);
-    };
-    return score(b) - score(a) || (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0) || b.id - a.id;
+    return (
+      (recommendationScores?.get(b.id) ?? 0) -
+        (recommendationScores?.get(a.id) ?? 0) ||
+      (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0) ||
+      b.id - a.id
+    );
   });
 
   const description =
@@ -207,7 +220,7 @@ export default async function SearchPage({
         </div>
       </section>
 
-      {!hasPersonalizationMaterial && (
+      {sort === "recommended" && !hasPersonalizationMaterial && (
         <p className="rounded-2xl border border-ink-200 bg-white p-4 text-sm text-ink-600">
           まだあなた向けに並べる材料がありません。{" "}
           <Link href={real ? "/settings" : "/login"} className="font-bold text-brand-600 underline">
