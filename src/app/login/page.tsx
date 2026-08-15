@@ -6,7 +6,7 @@ import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ mode?: string }>;
+  searchParams: Promise<{ mode?: string; error?: string }>;
 }) {
   const params = await searchParams;
   const user = await getMyUser();
@@ -20,10 +20,14 @@ export default async function LoginPage({
       <section className="border-b border-ink-200 pb-4">
         <h1 className="font-display text-2xl font-bold">ログイン / アカウントを作る</h1>
         <p className="mt-2 text-sm text-ink-600">
-          初回はメールアドレスに届く6桁のコードで確認してパスワードを設定します。
+          初回はメールアドレスに届くリンクで確認し、プロフィール画面でパスワードを設定します。
           次回からはメールアドレスとパスワードでログインでき、手持ちの登録やポーチを別の端末でも使えます。
         </p>
       </section>
+
+      {params.error && (
+        <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700">{params.error}</p>
+      )}
 
       <LoginForm
         anonymous={Boolean(user?.is_anonymous)}

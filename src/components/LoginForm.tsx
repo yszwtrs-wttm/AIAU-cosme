@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
+import { LockKeyhole, Mail } from "lucide-react";
+import PasswordField from "@/components/PasswordField";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "signup";
-type Step = "email" | "code" | "password";
+type Step = "email" | "sent";
 
 function toJapaneseError(error: { message?: string } | null) {
   const message = error?.message?.toLowerCase() ?? "";
@@ -28,10 +29,7 @@ function toJapaneseError(error: { message?: string } | null) {
     message.includes("too many requests") ||
     message.includes("email rate limit exceeded")
   ) {
-    return "確認コードの送信が制限されています。しばらく待ってからもう一度お試しください";
-  }
-  if (message.includes("otp") || message.includes("token")) {
-    return "確認コードが正しくないか、有効期限が切れています。もう一度お試しください";
+    return "メール送信が制限されています。しばらく待ってからもう一度お試しください";
   }
   return "認証に失敗しました。入力内容を確認して、もう一度お試しください";
 }
@@ -49,13 +47,8 @@ export default function LoginForm({
   const [resetPassword, setResetPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showPasswordConfirmation, setShowPasswordConfirmation] = useState(false);
-  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [linking, setLinking] = useState(false);
 
   const finishAuth = async () => {
     const supabase = createClient();
@@ -64,7 +57,7 @@ export default function LoginForm({
     router.refresh();
   };
 
-  const sendCode = async () => {
+  const sendEmail = async () => {
     const normalizedEmail = email.trim();
     if (!normalizedEmail || !normalizedEmail.includes("@")) {
       setError("メールアドレスを入力してください");
@@ -78,6 +71,7 @@ export default function LoginForm({
     setBusy(true);
     setError(null);
     const supabase = createClient();
+    const emailRedirectTo = `${window.location.origin}/auth/callback`;
 
     if (mode === "login" && !resetPassword) {
       const { error: err } = await supabase.auth.signInWithPassword({
@@ -94,13 +88,22 @@ export default function LoginForm({
       return;
     }
 
-    const shouldLinkAnonymous = mode === "signup" && anonymous;
-    const { error: err } = shouldLinkAnonymous
-      ? await supabase.auth.updateUser({ email: normalizedEmail })
-      : await supabase.auth.signInWithOtp({
-          email: normalizedEmail,
-          options: { shouldCreateUser: mode === "signup" },
-        });
+    const { error: err } = resetPassword
+      ? await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+          redirectTo: `${emailRedirectTo}?type=recovery`,
+        })
+      : mode === "signup" && anonymous
+        ? await supabase.auth.updateUser(
+            { email: normalizedEmail },
+            { emailRedirectTo },
+          )
+        : await supabase.auth.signInWithOtp({
+            email: normalizedEmail,
+            options: {
+              shouldCreateUser: mode === "signup",
+              emailRedirectTo,
+            },
+          });
 
     setBusy(false);
     if (err) {
@@ -108,54 +111,7 @@ export default function LoginForm({
       return;
     }
     setEmail(normalizedEmail);
-    setLinking(shouldLinkAnonymous);
-    setStep("code");
-  };
-
-  const verifyCode = async () => {
-    if (!/^\d{6}$/.test(code.trim())) {
-      setError("6桁の確認コードを入力してください");
-      return;
-    }
-
-    setBusy(true);
-    setError(null);
-    const supabase = createClient();
-    const { error: err } = await supabase.auth.verifyOtp({
-      email,
-      token: code.trim(),
-      type: linking ? "email_change" : "email",
-    });
-
-    setBusy(false);
-    if (err) {
-      setError(toJapaneseError(err));
-      return;
-    }
-    setStep("password");
-  };
-
-  const updatePassword = async () => {
-    if (password.length < 8) {
-      setError("パスワードは8文字以上にしてください");
-      return;
-    }
-    if (password !== passwordConfirmation) {
-      setError("パスワードが一致しません");
-      return;
-    }
-
-    setBusy(true);
-    setError(null);
-    const supabase = createClient();
-    const { error: err } = await supabase.auth.updateUser({ password });
-    if (err) {
-      setBusy(false);
-      setError(toJapaneseError(err));
-      return;
-    }
-    await finishAuth();
-    setBusy(false);
+    setStep("sent");
   };
 
   const switchMode = (nextMode: AuthMode) => {
@@ -163,8 +119,6 @@ export default function LoginForm({
     setResetPassword(false);
     setStep("email");
     setPassword("");
-    setPasswordConfirmation("");
-    setCode("");
     setError(null);
   };
 
@@ -182,11 +136,10 @@ export default function LoginForm({
           {mode === "signup" ? "新規登録" : resetPassword ? "パスワードを再設定" : "ログイン"}
         </h2>
         <p className="mt-1 text-xs text-ink-500">
-          {step === "email" && mode === "signup" && "メールアドレスに届く6桁のコードで確認します。"}
+          {step === "email" && mode === "signup" && "メールアドレスに確認リンクを送ります。"}
           {step === "email" && mode === "login" && !resetPassword && "登録済みのメールアドレスとパスワードでログインします。"}
-          {step === "email" && resetPassword && "登録済みのメールアドレスに確認コードを送ります。"}
-          {step === "code" && "メールアドレスに届いた6桁のコードを入力してください。"}
-          {step === "password" && "パスワードを8文字以上で設定してください。"}
+          {step === "email" && resetPassword && "登録済みのメールアドレスに再設定リンクを送ります。"}
+          {step === "sent" && "メールに届いたリンクを開いてください。"}
         </p>
       </div>
 
@@ -195,7 +148,7 @@ export default function LoginForm({
           className="space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            void sendCode();
+            void sendEmail();
           }}
         >
           <label className="block text-sm font-bold" htmlFor="login-email">
@@ -216,13 +169,11 @@ export default function LoginForm({
               <label className="block text-sm font-bold" htmlFor="login-password">
                 パスワード
               </label>
-              <PasswordInput
+              <PasswordField
                 id="login-password"
                 value={password}
                 onChange={setPassword}
                 autoComplete="current-password"
-                show={showPassword}
-                onToggle={() => setShowPassword((visible) => !visible)}
               />
             </>
           )}
@@ -238,7 +189,7 @@ export default function LoginForm({
               </>
             ) : (
               <>
-                <Mail size={15} /> {busy ? "送信中…" : "確認コードを送る"}
+                <Mail size={15} /> {busy ? "送信中…" : "メールを送る"}
               </>
             )}
           </button>
@@ -267,78 +218,22 @@ export default function LoginForm({
         </form>
       )}
 
-      {step === "code" && (
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void verifyCode();
-          }}
-        >
-          <p className="text-sm">{email} に届いた6桁のコードを入力してください。</p>
-          <input
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="123456"
-            className="w-full rounded-2xl border border-brand-100 px-3 py-2.5 text-center text-lg tracking-widest outline-none focus:border-brand-300"
-          />
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            {busy ? "確認中…" : "コードを確認する"}
-          </button>
+      {step === "sent" && (
+        <div className="space-y-3 rounded-2xl bg-brand-50 p-4 text-sm">
+          <p>
+            <span className="font-bold">{email}</span> にメールを送りました。
+          </p>
+          <p className="text-ink-600">
+            メールに届いたリンクを開くと、{resetPassword ? "パスワードの設定画面" : "認証とプロフィール作成画面"}に進みます。
+          </p>
           <button
             type="button"
             onClick={() => setStep("email")}
-            className="w-full text-xs text-ink-400 underline"
+            className="text-xs text-ink-400 underline"
           >
             メールアドレスを直す
           </button>
-        </form>
-      )}
-
-      {step === "password" && (
-        <form
-          className="space-y-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void updatePassword();
-          }}
-        >
-          <label className="block text-sm font-bold" htmlFor="new-password">
-            パスワード
-          </label>
-          <PasswordInput
-            id="new-password"
-            value={password}
-            onChange={setPassword}
-            autoComplete="new-password"
-            show={showPassword}
-            onToggle={() => setShowPassword((visible) => !visible)}
-          />
-          <label className="block text-sm font-bold" htmlFor="new-password-confirmation">
-            パスワード（確認）
-          </label>
-          <PasswordInput
-            id="new-password-confirmation"
-            value={passwordConfirmation}
-            onChange={setPasswordConfirmation}
-            autoComplete="new-password"
-            show={showPasswordConfirmation}
-            onToggle={() => setShowPasswordConfirmation((visible) => !visible)}
-          />
-          <button
-            type="submit"
-            disabled={busy}
-            className="w-full rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-          >
-            {busy ? "設定中…" : "パスワードを設定する"}
-          </button>
-        </form>
+        </div>
       )}
 
       {error && <p className="text-xs text-red-600">{error}</p>}
@@ -352,43 +247,6 @@ export default function LoginForm({
           {mode === "login" ? "新規登録はこちら" : "ログインはこちら"}
         </button>
       )}
-    </div>
-  );
-}
-
-function PasswordInput({
-  id,
-  value,
-  onChange,
-  autoComplete,
-  show,
-  onToggle,
-}: {
-  id: string;
-  value: string;
-  onChange: (value: string) => void;
-  autoComplete: "current-password" | "new-password";
-  show: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="relative">
-      <input
-        id={id}
-        type={show ? "text" : "password"}
-        autoComplete={autoComplete}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-brand-100 px-3 py-2.5 pr-11 text-sm outline-none focus:border-brand-300"
-      />
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-label={show ? "パスワードを隠す" : "パスワードを表示"}
-        className="absolute inset-y-0 right-3 text-ink-400"
-      >
-        {show ? <EyeOff size={17} /> : <Eye size={17} />}
-      </button>
     </div>
   );
 }

@@ -107,7 +107,7 @@ export default function BarcodeScanner() {
               onClick={start}
               className="flex items-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white"
             >
-              <Camera size={15} /> 続けてスキャンする
+              <Camera size={15} /> スキャンする
             </button>
           )}
           <form
@@ -155,7 +155,7 @@ export default function BarcodeScanner() {
             href="/stash"
             className="mt-3 inline-block rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
           >
-            かぶっていないか見る
+            Myポーチを見る
           </Link>
         </div>
       )}

@@ -1,12 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveProfile } from "@/app/actions";
+import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
-import { SKIN_TYPE_LABEL, type Profile, type SkinType } from "@/lib/types";
+import {
+  PERSONAL_COLOR_LABEL,
+  SKIN_TYPE_LABEL,
+  type IngredientMaster,
+  type PersonalColor,
+  type Profile,
+  type SkinType,
+} from "@/lib/types";
 
-/** 肌の色は数値で聞かず、見本から選ばせる（ファンデの番号提案に使う）。 */
 const SKIN_TONES = [
   { hex: "#f6e0d2", label: "とても明るい" },
   { hex: "#efd0bc", label: "明るい" },
@@ -20,10 +27,12 @@ const HUES = [330, 300, 260, 200, 160, 20];
 
 export default function ProfileForm({
   profile,
-  email,
+  ingredients,
+  allergenIds,
 }: {
   profile: Profile | null;
-  email: string | null;
+  ingredients: IngredientMaster[];
+  allergenIds: number[];
 }) {
   const router = useRouter();
   const [handle, setHandle] = useState(profile?.handle ?? "");
@@ -31,17 +40,81 @@ export default function ProfileForm({
   const [bio, setBio] = useState(profile?.bio ?? "");
   const [skinTone, setSkinTone] = useState(profile?.skin_tone_hex ?? "");
   const [skinType, setSkinType] = useState<SkinType | "">(profile?.skin_type ?? "");
+  const [personalColor, setPersonalColor] = useState<PersonalColor | "">(
+    profile?.personal_color ?? "",
+  );
   const [hue, setHue] = useState(profile?.avatar_hue ?? 330);
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url ?? null);
   const [stashPublic, setStashPublic] = useState(profile?.stash_public ?? true);
+  const [selectedAllergenIds, setSelectedAllergenIds] = useState<number[]>(allergenIds);
+  const [allergenQuery, setAllergenQuery] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [avatarBusy, setAvatarBusy] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const signOut = async () => {
+  const filteredIngredients = useMemo(() => {
+    const query = allergenQuery.trim().toLowerCase();
+    return ingredients
+      .filter((ingredient) => {
+        if (!query) return true;
+        return (
+          ingredient.inci.toLowerCase().includes(query) ||
+          (ingredient.name_ja ?? "").toLowerCase().includes(query)
+        );
+      })
+      .slice(0, 30);
+  }, [allergenQuery, ingredients]);
+
+  const selectedIngredients = ingredients.filter((ingredient) =>
+    selectedAllergenIds.includes(ingredient.id),
+  );
+
+  const uploadAvatar = async (file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("画像ファイルを選択してください");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("画像は5MB以下にしてください");
+      return;
+    }
+
+    setAvatarBusy(true);
+    setError(null);
     const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setAvatarBusy(false);
+      setError("セッションがありません");
+      return;
+    }
+
+    const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const path = `${user.id}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, { upsert: false });
+    if (uploadError) {
+      setAvatarBusy(false);
+      setError("アイコン画像をアップロードできませんでした");
+      return;
+    }
+
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    setAvatarUrl(data.publicUrl);
+    setAvatarBusy(false);
+  };
+
+  const toggleAllergen = (ingredientId: number) => {
+    setSelectedAllergenIds((current) =>
+      current.includes(ingredientId)
+        ? current.filter((id) => id !== ingredientId)
+        : [...current, ingredientId],
+    );
   };
 
   return (
@@ -58,8 +131,11 @@ export default function ProfileForm({
             bio,
             skinToneHex: skinTone || null,
             skinType: skinType || null,
+            personalColor: personalColor || null,
             stashPublic,
             avatarHue: hue,
+            avatarUrl,
+            allergenIds: selectedAllergenIds,
           });
           if (!res.ok) {
             setError(res.error ?? "保存できませんでした");
@@ -72,23 +148,47 @@ export default function ProfileForm({
       }}
     >
       <div className="flex items-center gap-3">
-        <span
-          className="grid h-14 w-14 place-items-center rounded-full text-xl font-bold text-white"
-          style={{ background: `hsl(${hue} 70% 62%)` }}
-        >
-          {(displayName || handle || "?").slice(0, 1)}
-        </span>
-        <div className="flex gap-1.5">
-          {HUES.map((h) => (
-            <button
-              key={h}
-              type="button"
-              onClick={() => setHue(h)}
-              aria-label="アイコンの色"
-              className={`h-7 w-7 rounded-full ${hue === h ? "ring-2 ring-brand-400 ring-offset-2" : ""}`}
-              style={{ background: `hsl(${h} 70% 62%)` }}
-            />
-          ))}
+        <Avatar
+          name={displayName || handle || "K"}
+          hue={hue}
+          avatarUrl={avatarUrl}
+          size="lg"
+        />
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-1.5">
+            {HUES.map((value) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setHue(value)}
+                aria-label="アイコンの色"
+                className={`h-7 w-7 rounded-full ${
+                  hue === value ? "ring-2 ring-brand-400 ring-offset-2" : ""
+                }`}
+                style={{ background: `hsl(${value} 70% 62%)` }}
+              />
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <label className="cursor-pointer rounded-full border border-brand-200 px-3 py-1.5 text-brand-700">
+              画像を選ぶ
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => void uploadAvatar(e.target.files?.[0])}
+              />
+            </label>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={() => setAvatarUrl(null)}
+                className="text-ink-400 underline"
+              >
+                デフォルトに戻す
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -97,7 +197,7 @@ export default function ProfileForm({
         <input
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="あおい"
+          placeholder="ニックネーム"
           className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
         />
         <span className="text-[11px] text-ink-400">口コミには、この名前とアイコンが出ます。</span>
@@ -108,10 +208,12 @@ export default function ProfileForm({
         <input
           value={handle}
           onChange={(e) => setHandle(e.target.value.toLowerCase())}
-          placeholder="aoi_cosme"
+          placeholder="kawanai_user"
           className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
         />
-        <span className="text-[11px] text-ink-400">半角の小文字・数字・_ で3〜20文字。あとから変えられます。</span>
+        <span className="text-[11px] text-ink-400">
+          半角の小文字・数字・_ で3〜20文字。あとから変えられます。
+        </span>
       </label>
 
       <label className="block space-y-1">
@@ -125,22 +227,24 @@ export default function ProfileForm({
       </label>
 
       <div className="space-y-1">
-        <span className="text-sm font-bold">肌の色（任意）</span>
+        <span className="text-sm font-bold">肌のトーン（任意）</span>
         <p className="text-[11px] text-ink-400">
-          選んでおくと、ファンデーションで「あなたに近い番号」を先に出せます。
+          選んでおくと、肌のトーンに近い色の商品を見つけやすくなります。
         </p>
         <div className="mt-1 flex flex-wrap gap-2">
-          {SKIN_TONES.map((t) => (
+          {SKIN_TONES.map((tone) => (
             <button
-              key={t.hex}
+              key={tone.hex}
               type="button"
-              onClick={() => setSkinTone(skinTone === t.hex ? "" : t.hex)}
+              onClick={() => setSkinTone(skinTone === tone.hex ? "" : tone.hex)}
               className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] ${
-                skinTone === t.hex ? "border-brand-400 bg-brand-50" : "border-brand-100 bg-white"
+                skinTone === tone.hex
+                  ? "border-brand-400 bg-brand-50"
+                  : "border-brand-100 bg-white"
               }`}
             >
-              <span className="swatch inline-block h-5 w-5 rounded-full" style={{ background: t.hex }} />
-              {t.label}
+              <span className="swatch inline-block h-5 w-5 rounded-full" style={{ background: tone.hex }} />
+              {tone.label}
             </button>
           ))}
         </div>
@@ -149,18 +253,100 @@ export default function ProfileForm({
       <div className="space-y-1">
         <span className="text-sm font-bold">肌の状態（任意）</span>
         <div className="mt-1 flex flex-wrap gap-2">
-          {(Object.keys(SKIN_TYPE_LABEL) as SkinType[]).map((k) => (
+          {(Object.keys(SKIN_TYPE_LABEL) as SkinType[]).map((key) => (
             <button
-              key={k}
+              key={key}
               type="button"
-              onClick={() => setSkinType(skinType === k ? "" : k)}
+              onClick={() => setSkinType(skinType === key ? "" : key)}
               className={`rounded-full border px-3 py-1 text-[11px] ${
-                skinType === k ? "border-brand-400 bg-brand-50 text-brand-700" : "border-brand-100 bg-white"
+                skinType === key
+                  ? "border-brand-400 bg-brand-50 text-brand-700"
+                  : "border-brand-100 bg-white"
               }`}
             >
-              {SKIN_TYPE_LABEL[k]}
+              {SKIN_TYPE_LABEL[key]}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <span className="text-sm font-bold">パーソナルカラー（任意）</span>
+        <div className="mt-1 flex flex-wrap gap-2">
+          {(Object.keys(PERSONAL_COLOR_LABEL) as PersonalColor[]).map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setPersonalColor(personalColor === key ? "" : key)}
+              className={`rounded-full border px-3 py-1 text-[11px] ${
+                personalColor === key
+                  ? "border-brand-400 bg-brand-50 text-brand-700"
+                  : "border-brand-100 bg-white"
+              }`}
+            >
+              {PERSONAL_COLOR_LABEL[key]}
+            </button>
+          ))}
+        </div>
+        {personalColor && (
+          <button
+            type="button"
+            onClick={() => setPersonalColor("")}
+            className="text-[11px] text-ink-400 underline"
+          >
+            選択を解除
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <div>
+          <span className="text-sm font-bold">避けたい成分（任意）</span>
+          <p className="text-[11px] text-ink-400">
+            登録した成分が入っている商品に注意を表示します。
+          </p>
+        </div>
+        {selectedIngredients.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {selectedIngredients.map((ingredient) => (
+              <button
+                key={ingredient.id}
+                type="button"
+                onClick={() => toggleAllergen(ingredient.id)}
+                className="rounded-full bg-brand-50 px-2 py-1 text-[11px] text-brand-700"
+              >
+                {ingredient.name_ja || ingredient.inci} ×
+              </button>
+            ))}
+          </div>
+        )}
+        <input
+          type="search"
+          value={allergenQuery}
+          onChange={(e) => setAllergenQuery(e.target.value)}
+          placeholder="成分名またはINCI名で検索"
+          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
+        />
+        <div className="max-h-48 overflow-y-auto rounded-2xl border border-ink-100">
+          {filteredIngredients.map((ingredient) => {
+            const selected = selectedAllergenIds.includes(ingredient.id);
+            return (
+              <button
+                key={ingredient.id}
+                type="button"
+                onClick={() => toggleAllergen(ingredient.id)}
+                className={`flex w-full items-center justify-between border-b border-ink-100 px-3 py-2 text-left text-xs last:border-b-0 ${
+                  selected ? "bg-brand-50 text-brand-700" : "bg-white"
+                }`}
+              >
+                <span>{ingredient.name_ja || ingredient.inci}</span>
+                <span className="ml-2 text-[10px] text-ink-400">{ingredient.inci}</span>
+              </button>
+            );
+          })}
+          {filteredIngredients.length === 0 && (
+            <p className="p-3 text-xs text-ink-400">一致する成分がありません。</p>
+          )}
         </div>
       </div>
 
@@ -176,19 +362,13 @@ export default function ProfileForm({
       {error && <p className="text-xs text-red-600">{error}</p>}
       {message && <p className="text-xs text-emerald-600">{message}</p>}
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
-        >
-          {pending ? "保存中…" : "保存する"}
-        </button>
-        <button type="button" onClick={() => void signOut()} className="text-xs text-ink-400 underline">
-          ログアウト
-        </button>
-        {email && <span className="text-[11px] text-ink-400">{email}</span>}
-      </div>
+      <button
+        type="submit"
+        disabled={pending || avatarBusy}
+        className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+      >
+        {pending || avatarBusy ? "保存中…" : "保存する"}
+      </button>
     </form>
   );
 }
