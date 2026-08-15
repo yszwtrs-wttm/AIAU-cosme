@@ -57,15 +57,15 @@ export default function ComparePanel({
           const lead = Math.abs(diff) >= 12 ? (diff > 0 ? "high" : "low") : null;
           return (
             <li key={axis.key} className="px-4 py-3">
-              <div className="text-center text-xs font-bold">{axis.label}</div>
+              <div className="text-center text-sm font-bold">{axis.label}</div>
               <div className="mt-2 flex items-center gap-2">
                 <span className="w-16 shrink-0" />
-                <div className="flex min-w-0 flex-1 justify-between text-[10px] text-ink-400">
+                <div className="flex min-w-0 flex-1 justify-between text-[11px] font-bold text-ink-400">
                   <span>{axis.low}</span>
                   <span>{axis.high}</span>
                 </div>
               </div>
-              <div className="mt-1 space-y-1.5">
+              <div className="mt-1 space-y-2">
                 <Bar value={h} label="この商品" tone="high" lead={lead === "high"} />
                 <Bar value={l} label="安い方" tone="low" lead={lead === "low"} />
               </div>
@@ -136,15 +136,21 @@ function Bar({
   const v = Math.max(0, Math.min(100, value));
   return (
     <div className="flex items-center gap-2">
-      <span className={`w-16 shrink-0 text-[10px] ${lead ? "font-bold text-ink-900" : "text-ink-400"}`}>
+      <span className={`w-16 shrink-0 text-[11px] font-bold ${lead ? "text-ink-900" : "text-ink-400"}`}>
         {label}
       </span>
-      <span className="relative h-2.5 flex-1 rounded-full bg-ink-100">
+      <span className="relative h-4 flex-1 rounded-full bg-ink-100">
         <span
           className={`absolute inset-y-0 left-0 rounded-full ${
-            tone === "high" ? "bg-brand-500" : "bg-emerald-500"
-          } ${lead ? "" : "opacity-60"}`}
+            tone === "high" ? "bg-brand-600" : "bg-emerald-600"
+          } ${lead ? "ring-2 ring-inset ring-white/40" : ""}`}
           style={{ width: `${v}%` }}
+        />
+        <span
+          className={`absolute top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-white shadow ${
+            tone === "high" ? "bg-brand-600" : "bg-emerald-600"
+          }`}
+          style={{ left: `${v}%` }}
         />
       </span>
     </div>
