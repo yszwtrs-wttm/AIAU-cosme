@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Avatar from "@/components/Avatar";
 import ProductCard from "@/components/ProductCard";
 import { createClient } from "@/lib/supabase/server";
 import { publicImageUrl } from "@/lib/storage";
-import { SKIN_TYPE_LABEL, type Product, type Profile, type Review } from "@/lib/types";
+import {
+  PERSONAL_COLOR_LABEL,
+  SKIN_TYPE_LABEL,
+  type Product,
+  type Profile,
+  type Review,
+} from "@/lib/types";
 
 type PublicReview = Review & { products: { id: number; name: string; brands: { name: string } | null } | null };
 type StashRow = { products: Product | null };
@@ -44,12 +51,12 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-ink-200 bg-white p-6">
-        <span
-          className="grid h-16 w-16 place-items-center rounded-full text-2xl font-bold text-white"
-          style={{ background: `hsl(${profile.avatar_hue} 70% 62%)` }}
-        >
-          {profile.display_name.slice(0, 1)}
-        </span>
+        <Avatar
+          name={profile.display_name}
+          hue={profile.avatar_hue}
+          avatarUrl={profile.avatar_url}
+          size="lg"
+        />
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-2xl font-bold">{profile.display_name}</h1>
           <div className="text-xs text-ink-400">@{profile.handle}</div>
@@ -61,12 +68,17 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
                   className="swatch inline-block h-3.5 w-3.5 rounded-full"
                   style={{ background: profile.skin_tone_hex }}
                 />
-                肌の色
+                肌のトーン
               </span>
             )}
             {profile.skin_type && (
               <span className="rounded-full bg-plum-100 px-2 py-0.5 text-plum-700">
                 {SKIN_TYPE_LABEL[profile.skin_type]}
+              </span>
+            )}
+            {profile.personal_color && (
+              <span className="rounded-full bg-plum-100 px-2 py-0.5 text-plum-700">
+                {PERSONAL_COLOR_LABEL[profile.personal_color]}
               </span>
             )}
           </div>

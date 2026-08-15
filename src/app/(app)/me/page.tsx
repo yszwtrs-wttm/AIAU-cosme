@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Settings } from "lucide-react";
+import Avatar from "@/components/Avatar";
+import LogoutButton from "@/components/LogoutButton";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -34,12 +36,12 @@ export default async function MyPage() {
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-ink-200 bg-white p-5">
-        <span
-          className="grid h-16 w-16 place-items-center rounded-full bg-ink-100 text-2xl font-bold text-white"
-          style={profile ? { background: `hsl(${profile.avatar_hue} 70% 62%)` } : undefined}
-        >
-          {(profile?.display_name ?? "?").slice(0, 1)}
-        </span>
+        <Avatar
+          name={profile?.display_name ?? "?"}
+          hue={profile?.avatar_hue ?? 330}
+          avatarUrl={profile?.avatar_url}
+          size="lg"
+        />
         <div className="min-w-0 flex-1">
           <div className="font-display text-2xl font-bold">
             {profile?.display_name ?? "お試しで使っています"}
@@ -47,6 +49,14 @@ export default async function MyPage() {
           <div className="text-xs text-ink-400">
             {profile ? `@${profile.handle}` : "ログインすると、口コミが書けてポーチを引き継げます"}
           </div>
+          {profile?.personal_color && (
+            <div className="mt-1 text-xs text-brand-700">
+              {profile.personal_color === "spring" && "イエベ春"}
+              {profile.personal_color === "summer" && "ブルベ夏"}
+              {profile.personal_color === "autumn" && "イエベ秋"}
+              {profile.personal_color === "winter" && "ブルベ冬"}
+            </div>
+          )}
         </div>
         <Link
           href={isRealAccount(user) ? "/settings" : "/login"}
@@ -55,11 +65,12 @@ export default async function MyPage() {
           {isRealAccount(user) ? <Settings size={15} /> : null}
           {isRealAccount(user) ? "設定" : "ログイン"}
         </Link>
+        {isRealAccount(user) && <LogoutButton />}
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-ink-200 bg-white p-4">
-          <div className="text-xs font-bold text-ink-400">ポーチの数</div>
+          <div className="text-xs font-bold text-ink-400">Myポーチの数</div>
           <div className="mt-1 font-display text-3xl font-bold tabular-nums">{items.length}</div>
         </div>
         <div className="rounded-2xl border border-ink-200 bg-white p-4">
@@ -72,10 +83,11 @@ export default async function MyPage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold">ポーチの中身</h2>
-          <Link href="/scan" className="text-xs font-bold text-brand-600">
-            追加する
-          </Link>
+          <h2 className="font-display text-lg font-bold">Myポーチの中身</h2>
+          <div className="flex items-center gap-3 text-xs font-bold text-brand-600">
+            {items.length > 4 && <Link href="/stash">すべて見る</Link>}
+            <Link href="/stash">追加する</Link>
+          </div>
         </div>
         {items.length === 0 ? (
           <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
@@ -83,7 +95,7 @@ export default async function MyPage() {
           </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
-            {items.map((p) => (
+            {items.slice(0, 4).map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
           </div>

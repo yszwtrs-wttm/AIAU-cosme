@@ -39,12 +39,11 @@ export default async function Home() {
     return <LandingPage products={await getRankedProducts(supabase)} />;
   }
 
-  const [{ data: products }, { data: scores }, { count: stashCount }, overlapRes, profile] =
+  const [{ data: products }, { data: scores }, { count: stashCount }, profile] =
     await Promise.all([
       supabase.from("products").select(PRODUCT_SELECT).returns<Product[]>(),
       supabase.from("product_score").select("*").returns<ProductScore[]>(),
       supabase.from("user_items").select("product_id", { count: "exact", head: true }),
-      supabase.rpc("find_stash_overlaps"),
       getMyProfile(),
     ]);
 
@@ -59,7 +58,6 @@ export default async function Home() {
         .filter(({ fit }) => fit.verdict === "good")
         .slice(0, 4)
     : [];
-  const overlapCount = Array.isArray(overlapRes.data) ? overlapRes.data.length : 0;
 
   return (
     <PersonalizedHome
@@ -67,7 +65,6 @@ export default async function Home() {
       hasSkinInfo={hasSkinInfo}
       suggestions={suggestions}
       stashCount={stashCount ?? 0}
-      overlapCount={overlapCount}
     />
   );
 }
@@ -181,13 +178,11 @@ function PersonalizedHome({
   hasSkinInfo,
   suggestions,
   stashCount,
-  overlapCount,
 }: {
   displayName: string;
   hasSkinInfo: boolean;
   suggestions: { product: Product; fit: ReturnType<typeof judgeFit> }[];
   stashCount: number;
-  overlapCount: number;
 }) {
   return (
     <div className="space-y-8">
@@ -246,22 +241,17 @@ function PersonalizedHome({
       <section className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="flex items-center gap-2 text-sm font-bold">
-            <Heart size={17} className="text-brand-600" /> ポーチの状況
+            <Heart size={17} className="text-brand-600" /> Myポーチの状況
           </div>
           <p className="mt-3 font-display text-3xl font-bold tabular-nums">{stashCount}点</p>
-          {overlapCount > 0 ? (
-            <p className="mt-1 text-sm text-amber-700">{overlapCount}組の似たものがあります。</p>
-          ) : (
-            <p className="mt-1 text-sm text-ink-600">手持ちとの違いを見ながら探せます。</p>
-          )}
           <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
-            {overlapCount > 0 ? "被りを確認する" : "ポーチを見る"} <ArrowRight className="inline" size={14} />
+            Myポーチを見る <ArrowRight className="inline" size={14} />
           </Link>
         </div>
         <div className="rounded-2xl border border-ink-200 bg-white p-5">
           <div className="text-sm font-bold">すぐ使える機能</div>
           <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-            <QuickLink href="/scan" icon={<Camera size={15} />} label="手持ちを登録" />
+            <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />
             <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
             <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
             <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />

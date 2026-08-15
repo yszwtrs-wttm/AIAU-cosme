@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Flag, ImagePlus, Lock, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { attachReviewImages, postReview, reportReview } from "@/app/actions";
+import Avatar from "@/components/Avatar";
 import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
 import { averageHash } from "@/lib/phash";
@@ -25,17 +26,6 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-function Avatar({ name, hue }: { name: string; hue: number }) {
-  return (
-    <span
-      className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[11px] font-bold text-white"
-      style={{ background: `hsl(${hue} 70% 62%)` }}
-    >
-      {name.slice(0, 1)}
-    </span>
-  );
-}
-
 function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   const [reported, setReported] = useState(false);
   const name = review.profiles?.display_name ?? review.author_name;
@@ -45,7 +35,12 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   return (
     <div className="rounded-2xl border border-ink-200 bg-white p-4">
       <div className="flex items-center gap-2">
-        <Avatar name={name} hue={review.profiles?.avatar_hue ?? 330} />
+        <Avatar
+          name={name}
+          hue={review.profiles?.avatar_hue ?? 330}
+          avatarUrl={review.profiles?.avatar_url}
+          size="sm"
+        />
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-bold">
             {review.profiles?.handle ? (
@@ -145,7 +140,7 @@ export default function ReviewPanel({
         supabase
           .from("reviews")
           .select(
-            "*,profiles(handle,display_name,avatar_hue,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
+            "*,profiles(handle,display_name,avatar_hue,avatar_url,skin_type,skin_tone_hex),review_images(id,review_id,path,pos)",
           )
           .eq("product_id", productId)
           .order("posted_at", { ascending: false }),
