@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImagePlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { extractPalette, labArray, type ExtractedColor } from "@/lib/color";
@@ -19,13 +19,21 @@ const CATEGORIES = [
  * 写真を選ぶ → 色を選ぶ → 近いコスメを見る、の3ステップ。
  * HEX や ΔE は画面に出さず、色見本と言葉だけで選べるようにする。
  */
-export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null }) {
-  const [hex, setHex] = useState<string | null>(null);
+export default function ColorLab({
+  skinToneHex,
+  initialHex = null,
+}: {
+  skinToneHex?: string | null;
+  initialHex?: string | null;
+}) {
+  const [hex, setHex] = useState<string | null>(initialHex);
   const [matches, setMatches] = useState<ColorMatch[]>([]);
   const [category, setCategory] = useState("lip");
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
-  const [extracted, setExtracted] = useState<ExtractedColor[]>([]);
+  const [extracted, setExtracted] = useState<ExtractedColor[]>(
+    initialHex ? [{ hex: initialHex, share: 1 }] : [],
+  );
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const search = async (targetHex: string, cat: string) => {
@@ -39,6 +47,11 @@ export default function ColorLab({ skinToneHex }: { skinToneHex?: string | null 
     setMatches((data ?? []) as ColorMatch[]);
     setLoading(false);
   };
+
+  // ポーチの色マップから「持っていない色」を渡されたときは、その色でそのまま探す。
+  useEffect(() => {
+    if (initialHex) void search(initialHex, "lip");
+  }, [initialHex]);
 
   const onFile = (file: File) => {
     const url = URL.createObjectURL(file);
