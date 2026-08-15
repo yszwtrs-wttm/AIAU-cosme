@@ -32,6 +32,19 @@ w_i = (1 / log2(i + 2)) * idf(ingredient)
 
 共通の基剤（水、BG、グリセリンなど）は IDF で寄与を落とす。L2 正規化して pgvector の cosine 距離で比較する。
 
+### 定期再計算
+
+IDF は商品が増えるたびに変わるので、Supabase Cron（`pg_cron`）で日次 18:00 UTC（JST 3:00）に
+`refresh_ingredient_idf_logged()` を実行し、DF / IDF を数え直して `products.ingredient_vec` を全行再生成する。
+手動で走らせたい場合は `select refresh_ingredient_idf_logged();`。
+
+実行ログは `maintenance_runs` に残る。最終実行はビューで確認する。
+
+```sql
+select * from ingredient_idf_status;
+-- started_at | finished_at | duration_ms | products | ingredients | status | detail
+```
+
 ## 色差
 
 HEX → CIELAB に変換し、CIEDE2000 を Postgres 関数 `lab_delta_e` で計算する。
