@@ -4,12 +4,14 @@ import DupeRowItem from "@/components/DupeRowItem";
 import FeelChart from "@/components/FeelChart";
 import FitCard from "@/components/FitCard";
 import IngredientPanel from "@/components/IngredientPanel";
+import OverlapReason from "@/components/OverlapReason";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { axesFor, estimateFeel } from "@/lib/feel";
 import { judgeFit } from "@/lib/fit";
+import { type IngredientOverlap, explainOverlap, toIdfMap } from "@/lib/overlap";
 import { createClient } from "@/lib/supabase/server";
 import {
   CATEGORY_LABEL,
@@ -21,6 +23,19 @@ import {
   type Review,
 } from "@/lib/types";
 import { colorDifferenceText, colorMatchText, colorName, formulaMatchText } from "@/lib/wording";
+
+/** 寄与度の計算に使う IDF を、2商品に出てくる成分の分だけ引く。 */
+async function fetchIdf(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  a: string[],
+  b: string[],
+) {
+  const { data } = await supabase
+    .from("ingredients_master")
+    .select("inci,idf")
+    .in("inci", [...new Set([...a, ...b])]);
+  return toIdfMap(data ?? []);
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -107,8 +122,26 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     ? Object.fromEntries(Object.entries(feelSummary!.feel!).map(([k, v]) => [k, Number(v)]))
     : estimateFeel(product.category, product.ingredients);
 
+  // 被り判定の根拠。相手の全成分表示が要るので、似ている相手が決まってから取りに行く。
+  let dupeOverlap: IngredientOverlap | null = null;
+  if (topDupe && product.ingredients.length > 0) {
+    const { data: dupeProduct } = await supabase
+      .from("products")
+      .select("ingredients")
+      .eq("id", topDupe.product_id)
+      .maybeSingle<Pick<Product, "ingredients">>();
+    if (dupeProduct && dupeProduct.ingredients.length > 0) {
+      dupeOverlap = explainOverlap(
+        product.ingredients,
+        dupeProduct.ingredients,
+        await fetchIdf(supabase, product.ingredients, dupeProduct.ingredients),
+      );
+    }
+  }
+
   // 高い方の良さを見せる比較。安い候補の成分と口コミ平均も要るので、決まってから取りに行く。
   let compareLow: CompareSide | null = null;
+  let cheaperOverlap: IngredientOverlap | null = null;
   if (cheapestSimilar) {
     const [{ data: lowProduct }, { data: lowFeel }] = await Promise.all([
       supabase
@@ -136,6 +169,13 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     ]);
 
     if (lowProduct) {
+      if (product.ingredients.length > 0 && lowProduct.ingredients.length > 0) {
+        cheaperOverlap = explainOverlap(
+          product.ingredients,
+          lowProduct.ingredients,
+          await fetchIdf(supabase, product.ingredients, lowProduct.ingredients),
+        );
+      }
       const lowMeasured = Boolean(lowFeel?.feel && lowFeel.feel_count > 0);
       compareLow = {
         productId: lowProduct.id,
@@ -245,7 +285,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {compareLow ? "使い心地とねだんを比べる" : "使い心地"}
         </h2>
         {compareLow ? (
-          <ComparePanel axes={axes} high={compareHigh} low={compareLow} />
+          <>
+            <ComparePanel axes={axes} high={compareHigh} low={compareLow} />
+            {cheaperOverlap && (
+              <OverlapReason overlap={cheaperOverlap} baseLabel="この商品" otherLabel="安い方" />
+            )}
+          </>
         ) : (
           <FeelChart axes={axes} values={feelValues} reviewCount={feelSummary?.feel_count ?? 0} />
         )}
@@ -264,7 +309,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                     product.color_hex &&
                     `${colorDifferenceText(topDupe.color_hex, product.color_hex)}`}
                 </p>
-                <p className="mt-1 text-xs text-ink-400">
+                {dupeOverlap && (
+                  <div className="mt-3">
+                    <OverlapReason overlap={dupeOverlap} baseLabel="この商品" otherLabel="ポーチの方" />
+                  </div>
+                )}
+                <p className="mt-3 text-xs text-ink-400">
                   使い分けたい理由があるなら買う意味はあります。同じ用途で足りるなら、持っている方で済みます。
                 </p>
                 <div className="mt-3 space-y-2">
