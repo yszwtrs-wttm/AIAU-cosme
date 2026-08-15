@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { saveProfile } from "@/app/actions";
 import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/client";
@@ -33,6 +34,7 @@ export default function ProfileForm({
   ingredients: IngredientMaster[];
   allergenIds: number[];
 }) {
+  const router = useRouter();
   const [handle, setHandle] = useState(profile?.handle ?? "");
   const [displayName, setDisplayName] = useState(profile?.display_name ?? "");
   const [bio, setBio] = useState(profile?.bio ?? "");
@@ -140,7 +142,8 @@ export default function ProfileForm({
             return;
           }
           setMessage("保存しました");
-          window.location.href = "/me";
+          router.push("/me");
+          router.refresh();
         });
       }}
     >
@@ -194,7 +197,7 @@ export default function ProfileForm({
         <input
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="表示名（任意）"
+          placeholder="ニックネーム"
           className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
         />
         <span className="text-[11px] text-ink-400">口コミには、この名前とアイコンが出ます。</span>

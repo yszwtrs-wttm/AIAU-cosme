@@ -36,16 +36,12 @@ export default async function MyPage() {
   return (
     <div className="space-y-6">
       <section className="flex flex-wrap items-center gap-4 rounded-2xl border border-ink-200 bg-white p-5">
-        <span
-          className="shrink-0"
-        >
-          <Avatar
-            name={profile?.display_name ?? "?"}
-            hue={profile?.avatar_hue ?? 330}
-            avatarUrl={profile?.avatar_url}
-            size="lg"
-          />
-        </span>
+        <Avatar
+          name={profile?.display_name ?? "?"}
+          hue={profile?.avatar_hue ?? 330}
+          avatarUrl={profile?.avatar_url}
+          size="lg"
+        />
         <div className="min-w-0 flex-1">
           <div className="font-display text-2xl font-bold">
             {profile?.display_name ?? "お試しで使っています"}

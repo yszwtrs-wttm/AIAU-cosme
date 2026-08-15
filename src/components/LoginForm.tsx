@@ -90,7 +90,7 @@ export default function LoginForm({
 
     const { error: err } = resetPassword
       ? await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-          redirectTo: emailRedirectTo,
+          redirectTo: `${emailRedirectTo}?type=recovery`,
         })
       : mode === "signup" && anonymous
         ? await supabase.auth.updateUser(
