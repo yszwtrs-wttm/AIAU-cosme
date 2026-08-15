@@ -85,6 +85,127 @@ export type Database = {
         }
         Relationships: []
       }
+      passes: {
+        Row: {
+          alt_label: string | null
+          alt_price_yen: number | null
+          alt_product_id: number | null
+          created_at: string
+          delta_e: number | null
+          id: number
+          ing_sim: number | null
+          owned_label: string | null
+          owned_product_id: number | null
+          palette_covered: number | null
+          palette_total: number | null
+          price_yen: number
+          product_id: number
+          reason: string
+          share_id: string
+          user_id: string
+        }
+        Insert: {
+          alt_label?: string | null
+          alt_price_yen?: number | null
+          alt_product_id?: number | null
+          created_at?: string
+          delta_e?: number | null
+          id?: never
+          ing_sim?: number | null
+          owned_label?: string | null
+          owned_product_id?: number | null
+          palette_covered?: number | null
+          palette_total?: number | null
+          price_yen: number
+          product_id: number
+          reason?: string
+          share_id?: string
+          user_id?: string
+        }
+        Update: {
+          alt_label?: string | null
+          alt_price_yen?: number | null
+          alt_product_id?: number | null
+          created_at?: string
+          delta_e?: number | null
+          id?: never
+          ing_sim?: number | null
+          owned_label?: string | null
+          owned_product_id?: number | null
+          palette_covered?: number | null
+          palette_total?: number | null
+          price_yen?: number
+          product_id?: number
+          reason?: string
+          share_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passes_alt_product_id_fkey"
+            columns: ["alt_product_id"]
+            isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "passes_alt_product_id_fkey"
+            columns: ["alt_product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "passes_alt_product_id_fkey"
+            columns: ["alt_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passes_owned_product_id_fkey"
+            columns: ["owned_product_id"]
+            isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "passes_owned_product_id_fkey"
+            columns: ["owned_product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "passes_owned_product_id_fkey"
+            columns: ["owned_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "passes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "passes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "passes_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_colors: {
         Row: {
           hex: string
@@ -196,6 +317,32 @@ export type Database = {
           },
         ]
       }
+      profile_allergens: {
+        Row: {
+          created_at: string
+          ingredient_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ingredient_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          ingredient_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_allergens_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_hue: number
@@ -237,32 +384,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      profile_allergens: {
-        Row: {
-          created_at: string
-          ingredient_id: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          ingredient_id: number
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          ingredient_id?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_allergens_ingredient_id_fkey"
-            columns: ["ingredient_id"]
-            isOneToOne: false
-            referencedRelation: "ingredients_master"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       review_images: {
         Row: {
@@ -661,6 +782,29 @@ export type Database = {
           score: number
         }[]
       }
+      get_shared_pass: {
+        Args: { p_share_id: string }
+        Returns: {
+          alt_label: string
+          alt_price_yen: number
+          author_handle: string
+          author_name: string
+          brand: string
+          category: string
+          color_hex: string
+          created_at: string
+          delta_e: number
+          ing_sim: number
+          name: string
+          owned_label: string
+          palette_covered: number
+          palette_total: number
+          price_yen: number
+          product_id: number
+          reason: string
+          share_id: string
+        }[]
+      }
       gtrgm_compress: {
         Args: { "": unknown }
         Returns: unknown
@@ -940,3 +1084,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

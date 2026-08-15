@@ -20,10 +20,20 @@ const display = Playfair_Display({
   display: "swap",
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
+  // OG 画像は各ページの opengraph-image.tsx が返す。絶対 URL にするため基準を持たせる。
+  metadataBase: new URL(siteUrl),
   title: "KAWANAI — そのコスメ、もう持ってるかも",
   description:
     "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
+  // twitter:image は省略する。指定がなければ og:image がそのまま使われる。
+  twitter: { card: "summary_large_image" },
 };
 
 // スマホ利用が前提なので、ノッチ端末でも下タブが安全領域に収まるようにする。

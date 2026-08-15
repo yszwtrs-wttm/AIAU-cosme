@@ -4,6 +4,7 @@ import DupeRowItem from "@/components/DupeRowItem";
 import FeelChart from "@/components/FeelChart";
 import FitCard from "@/components/FitCard";
 import IngredientPanel from "@/components/IngredientPanel";
+import PassButton from "@/components/PassButton";
 import ReviewPanel from "@/components/ReviewPanel";
 import ProductThumb from "@/components/ProductThumb";
 import StashButton from "@/components/StashButton";
@@ -16,6 +17,7 @@ import {
   type DupeRow,
   type FeelSummary,
   type PaletteCoverage,
+  type Pass,
   type Product,
   type RatingSummary,
   type Review,
@@ -39,6 +41,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     { data: reviews },
     { data: summary },
     { data: feelSummary },
+    { data: pass },
     profile,
   ] = await Promise.all([
     supabase
@@ -69,6 +72,14 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       .returns<Review[]>(),
     supabase.from("product_rating_summary").select("*").eq("product_id", productId).maybeSingle<RatingSummary>(),
     supabase.from("product_feel_summary").select("*").eq("product_id", productId).maybeSingle<FeelSummary>(),
+    user
+      ? supabase
+          .from("passes")
+          .select("share_id")
+          .eq("product_id", productId)
+          .eq("user_id", user.id)
+          .maybeSingle<Pick<Pass, "share_id">>()
+      : Promise.resolve({ data: null }),
     getMyProfile(),
   ]);
 
@@ -226,8 +237,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               ))}
             </ul>
           )}
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
             <StashButton productId={product.id} owned={isOwned} canUse={canUseStash} />
+            {!isOwned && (
+              <PassButton
+                productId={product.id}
+                shareId={pass?.share_id ?? null}
+                canUse={canUseStash}
+              />
+            )}
           </div>
           {isOwned && (
             <p className="mt-2 text-xs font-bold text-brand-700">これは持っている商品です。</p>

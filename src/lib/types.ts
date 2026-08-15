@@ -191,6 +191,58 @@ export type ColorMatch = {
   shade_hex: string | null;
 };
 
+/** 見送った理由。判断のときに使った根拠と対応する。 */
+export type PassReason = "dupe" | "palette" | "price" | "other";
+
+export const PASS_REASON_LABEL: Record<PassReason, string> = {
+  dupe: "手持ちと被っていたから",
+  palette: "手持ちで似た色が作れるから",
+  price: "似ていて安い方があるから",
+  other: "今は要らないから",
+};
+
+/** 見送り記録。判断した時点の根拠を一緒に固定して残す。 */
+export type Pass = {
+  id: number;
+  share_id: string;
+  product_id: number;
+  reason: PassReason;
+  price_yen: number;
+  owned_product_id: number | null;
+  owned_label: string | null;
+  ing_sim: number | null;
+  delta_e: number | null;
+  palette_total: number | null;
+  palette_covered: number | null;
+  alt_product_id: number | null;
+  alt_label: string | null;
+  alt_price_yen: number | null;
+  created_at: string;
+  products?: { name: string; brands: { name: string } | null } | null;
+};
+
+/** get_shared_pass の戻り。share_id を知っている人だけが読める公開用の形。 */
+export type SharedPass = {
+  share_id: string;
+  product_id: number;
+  brand: string;
+  name: string;
+  category: Category;
+  price_yen: number;
+  color_hex: string | null;
+  reason: PassReason;
+  owned_label: string | null;
+  ing_sim: number | null;
+  delta_e: number | null;
+  palette_total: number | null;
+  palette_covered: number | null;
+  alt_label: string | null;
+  alt_price_yen: number | null;
+  author_name: string | null;
+  author_handle: string | null;
+  created_at: string;
+};
+
 export type PaletteCoverage = {
   pos: number;
   shade_name: string;
