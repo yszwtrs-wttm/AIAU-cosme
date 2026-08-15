@@ -23,7 +23,7 @@ export default async function SiteHeader() {
         </Link>
 
         <nav className="ml-auto hidden items-center gap-4 text-sm text-ink-600 md:flex">
-          <Link href="/" className="hover:text-brand-600">探す</Link>
+          <Link href="/search" className="hover:text-brand-600">探す</Link>
           <Link href="/scan" className="hover:text-brand-600">手持ちを登録</Link>
           <Link href="/stash" className="hover:text-brand-600">ポーチ</Link>
           <Link href="/feed" className="hover:text-brand-600">みんなの投稿</Link>

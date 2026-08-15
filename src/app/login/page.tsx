@@ -24,7 +24,7 @@ export default async function LoginPage() {
 
       <p className="text-xs leading-relaxed text-ink-400">
         ログインしなくても、商品の検索・成分・口コミの閲覧・写真から色を探す機能は使えます。
-        <Link href="/" className="ml-1 text-brand-600 underline">
+        <Link href="/search" className="ml-1 text-brand-600 underline">
           そのまま見る
         </Link>
       </p>
