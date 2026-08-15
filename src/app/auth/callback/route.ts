@@ -14,13 +14,17 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.exchangeCodeForSession(code);
-  if (error) {
+  const { data: session, error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error || !session.user) {
     return NextResponse.redirect(
       `${origin}/login?error=${encodeURIComponent("認証リンクを確認できませんでした")}`,
     );
   }
 
-  const { data } = await supabase.from("profiles").select("handle").maybeSingle();
+  const { data } = await supabase
+    .from("profiles")
+    .select("handle")
+    .eq("user_id", session.user.id)
+    .maybeSingle();
   return NextResponse.redirect(`${origin}${isRecovery || !data ? "/settings" : "/me"}`);
 }
