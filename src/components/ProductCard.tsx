@@ -38,12 +38,16 @@ export default function ProductCard({ product }: { product: Product }) {
               <span
                 key={s.pos}
                 title={`${s.shade_name}（${colorName(s.hex)}）`}
+                role="img"
+                aria-label={`${s.shade_name}（${colorName(s.hex)}）`}
                 className="swatch inline-block h-4 w-4 rounded-full"
                 style={{ background: s.hex }}
               />
             ))}
             {shades.length > 6 && (
-              <span className="text-[10px] text-ink-400">+{shades.length - 6}</span>
+              <span className="text-[10px] text-ink-400" aria-label={`ほか${shades.length - 6}色`}>
+                +{shades.length - 6}
+              </span>
             )}
           </div>
         )}

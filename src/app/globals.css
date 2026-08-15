@@ -13,6 +13,20 @@ body {
   background: #fdfcfc;
 }
 
+/* キーボードだけで操作しても現在位置が分かるように、共通のフォーカスリングを出す。 */
+:where(a, button, summary, input, select, textarea, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid #d92668;
+  outline-offset: 2px;
+}
+
+@layer utilities {
+  /* outline を消している入力に、フォーカス時だけリングを戻す。 */
+  .focus-ring:focus-visible {
+    outline: 2px solid #d92668;
+    outline-offset: 2px;
+  }
+}
+
 /* 色を主役にしたいので、スウォッチには内側の影で厚みを出す。 */
 .swatch {
   box-shadow:

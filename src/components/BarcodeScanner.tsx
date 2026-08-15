@@ -120,8 +120,9 @@ export default function BarcodeScanner() {
             <input
               value={jan}
               onChange={(e) => setJan(e.target.value)}
+              aria-label="バーコードの数字"
               placeholder="バーコードの数字を手入力"
-              className="min-w-0 flex-1 rounded-full border border-brand-100 px-4 py-2.5 text-sm outline-none focus:border-brand-300 sm:w-56 sm:flex-none"
+              className="min-w-0 flex-1 rounded-full border border-brand-100 px-4 py-2.5 text-sm focus-ring focus:border-brand-300 sm:w-56 sm:flex-none"
             />
             <button
               type="submit"
@@ -194,6 +195,7 @@ export default function BarcodeScanner() {
                 <span
                   className="swatch inline-block h-8 w-8 rounded-full"
                   style={{ background: p.color_hex ?? "#e9e2e6" }}
+                  aria-hidden="true"
                 />
                 <span className="min-w-0">
                   <span className="block truncate">

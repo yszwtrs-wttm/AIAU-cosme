@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { AlertTriangle } from "lucide-react";
 import {
   ROLE_LABEL,
@@ -19,8 +19,27 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
   const groups = groupByRole(resolved);
   const cautions = resolved.filter((x) => x.caution);
 
+  const tabIds = [...groups.map((g) => g.role), "raw"];
   const [active, setActive] = useState<string>(groups[0]?.role ?? "raw");
   const current = groups.find((g) => g.role === active);
+
+  // 左右キーでタブを送る。Home / End で両端に飛ぶ。
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const keys = ["ArrowRight", "ArrowLeft", "Home", "End"];
+    if (!keys.includes(e.key)) return;
+    e.preventDefault();
+    const i = tabIds.indexOf(active);
+    const next =
+      e.key === "ArrowRight"
+        ? tabIds[(i + 1) % tabIds.length]
+        : e.key === "ArrowLeft"
+          ? tabIds[(i - 1 + tabIds.length) % tabIds.length]
+          : e.key === "Home"
+            ? tabIds[0]
+            : tabIds[tabIds.length - 1];
+    setActive(next);
+    document.getElementById(`ingredient-tab-${next}`)?.focus();
+  };
 
   return (
     <div className="space-y-3">
@@ -49,7 +68,12 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
       )}
 
       <div className="overflow-hidden rounded-2xl border border-ink-200 bg-white">
-        <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-ink-100 p-2">
+        <div
+          role="tablist"
+          aria-label="成分の見たい切り口"
+          onKeyDown={onKeyDown}
+          className="flex gap-1 overflow-x-auto border-b border-ink-100 p-2"
+        >
           {groups.map((g) => (
             <TabButton
               key={g.role}
@@ -64,7 +88,13 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
         </div>
 
         {current ? (
-          <div role="tabpanel" className="p-4">
+          <div
+            role="tabpanel"
+            id={`ingredient-panel-${current.role}`}
+            aria-labelledby={`ingredient-tab-${current.role}`}
+            tabIndex={0}
+            className="p-4"
+          >
             <div className="text-xs font-bold text-brand-600">{ROLE_LABEL[current.role]}</div>
             <ul className="mt-2 space-y-2">
               {current.items.map((item) => (
@@ -84,7 +114,13 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
             </ul>
           </div>
         ) : (
-          <div role="tabpanel" className="p-4">
+          <div
+            role="tabpanel"
+            id="ingredient-panel-raw"
+            aria-labelledby="ingredient-tab-raw"
+            tabIndex={0}
+            className="p-4"
+          >
             <div className="text-xs text-ink-400">全成分の原文（配合量の多い順）</div>
             <ol className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-ink-600">
               {resolved.map((item) => (
@@ -117,7 +153,10 @@ function TabButton({
     <button
       type="button"
       role="tab"
+      id={`ingredient-tab-${id}`}
       aria-selected={active}
+      aria-controls={`ingredient-panel-${id}`}
+      tabIndex={active ? 0 : -1}
       onClick={() => onSelect(id)}
       className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
         active ? "bg-brand-600 text-white" : "bg-ink-50 text-ink-600 hover:bg-ink-100"

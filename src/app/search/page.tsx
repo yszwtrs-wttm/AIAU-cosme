@@ -158,12 +158,13 @@ export default async function SearchPage({
               size={16}
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400"
             />
+            <span className="sr-only">商品名で探す</span>
             <input
               type="search"
               name="q"
               defaultValue={params.q ?? ""}
               placeholder="商品名で探す"
-              className="w-full rounded-full border border-ink-200 bg-white py-2.5 pl-9 pr-4 text-sm outline-none focus:border-brand-400"
+              className="w-full rounded-full border border-ink-200 bg-white py-2.5 pl-9 pr-4 text-sm focus-ring focus:border-brand-400"
             />
           </label>
           {params.category && <input type="hidden" name="category" value={params.category} />}
@@ -179,6 +180,7 @@ export default async function SearchPage({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={filterHref({ q: params.q, sort })}
+            aria-current={!params.category && params.mens !== "1" ? "true" : undefined}
             className={`${CHIP} ${!params.category && params.mens !== "1" ? CHIP_ON : CHIP_OFF}`}
           >
             すべて
@@ -187,6 +189,7 @@ export default async function SearchPage({
             <Link
               key={category}
               href={filterHref({ q: params.q, category, mens: params.mens, sort })}
+              aria-current={params.category === category ? "true" : undefined}
               className={`${CHIP} ${params.category === category ? CHIP_ON : CHIP_OFF}`}
             >
               {CATEGORY_LABEL[category]}
@@ -194,6 +197,7 @@ export default async function SearchPage({
           ))}
           <Link
             href={filterHref({ q: params.q, category: params.category, mens: "1", sort })}
+            aria-current={params.mens === "1" ? "true" : undefined}
             className={`${CHIP} ${params.mens === "1" ? CHIP_ON : CHIP_OFF}`}
           >
             メンズ
@@ -210,6 +214,7 @@ export default async function SearchPage({
                 mens: params.mens,
                 sort: option.value,
               })}
+              aria-current={sort === option.value ? "true" : undefined}
               className={`${CHIP} ${
                 sort === option.value ? CHIP_ON : CHIP_OFF
               }`}

@@ -161,7 +161,7 @@ export default function LoginForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-2xl border border-brand-100 px-3 py-2.5 text-sm outline-none focus:border-brand-300"
+            className="w-full rounded-2xl border border-brand-100 px-3 py-2.5 text-sm focus-ring focus:border-brand-300"
           />
 
           {mode === "login" && !resetPassword && (

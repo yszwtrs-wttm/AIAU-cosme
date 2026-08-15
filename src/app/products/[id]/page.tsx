@@ -179,6 +179,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           category={product.category}
           colors={shades}
           imageUrl={product.image_url}
+          name={`${product.brands?.name ?? ""} ${product.name}`.trim()}
           size={112}
           className="rounded-xl"
         />
@@ -219,7 +220,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             <ul className="mt-3 flex flex-wrap gap-2 text-[11px] text-ink-600">
               {shades.map((s) => (
                 <li key={s.pos} className="flex items-center gap-1.5 rounded-full border border-ink-100 px-2 py-1">
-                  <span className="swatch inline-block h-4 w-4 rounded-full" style={{ background: s.hex }} />
+                  <span
+                    className="swatch inline-block h-4 w-4 rounded-full"
+                    style={{ background: s.hex }}
+                    aria-hidden="true"
+                  />
                   {s.shade_name}
                   <span className="text-ink-400">{colorName(s.hex)}</span>
                 </li>
@@ -296,13 +301,20 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {coverage.map((c) => (
                     <li key={c.pos} className="flex items-center gap-2 rounded-xl bg-ink-50 p-2 text-xs">
-                      <span className="swatch inline-block h-6 w-6 shrink-0 rounded-full" style={{ background: c.shade_hex }} />
+                      <span
+                        className="swatch inline-block h-6 w-6 shrink-0 rounded-full"
+                        style={{ background: c.shade_hex }}
+                        role="img"
+                        aria-label={colorName(c.shade_hex)}
+                      />
                       <span className="w-24 shrink-0 truncate">{c.shade_name}</span>
                       {c.owned_product_id !== null ? (
                         <span className="flex min-w-0 items-center gap-1.5 text-emerald-800">
                           <span
                             className="swatch inline-block h-4 w-4 shrink-0 rounded-full"
                             style={{ background: c.owned_hex ?? undefined }}
+                            role="img"
+                            aria-label={c.owned_hex ? colorName(c.owned_hex) : "色不明"}
                           />
                           <span className="truncate">
                             {c.owned_label}

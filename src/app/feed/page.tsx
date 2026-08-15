@@ -32,16 +32,20 @@ export default async function FeedPage() {
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {(reviews ?? []).map((r) => {
           const images = [...(r.review_images ?? [])].sort((a, b) => a.pos - b.pos);
+          const author = r.profiles?.display_name ?? r.author_name;
+          const productLabel = [r.products?.brands?.name, r.products?.name]
+            .filter(Boolean)
+            .join(" ");
           return (
             <article key={r.id} className="overflow-hidden rounded-2xl border border-ink-200 bg-white">
               {images.length > 0 && (
                 <div className="flex gap-1 overflow-x-auto">
-                  {images.map((img) => (
+                  {images.map((img, i) => (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       key={img.id}
                       src={publicImageUrl(img.path)}
-                      alt=""
+                      alt={`${author}さんの口コミの写真${images.length > 1 ? ` ${i + 1}枚目` : ""}：${productLabel}`}
                       className="h-48 w-full shrink-0 object-cover"
                     />
                   ))}
@@ -62,7 +66,9 @@ export default async function FeedPage() {
                   ) : (
                     <span className="font-bold">{r.author_name}</span>
                   )}
-                  <span className="text-amber-500">{"★".repeat(r.rating)}</span>
+                  <span className="text-amber-500" aria-label={`${r.rating}点`}>
+                    {"★".repeat(r.rating)}
+                  </span>
                 </div>
                 <Link href={`/products/${r.product_id}`} className="block text-sm font-bold hover:text-brand-600">
                   {r.products?.brands?.name} {r.products?.name}

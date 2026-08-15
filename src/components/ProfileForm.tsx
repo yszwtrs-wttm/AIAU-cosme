@@ -156,12 +156,13 @@ export default function ProfileForm({
         />
         <div className="space-y-2">
           <div className="flex flex-wrap gap-1.5">
-            {HUES.map((value) => (
+            {HUES.map((value, i) => (
               <button
                 key={value}
                 type="button"
                 onClick={() => setHue(value)}
-                aria-label="アイコンの色"
+                aria-label={`アイコンの色 ${i + 1}`}
+                aria-pressed={hue === value}
                 className={`h-7 w-7 rounded-full ${
                   hue === value ? "ring-2 ring-brand-400 ring-offset-2" : ""
                 }`}
@@ -198,7 +199,7 @@ export default function ProfileForm({
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           placeholder="ニックネーム"
-          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
+          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm focus-ring focus:border-brand-300"
         />
         <span className="text-[11px] text-ink-400">口コミには、この名前とアイコンが出ます。</span>
       </label>
@@ -209,7 +210,7 @@ export default function ProfileForm({
           value={handle}
           onChange={(e) => setHandle(e.target.value.toLowerCase())}
           placeholder="kawanai_user"
-          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
+          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm focus-ring focus:border-brand-300"
         />
         <span className="text-[11px] text-ink-400">
           半角の小文字・数字・_ で3〜20文字。あとから変えられます。
@@ -222,7 +223,7 @@ export default function ProfileForm({
           value={bio}
           onChange={(e) => setBio(e.target.value)}
           rows={2}
-          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
+          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm focus-ring focus:border-brand-300"
         />
       </label>
 
@@ -237,13 +238,18 @@ export default function ProfileForm({
               key={tone.hex}
               type="button"
               onClick={() => setSkinTone(skinTone === tone.hex ? "" : tone.hex)}
+              aria-pressed={skinTone === tone.hex}
               className={`flex items-center gap-1.5 rounded-full border px-2 py-1 text-[11px] ${
                 skinTone === tone.hex
                   ? "border-brand-400 bg-brand-50"
                   : "border-brand-100 bg-white"
               }`}
             >
-              <span className="swatch inline-block h-5 w-5 rounded-full" style={{ background: tone.hex }} />
+              <span
+                className="swatch inline-block h-5 w-5 rounded-full"
+                style={{ background: tone.hex }}
+                aria-hidden="true"
+              />
               {tone.label}
             </button>
           ))}
@@ -325,7 +331,7 @@ export default function ProfileForm({
           value={allergenQuery}
           onChange={(e) => setAllergenQuery(e.target.value)}
           placeholder="成分名またはINCI名で検索"
-          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm outline-none focus:border-brand-300"
+          className="w-full rounded-2xl border border-brand-100 px-3 py-2 text-sm focus-ring focus:border-brand-300"
         />
         <div className="max-h-48 overflow-y-auto rounded-2xl border border-ink-100">
           {filteredIngredients.map((ingredient) => {

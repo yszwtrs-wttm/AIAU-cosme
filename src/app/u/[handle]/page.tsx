@@ -4,6 +4,7 @@ import Avatar from "@/components/Avatar";
 import ProductCard from "@/components/ProductCard";
 import { createClient } from "@/lib/supabase/server";
 import { publicImageUrl } from "@/lib/storage";
+import { colorName } from "@/lib/wording";
 import {
   PERSONAL_COLOR_LABEL,
   SKIN_TYPE_LABEL,
@@ -67,6 +68,8 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
                 <span
                   className="swatch inline-block h-3.5 w-3.5 rounded-full"
                   style={{ background: profile.skin_tone_hex }}
+                  role="img"
+                  aria-label={colorName(profile.skin_tone_hex)}
                 />
                 肌のトーン
               </span>
@@ -116,16 +119,20 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
                 <Link href={`/products/${r.product_id}`} className="text-sm font-bold hover:text-brand-600">
                   {r.products?.name}
                 </Link>
-                <div className="text-amber-500">{"★".repeat(r.rating)}</div>
+                <div className="text-amber-500" aria-label={`${r.rating}点`}>
+                  {"★".repeat(r.rating)}
+                </div>
                 <p className="mt-1 text-sm leading-relaxed">{r.body}</p>
                 {(r.review_images ?? []).length > 0 && (
                   <div className="mt-2 flex gap-2 overflow-x-auto">
-                    {(r.review_images ?? []).map((img) => (
+                    {(r.review_images ?? []).map((img, i) => (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         key={img.id}
                         src={publicImageUrl(img.path)}
-                        alt=""
+                        alt={`${profile.display_name}さんの口コミの写真 ${i + 1}枚目：${
+                          r.products?.name ?? ""
+                        }`}
                         className="h-24 w-24 shrink-0 rounded-2xl object-cover"
                       />
                     ))}

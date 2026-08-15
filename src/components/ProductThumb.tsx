@@ -1,9 +1,11 @@
-import type { Category, ProductColor } from "@/lib/types";
+import { CATEGORY_LABEL, type Category, type ProductColor } from "@/lib/types";
 
 type Props = {
   category: Category;
   colors: ProductColor[];
   imageUrl?: string | null;
+  /** 代替テキストに使う商品名。名前を隣に書いているなら省いて装飾扱いにする。 */
+  name?: string;
   size?: number;
   className?: string;
 };
@@ -93,17 +95,19 @@ export default function ProductThumb({
   category,
   colors: unordered,
   imageUrl,
+  name,
   size = 56,
   className,
 }: Props) {
   const colors = [...unordered].sort((a, b) => a.pos - b.pos);
+  const label = name ? `${name}（${CATEGORY_LABEL[category]}）の商品画像` : "";
 
   if (imageUrl) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={imageUrl}
-        alt=""
+        alt={label}
         width={size}
         height={size}
         className={`shrink-0 rounded-lg border border-neutral-200 object-cover ${className ?? ""}`}
@@ -119,8 +123,9 @@ export default function ProductThumb({
       viewBox="0 0 64 64"
       width={size}
       height={size}
-      role="img"
-      aria-label="商品画像"
+      role={label ? "img" : "presentation"}
+      aria-label={label || undefined}
+      aria-hidden={label ? undefined : true}
       className={`shrink-0 rounded-lg border border-neutral-200 bg-neutral-50 ${className ?? ""}`}
     >
       {category === "eyeshadow" && colors.length > 0 ? (

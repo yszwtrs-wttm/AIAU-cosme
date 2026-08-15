@@ -44,9 +44,9 @@ export default async function MyPage() {
           size="lg"
         />
         <div className="min-w-0 flex-1">
-          <div className="font-display text-2xl font-bold">
+          <h1 className="font-display text-2xl font-bold">
             {profile?.display_name ?? (real ? "名前未設定" : "お試しで使っています")}
-          </div>
+          </h1>
           <div className="text-xs text-ink-400">
             {profile ? (
               `@${profile.handle}`
@@ -120,7 +120,9 @@ export default async function MyPage() {
                 <Link href={`/products/${r.product_id}`} className="text-xs text-brand-600">
                   この商品を見る
                 </Link>
-                <div className="text-amber-500">{"★".repeat(r.rating)}</div>
+                <div className="text-amber-500" aria-label={`${r.rating}点`}>
+                  {"★".repeat(r.rating)}
+                </div>
                 <p className="text-sm">{r.body}</p>
               </li>
             ))}
