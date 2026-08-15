@@ -1,16 +1,19 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Flag, ImagePlus, Lock, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { attachReviewImages, postReview, reportReview } from "@/app/actions";
 import Avatar from "@/components/Avatar";
+import { useToast } from "@/components/Toast";
+import { japaneseError } from "@/lib/errors";
 import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
+import ReviewImage from "@/components/ReviewImage";
+import { shrinkImage } from "@/lib/image";
 import { averageHash } from "@/lib/phash";
-import { publicImageUrl } from "@/lib/storage";
+import { THUMB_WIDTH } from "@/lib/storage";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
 
@@ -29,6 +32,7 @@ function Stars({ value }: { value: number }) {
 
 function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   const [reported, setReported] = useState(false);
+  const showToast = useToast();
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
   const skin = review.profiles?.skin_type;
@@ -58,7 +62,16 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
           type="button"
           disabled={reported}
           onClick={async () => {
-            await reportReview(review.id, "fake");
+            try {
+              const res = await reportReview(review.id, "fake");
+              if (!res.ok) {
+                showToast(japaneseError(res.error, "報告できませんでした"));
+                return;
+              }
+            } catch (e) {
+              showToast(japaneseError(e, "報告できませんでした"));
+              return;
+            }
             setReported(true);
           }}
           className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
@@ -90,14 +103,11 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
       {images.length > 0 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {images.map((img) => (
-            <Image
+            <ReviewImage
               key={img.id}
-              src={publicImageUrl(img.path)}
-              alt=""
-              width={112}
-              height={112}
-              sizes="112px"
-              className="h-28 w-28 shrink-0 rounded-2xl object-cover"
+              path={img.path}
+              width={THUMB_WIDTH}
+              className="h-28 w-28 overflow-hidden rounded-2xl"
             />
           ))}
         </div>
@@ -133,6 +143,7 @@ export default function ReviewPanel({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
+  const showToast = useToast();
 
   // 不正判定は Postgres の trigger が走らせる。結果は Realtime で降ってくる。
   useEffect(() => {
@@ -179,9 +190,15 @@ export default function ReviewPanel({
   const submit = () => {
     setError(null);
     startTransition(async () => {
-      const res = await postReview({ productId, rating, body, feel });
+      let res: Awaited<ReturnType<typeof postReview>>;
+      try {
+        res = await postReview({ productId, rating, body, feel });
+      } catch (e) {
+        setError(japaneseError(e, "投稿できませんでした"));
+        return;
+      }
       if (!res.ok || !res.reviewId) {
-        setError(res.error ?? "投稿できませんでした");
+        setError(japaneseError(res.error, "投稿できませんでした"));
         return;
       }
 
@@ -192,19 +209,34 @@ export default function ReviewPanel({
         } = await supabase.auth.getUser();
         const uploaded: { path: string; phash?: string | null }[] = [];
 
-        for (const file of files.slice(0, MAX_IMAGES)) {
+        const targets = files.slice(0, MAX_IMAGES);
+
+        for (const original of targets) {
+          const file = await shrinkImage(original);
           const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
           const path = `${user!.id}/${res.reviewId}-${uploaded.length}.${ext}`;
           const { error: upErr } = await supabase.storage
             .from("review-images")
-            .upload(path, file, { upsert: true });
+            .upload(path, file, { upsert: true, contentType: file.type });
           if (upErr) continue;
           uploaded.push({ path, phash: await averageHash(file) });
         }
 
-        if (uploaded.length > 0) await attachReviewImages(res.reviewId, uploaded);
+        const attached: { ok: boolean; error?: string } =
+          uploaded.length > 0 ? await attachReviewImages(res.reviewId, uploaded) : { ok: true };
+
+        // 口コミ本文は保存できているので、写真だけ失敗したことを伝える。
+        if (!attached.ok || uploaded.length < targets.length) {
+          showToast(
+            japaneseError(
+              attached.ok ? null : attached.error,
+              "口コミは投稿できましたが、写真を上げられませんでした",
+            ),
+          );
+        }
       }
 
+      showToast("口コミを投稿しました", "success");
       setBody("");
       setFiles([]);
       if (fileInput.current) fileInput.current.value = "";

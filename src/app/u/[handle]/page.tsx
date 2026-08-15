@@ -1,10 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Avatar from "@/components/Avatar";
 import ProductCard from "@/components/ProductCard";
 import { createClient } from "@/lib/supabase/server";
-import { publicImageUrl } from "@/lib/storage";
+import ReviewImage from "@/components/ReviewImage";
+import { THUMB_WIDTH } from "@/lib/storage";
 import {
   PERSONAL_COLOR_LABEL,
   SKIN_TYPE_LABEL,
@@ -122,14 +122,11 @@ export default async function UserPage({ params }: { params: Promise<{ handle: s
                 {(r.review_images ?? []).length > 0 && (
                   <div className="mt-2 flex gap-2 overflow-x-auto">
                     {(r.review_images ?? []).map((img) => (
-                      <Image
+                      <ReviewImage
                         key={img.id}
-                        src={publicImageUrl(img.path)}
-                        alt=""
-                        width={96}
-                        height={96}
-                        sizes="96px"
-                        className="h-24 w-24 shrink-0 rounded-2xl object-cover"
+                        path={img.path}
+                        width={THUMB_WIDTH}
+                        className="h-24 w-24 overflow-hidden rounded-2xl"
                       />
                     ))}
                   </div>

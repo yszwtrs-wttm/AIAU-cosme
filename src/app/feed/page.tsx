@@ -1,8 +1,8 @@
-import Image from "next/image";
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import { createClient } from "@/lib/supabase/server";
-import { publicImageUrl } from "@/lib/storage";
+import ReviewImage from "@/components/ReviewImage";
+import { THUMB_WIDTH } from "@/lib/storage";
 import type { Profile, Review } from "@/lib/types";
 
 type FeedReview = Review & {
@@ -38,17 +38,14 @@ export default async function FeedPage() {
               {images.length > 0 && (
                 <div className="flex gap-1 overflow-x-auto">
                   {images.map((img, imageIndex) => (
-                    <div key={img.id} className="relative h-48 w-full shrink-0">
-                      <Image
-                        src={publicImageUrl(img.path)}
-                        alt=""
-                        fill
-                        sizes="(min-width: 640px) 50vw, 100vw"
-                        // 先頭の投稿の1枚目がファーストビューの LCP になる。
-                        priority={index === 0 && imageIndex === 0}
-                        className="object-cover"
-                      />
-                    </div>
+                    <ReviewImage
+                      key={img.id}
+                      path={img.path}
+                      width={THUMB_WIDTH}
+                      // 先頭の投稿の1枚目がファーストビューの LCP になる。
+                      priority={index === 0 && imageIndex === 0}
+                      className="h-48 w-full"
+                    />
                   ))}
                 </div>
               )}
