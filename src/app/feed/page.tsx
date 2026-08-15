@@ -31,17 +31,19 @@ export default async function FeedPage() {
       </section>
 
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {(reviews ?? []).map((r) => {
+        {(reviews ?? []).map((r, index) => {
           const images = [...(r.review_images ?? [])].sort((a, b) => a.pos - b.pos);
           return (
             <article key={r.id} className="overflow-hidden rounded-2xl border border-ink-200 bg-white">
               {images.length > 0 && (
                 <div className="flex gap-1 overflow-x-auto">
-                  {images.map((img) => (
+                  {images.map((img, imageIndex) => (
                     <ReviewImage
                       key={img.id}
                       path={img.path}
                       width={THUMB_WIDTH}
+                      // 先頭の投稿の1枚目がファーストビューの LCP になる。
+                      priority={index === 0 && imageIndex === 0}
                       className="h-48 w-full"
                     />
                   ))}

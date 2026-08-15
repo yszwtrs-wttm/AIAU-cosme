@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Category, ProductColor } from "@/lib/types";
 
 type Props = {
@@ -100,12 +101,12 @@ export default function ProductThumb({
 
   if (imageUrl) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={imageUrl}
         alt=""
         width={size}
         height={size}
+        sizes={`${size}px`}
         className={`shrink-0 rounded-lg border border-neutral-200 object-cover ${className ?? ""}`}
         style={{ width: size, height: size }}
       />

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Image, { type ImageLoaderProps } from "next/image";
 import { X } from "lucide-react";
 import { imageUrl, publicImageUrl } from "@/lib/storage";
 
@@ -13,10 +14,12 @@ const FULL_WIDTH = 1600;
 export default function ReviewImage({
   path,
   width,
+  priority = false,
   className = "",
 }: {
   path: string;
   width: number;
+  priority?: boolean;
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
@@ -30,20 +33,30 @@ export default function ReviewImage({
     if (img?.complete && img.naturalWidth === 0) setFailed(true);
   }, []);
 
-  const src = failed ? publicImageUrl(path) : imageUrl(path, { width });
+  // next/image の最適化は挟まず、Storage の画像変換をそのままローダーにする。
+  const loader = useCallback(
+    ({ src, width: w, quality }: ImageLoaderProps) =>
+      failed ? publicImageUrl(src) : imageUrl(src, { width: w, quality }),
+    [failed],
+  );
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={`block shrink-0 ${className}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={`relative block shrink-0 ${className}`}
+      >
+        <Image
           ref={thumbRef}
-          src={src}
+          loader={loader}
+          src={path}
           alt=""
-          loading="lazy"
-          decoding="async"
+          fill
+          sizes={`${width}px`}
+          priority={priority}
           onError={() => setFailed(true)}
-          className="h-full w-full object-cover"
+          className="object-cover"
         />
       </button>
 
@@ -54,12 +67,16 @@ export default function ReviewImage({
           onClick={() => setOpen(false)}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={failed ? publicImageUrl(path) : imageUrl(path, { width: FULL_WIDTH, quality: 80 })}
+          <Image
+            loader={loader}
+            src={path}
             alt=""
+            width={FULL_WIDTH}
+            height={FULL_WIDTH}
+            quality={80}
+            sizes="100vw"
             onError={() => setFailed(true)}
-            className="max-h-full max-w-full rounded-2xl object-contain"
+            className="h-auto max-h-full w-auto max-w-full rounded-2xl object-contain"
           />
           <button
             type="button"
