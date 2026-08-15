@@ -61,5 +61,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // 計測ビーコンはセッションを使わないので、トークン更新の対象から外す。
+  matcher: [
+    "/((?!_next/static|_next/image|api/vitals|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
 };

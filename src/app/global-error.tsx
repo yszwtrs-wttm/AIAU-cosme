@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import "./globals.css";
+import { captureClientError } from "@/lib/sentry-client";
 
 /** ルートレイアウトごと落ちたときの最後の砦。html/body から自前で描く。 */
 export default function GlobalError({
@@ -13,7 +14,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error(error);
+    captureClientError(error, { where: "global-error", digest: error.digest });
   }, [error]);
 
   return (

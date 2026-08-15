@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { RefreshCw, Search } from "lucide-react";
+import { captureClientError } from "@/lib/sentry-client";
 
 /** サーバー側の例外で白画面になると事故がそのまま見えるので、再試行できる画面を出す。 */
 export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
-    console.error(error);
+    captureClientError(error, { where: "error-boundary", digest: error.digest });
   }, [error]);
 
   return (
