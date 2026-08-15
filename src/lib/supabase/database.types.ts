@@ -85,6 +85,42 @@ export type Database = {
         }
         Relationships: []
       }
+      maintenance_runs: {
+        Row: {
+          detail: string | null
+          duration_ms: number | null
+          finished_at: string | null
+          id: number
+          ingredients: number | null
+          job: string
+          products: number | null
+          started_at: string
+          status: string
+        }
+        Insert: {
+          detail?: string | null
+          duration_ms?: number | null
+          finished_at?: string | null
+          id?: number
+          ingredients?: number | null
+          job: string
+          products?: number | null
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          detail?: string | null
+          duration_ms?: number | null
+          finished_at?: string | null
+          id?: number
+          ingredients?: number | null
+          job?: string
+          products?: number | null
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       product_colors: {
         Row: {
           hex: string
@@ -196,6 +232,32 @@ export type Database = {
           },
         ]
       }
+      profile_allergens: {
+        Row: {
+          created_at: string
+          ingredient_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ingredient_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          ingredient_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_allergens_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_hue: number
@@ -237,32 +299,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      profile_allergens: {
-        Row: {
-          created_at: string
-          ingredient_id: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          ingredient_id: number
-          user_id?: string
-        }
-        Update: {
-          created_at?: string
-          ingredient_id?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profile_allergens_ingredient_id_fkey"
-            columns: ["ingredient_id"]
-            isOneToOne: false
-            referencedRelation: "ingredients_master"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       review_images: {
         Row: {
@@ -528,6 +564,18 @@ export type Database = {
       }
     }
     Views: {
+      ingredient_idf_status: {
+        Row: {
+          detail: string | null
+          duration_ms: number | null
+          finished_at: string | null
+          ingredients: number | null
+          products: number | null
+          started_at: string | null
+          status: string | null
+        }
+        Relationships: []
+      }
       product_feel_summary: {
         Row: {
           feel: Json | null
@@ -777,6 +825,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      refresh_ingredient_idf_logged: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      search_products: {
+        Args: { p_category?: string | null; p_limit?: number; p_mens?: boolean | null; p_q: string }
+        Returns: {
+          product_id: number
+          score: number
+        }[]
+      }
       set_limit: {
         Args: { "": number }
         Returns: number
@@ -960,3 +1019,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
