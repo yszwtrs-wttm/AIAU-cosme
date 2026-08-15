@@ -115,6 +115,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         priceYen: lowProduct.price_yen,
         ingredients: lowProduct.ingredients,
         measured: lowMeasured,
+        reviewCount: lowFeel?.feel_count ?? 0,
         feel: lowMeasured
           ? Object.fromEntries(Object.entries(lowFeel!.feel!).map(([k, v]) => [k, Number(v)]))
           : estimateFeel(lowProduct.category, lowProduct.ingredients),
@@ -129,6 +130,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     priceYen: product.price_yen,
     ingredients: product.ingredients,
     measured: measuredFeel,
+    reviewCount: feelSummary?.feel_count ?? 0,
     feel: feelValues,
   };
 
@@ -188,23 +190,25 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
       </section>
 
       <section className="space-y-2">
-        <h2 className="font-display text-lg font-bold">使い心地</h2>
-        <FeelChart axes={axes} values={feelValues} reviewCount={feelSummary?.feel_count ?? 0} />
+        <h2 className="font-display text-lg font-bold">
+          {compareLow ? "使い心地とねだんを比べる" : "使い心地"}
+        </h2>
+        {compareLow ? (
+          <>
+            <ComparePanel axes={axes} high={compareHigh} low={compareLow} />
+            {cheaper.length > 1 && (
+              <div className="space-y-2">
+                <p className="pt-2 text-xs text-ink-400">ほかの似ていて安いもの</p>
+                {cheaper.slice(1).map((row) => (
+                  <DupeRowItem key={row.product_id} row={row} tone="save" />
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <FeelChart axes={axes} values={feelValues} reviewCount={feelSummary?.feel_count ?? 0} />
+        )}
       </section>
-
-      {compareLow && (
-        <section className="space-y-2">
-          <h2 className="font-display text-lg font-bold">似ていて安いものとの違い</h2>
-          <ComparePanel axes={axes} high={compareHigh} low={compareLow} />
-          {cheaper.length > 1 && (
-            <div className="space-y-2">
-              {cheaper.slice(1).map((row) => (
-                <DupeRowItem key={row.product_id} row={row} tone="save" />
-              ))}
-            </div>
-          )}
-        </section>
-      )}
 
       <section className="space-y-2">
         <h2 className="font-display text-lg font-bold">持っているものと近いか</h2>
