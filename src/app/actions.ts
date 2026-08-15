@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isRealAccount } from "@/lib/auth";
-import { isRemainingLevel } from "@/lib/usage";
+import { isPlausibleOpenedAt, isRemainingLevel } from "@/lib/usage";
 import type { PersonalColor, RemainingLevel, SkinType } from "@/lib/types";
 
 type Result = { ok: boolean; error?: string };
@@ -89,8 +89,8 @@ export async function updateStashUsage(
   if (input.remainingLevel && !isRemainingLevel(input.remainingLevel)) {
     return { ok: false, error: "残量の指定が不正です" };
   }
-  if (input.openedAt && !/^\d{4}-\d{2}-\d{2}$/.test(input.openedAt)) {
-    return { ok: false, error: "開封日は日付で入力してください" };
+  if (input.openedAt && !isPlausibleOpenedAt(input.openedAt)) {
+    return { ok: false, error: "開封日は今日までの日付で入力してください" };
   }
 
   const patch: {

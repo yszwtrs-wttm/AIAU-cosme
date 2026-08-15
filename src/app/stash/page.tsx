@@ -29,6 +29,7 @@ export default async function StashPage() {
       .select(
         "product_id, remaining_level, opened_at, finished_at, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
       )
+      .order("product_id")
       .returns<StashItem[]>(),
     supabase
       .from("products")

@@ -36,6 +36,24 @@ export function isRemainingLevel(value: unknown): value is RemainingLevel {
   return typeof value === "string" && (REMAINING_LEVELS as string[]).includes(value);
 }
 
+/** 開封日として受け付ける最も古い日付からの年数。これより古いものは打ち間違いとして扱う。 */
+const OPENED_AT_MAX_AGE_YEARS = 10;
+
+/** 入力欄の下限に使う、受け付ける最も古い開封日。 */
+export function oldestOpenedAt(now: Date = new Date()): string {
+  const oldest = new Date(now);
+  oldest.setFullYear(oldest.getFullYear() - OPENED_AT_MAX_AGE_YEARS);
+  return oldest.toISOString().slice(0, 10);
+}
+
+/** 開封日として妥当か。未来の日付や、打ちかけの西暦（0002-03-01 など）を弾く。 */
+export function isPlausibleOpenedAt(value: string, now: Date = new Date()): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const opened = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(opened.getTime())) return false;
+  return value <= now.toISOString().slice(0, 10) && value >= oldestOpenedAt(now);
+}
+
 /** 開封からの経過月数。未開封（日付なし）は null。 */
 export function monthsSinceOpen(openedAt: string | null, now: Date = new Date()): number | null {
   if (!openedAt) return null;
@@ -93,14 +111,14 @@ export function judgeUsage(
  * 同じものが「たっぷり」残っているなら買わなくていい。「残りわずか」なら買ってよい。
  */
 export function dupeAdviceText(judgement: UsageJudgement): string {
-  if (judgement.overdue) {
-    return "ただし持っている方は開封から時間が経っています。使い切れなさそうなら、これに買い替える判断もありです。";
-  }
-  if (judgement.readyToBuy) {
-    return "ただし持っている方は残りわずかです。使い切るタイミングなので、これを買っても被りません。";
-  }
   if (judgement.finished) {
     return "持っていたものは使い切っています。買い直しなら被りません。";
+  }
+  if (judgement.overdue) {
+    return "使い切れなさそうなら、これに買い替える判断もありです。";
+  }
+  if (judgement.readyToBuy) {
+    return "使い切るタイミングなので、これを買っても被りません。";
   }
   return "使い分けたい理由があるなら買う意味はあります。同じ用途で足りるなら、持っている方で済みます。";
 }

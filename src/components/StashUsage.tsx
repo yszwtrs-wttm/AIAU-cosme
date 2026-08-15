@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { Check, RotateCcw } from "lucide-react";
 import { updateStashUsage } from "@/app/actions";
 import type { Category, RemainingLevel, StashEntry } from "@/lib/types";
-import { REMAINING_LABEL, REMAINING_LEVELS, judgeUsage } from "@/lib/usage";
+import {
+  REMAINING_LABEL,
+  REMAINING_LEVELS,
+  isPlausibleOpenedAt,
+  judgeUsage,
+  oldestOpenedAt,
+} from "@/lib/usage";
 
 /** 残量・開封日・使い切りの登録。ポーチのカードと商品ページの両方から同じものを使う。 */
 export default function StashUsage({
@@ -58,8 +64,14 @@ export default function StashUsage({
           type="date"
           value={entry.opened_at ?? ""}
           disabled={pending}
+          min={oldestOpenedAt()}
           max={new Date().toISOString().slice(0, 10)}
-          onChange={(e) => save({ openedAt: e.target.value })}
+          // 日付入力は打ちかけでも onChange が飛ぶ。妥当な日付になるまで保存しない。
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value && !isPlausibleOpenedAt(value)) return;
+            save({ openedAt: value || null });
+          }}
           className="rounded-lg border border-ink-200 bg-white px-2 py-1 tabular-nums"
         />
         {entry.opened_at && (
