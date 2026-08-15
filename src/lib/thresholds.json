@@ -13,6 +13,9 @@
   "palette_coverage": {
     "max_delta_e": 5
   },
+  "skin_tone": {
+    "shade_match_delta_e": 6
+  },
   "dupe_score": {
     "delta_e_zero": 10,
     "ingredient_weight": 0.6,

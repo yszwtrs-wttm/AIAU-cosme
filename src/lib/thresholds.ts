@@ -18,6 +18,9 @@ export const SHADE = raw.shade;
 /** パレットの手持ちカバー判定（SQL の `find_palette_coverage` と同じ値）。 */
 export const PALETTE_COVERAGE = raw.palette_coverage;
 
+/** 肌の色と色番号の近さ。 */
+export const SKIN_TONE = raw.skin_tone;
+
 /** 被りスコア（SQL の `dupe_score` と同じ値）。 */
 export const DUPE_SCORE = raw.dupe_score;
 

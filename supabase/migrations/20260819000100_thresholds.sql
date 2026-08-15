@@ -21,6 +21,7 @@ begin
     when 'shade.dedupe_delta_e' then 2::double precision
     when 'shade.palette_extract_min_delta_e' then 12::double precision
     when 'palette_coverage.max_delta_e' then 5::double precision
+    when 'skin_tone.shade_match_delta_e' then 6::double precision
     when 'dupe_score.delta_e_zero' then 10::double precision
     when 'dupe_score.ingredient_weight' then 0.6::double precision
     when 'dupe_score.color_weight' then 0.4::double precision
