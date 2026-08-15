@@ -616,6 +616,25 @@ export type Database = {
           score: number
         }[]
       }
+      find_cheaper_shade_swaps: {
+        Args: { p_limit?: number; p_max_delta?: number }
+        Returns: {
+          brand: string
+          delta_e: number
+          mine_hex: string
+          mine_label: string
+          mine_pos: number
+          mine_price: number
+          mine_product_id: number
+          mine_shade: string
+          name: string
+          price_yen: number
+          product_id: number
+          savings: number
+          shade_hex: string
+          shade_name: string
+        }[]
+      }
       find_duplicates_in_stash: {
         Args: { p_min_score?: number; p_product_id: number }
         Returns: {
@@ -641,6 +660,28 @@ export type Database = {
           owned_product_id: number
           owned_shade: string
           pos: number
+          shade_hex: string
+          shade_name: string
+        }[]
+      }
+      find_shade_matches: {
+        Args: {
+          p_limit?: number
+          p_max_delta?: number
+          p_pos: number
+          p_product_id: number
+        }
+        Returns: {
+          brand: string
+          category: string
+          delta_e: number
+          image_url: string
+          name: string
+          owned: boolean
+          pos: number
+          price_diff: number
+          price_yen: number
+          product_id: number
           shade_hex: string
           shade_name: string
         }[]
