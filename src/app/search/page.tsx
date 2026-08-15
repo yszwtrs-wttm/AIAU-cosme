@@ -88,11 +88,13 @@ export default async function SearchPage({
         ? "価格が安い順に表示しています。"
         : sort === "expensive"
           ? "価格が高い順に表示しています。"
-          : sort === "rating"
-            ? "信用できる口コミの評価が高い順に表示しています。"
-            : hasPersonalizationMaterial
-              ? "肌情報・避けたい成分・ポーチをもとに、あなた向けに並べています。"
-              : "信用できる口コミの評価が高い順に表示しています。";
+          : sort === "unit_price"
+            ? "容量あたりの価格が安い順に表示しています。容量が未登録の商品は最後に並べています。"
+            : sort === "rating"
+              ? "信用できる口コミの評価が高い順に表示しています。"
+              : hasPersonalizationMaterial
+                ? "肌情報・避けたい成分・ポーチをもとに、あなた向けに並べています。"
+                : "信用できる口コミの評価が高い順に表示しています。";
 
   return (
     <div className="space-y-6">

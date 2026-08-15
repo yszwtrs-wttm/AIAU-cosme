@@ -9,13 +9,20 @@ import type { Category, Product, ProductColor, Profile } from "./types";
 
 export const PAGE_SIZE = 20;
 
-export type ProductSort = "recommended" | "new" | "cheap" | "expensive" | "rating";
+export type ProductSort =
+  | "recommended"
+  | "new"
+  | "cheap"
+  | "expensive"
+  | "unit_price"
+  | "rating";
 
 export const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: "recommended", label: "おすすめ" },
   { value: "new", label: "新着" },
   { value: "cheap", label: "安い順" },
   { value: "expensive", label: "高い順" },
+  { value: "unit_price", label: "単価が安い順" },
   { value: "rating", label: "評価順" },
 ];
 
@@ -72,6 +79,7 @@ export async function searchProducts(
     price_yen: row.price_yen,
     volume: row.volume,
     volume_unit: row.volume_unit,
+    unit_price_yen: row.unit_price_yen,
     jan: row.jan,
     image_url: row.image_url,
     color_hex: row.color_hex,

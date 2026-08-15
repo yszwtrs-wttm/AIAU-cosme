@@ -19,13 +19,13 @@ export default async function StashPage() {
     supabase
       .from("user_items")
       .select(
-        "product_id, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
+        "product_id, products(id,name,category,is_mens,price_yen,volume,volume_unit,unit_price_yen,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
       )
       .returns<StashItem[]>(),
     supabase
       .from("products")
       .select(
-        "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
+        "id,name,category,is_mens,price_yen,volume,volume_unit,unit_price_yen,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)",
       )
       .order("price_yen", { ascending: true })
       .limit(24)

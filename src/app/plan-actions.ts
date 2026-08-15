@@ -14,7 +14,7 @@ export async function generateMakeupPlan(request: string): Promise<Plan> {
   const { data } = await supabase
     .from("user_items")
     .select(
-      "products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name))",
+      "products(id,name,category,is_mens,price_yen,volume,volume_unit,unit_price_yen,jan,image_url,color_hex,ingredients,brands(name))",
     )
     .returns<{ products: Product }[]>();
 

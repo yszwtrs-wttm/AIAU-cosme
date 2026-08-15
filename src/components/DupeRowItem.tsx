@@ -1,9 +1,16 @@
 import Link from "next/link";
+import { unitPriceLabel } from "@/lib/price";
 import type { DupeRow } from "@/lib/types";
 import { colorMatchBadge, colorName, formulaMatchBadge } from "@/lib/wording";
 
 export default function DupeRowItem({ row, tone }: { row: DupeRow; tone: "warn" | "save" }) {
   const saving = row.savings ?? (row.price_diff !== undefined ? -row.price_diff : 0);
+  const hasUnitPrice = row.unit_price_yen !== undefined;
+  const unitPrice = unitPriceLabel({
+    unit_price_yen: row.unit_price_yen,
+    volume_unit: row.volume_unit ?? null,
+  });
+  const unitPriceSaving = row.unit_price_savings ?? null;
 
   return (
     <Link
@@ -31,10 +38,22 @@ export default function DupeRowItem({ row, tone }: { row: DupeRow; tone: "warn" 
               {colorName(row.color_hex)}
             </span>
           )}
+          {unitPriceSaving !== null && (
+            <span
+              className={`rounded-full px-2 py-0.5 ${
+                unitPriceSaving > 0 ? "bg-emerald-50 text-emerald-700" : "bg-ink-100 text-ink-500"
+              }`}
+            >
+              {unitPriceSaving > 0 ? "単価も安い" : "単価は高い"}
+            </span>
+          )}
         </div>
       </div>
       <div className="shrink-0 text-right">
         <div className="text-sm font-medium tabular-nums">¥{row.price_yen.toLocaleString()}</div>
+        {hasUnitPrice && (
+          <div className="text-[11px] tabular-nums text-ink-400">{unitPrice ?? "容量未登録"}</div>
+        )}
         {saving > 0 && (
           <div
             className={`text-xs font-bold tabular-nums ${tone === "save" ? "text-emerald-600" : "text-ink-400"}`}

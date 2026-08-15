@@ -46,6 +46,7 @@ export type Product = {
   price_yen: number;
   volume: number | null;
   volume_unit: string | null;
+  unit_price_yen?: number | null;
   jan: string | null;
   image_url: string | null;
   color_hex: string | null;
@@ -67,6 +68,10 @@ export type DupeRow = {
   score: number;
   price_diff?: number;
   savings?: number;
+  volume?: number | null;
+  volume_unit?: string | null;
+  unit_price_yen?: number | null;
+  unit_price_savings?: number | null;
 };
 
 export type StashOverlap = {

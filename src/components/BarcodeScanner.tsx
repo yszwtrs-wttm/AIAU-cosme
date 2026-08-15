@@ -14,7 +14,7 @@ type Status = "idle" | "scanning" | "found" | "unknown" | "error";
 type Candidate = { product: Product; sameMaker: boolean };
 
 const COLUMNS =
-  "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
+  "id,name,category,is_mens,price_yen,volume,volume_unit,unit_price_yen,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
 const CANDIDATE_LIMIT = 24;
 const CANDIDATE_CATEGORIES: Category[] = [
   "lip",
