@@ -13,47 +13,31 @@ import {
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import { judgeFit } from "@/lib/fit";
+import { searchProducts, withFitOrder } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
-import type { Product, ProductScore } from "@/lib/types";
+import type { Product } from "@/lib/types";
 
-const PRODUCT_SELECT =
-  "id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex)";
-
-async function getRankedProducts(supabase: Awaited<ReturnType<typeof createClient>>) {
-  const [{ data }, { data: scores }] = await Promise.all([
-    supabase.from("products").select(PRODUCT_SELECT).returns<Product[]>(),
-    supabase.from("product_score").select("*").returns<ProductScore[]>(),
-  ]);
-
-  const rank = new Map((scores ?? []).map((score) => [score.product_id, score.ranked_rating ?? 0]));
-  return [...(data ?? [])]
-    .sort((a, b) => (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0))
-    .slice(0, 8);
-}
+/** おすすめの候補として見る件数。全件は取らない。 */
+const SUGGESTION_POOL = 40;
 
 export default async function Home() {
   const supabase = await createClient();
   const user = await getMyUser();
 
   if (!isRealAccount(user)) {
-    return <LandingPage products={await getRankedProducts(supabase)} />;
+    const { products } = await searchProducts(supabase, { sort: "rating", limit: 8 });
+    return <LandingPage products={products} />;
   }
 
-  const [{ data: products }, { data: scores }, { count: stashCount }, profile] =
-    await Promise.all([
-      supabase.from("products").select(PRODUCT_SELECT).returns<Product[]>(),
-      supabase.from("product_score").select("*").returns<ProductScore[]>(),
-      supabase.from("user_items").select("product_id", { count: "exact", head: true }),
-      getMyProfile(),
-    ]);
+  const [page, { count: stashCount }, profile] = await Promise.all([
+    searchProducts(supabase, { sort: "recommended", limit: SUGGESTION_POOL }),
+    supabase.from("user_items").select("product_id", { count: "exact", head: true }),
+    getMyProfile(),
+  ]);
 
-  const rank = new Map((scores ?? []).map((score) => [score.product_id, score.ranked_rating ?? 0]));
-  const rankedProducts = [...(products ?? [])].sort(
-    (a, b) => (rank.get(b.id) ?? 0) - (rank.get(a.id) ?? 0),
-  );
   const hasSkinInfo = Boolean(profile?.skin_type || profile?.skin_tone_hex);
   const suggestions = hasSkinInfo
-    ? rankedProducts
+    ? withFitOrder(page.products, profile)
         .map((product) => ({ product, fit: judgeFit(product, profile) }))
         .filter(({ fit }) => fit.verdict === "good")
         .slice(0, 4)

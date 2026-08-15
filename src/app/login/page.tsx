@@ -29,6 +29,7 @@ export default async function LoginPage({
         <p className="rounded-xl bg-rose-50 dark:bg-rose-950/40 px-3 py-2 text-xs text-rose-700 dark:text-rose-200">{params.error}</p>
       )}
 
+      {/* 匿名セッションの発行はやめたが、以前の訪問で発行された分は本アカウントへ引き上げられるようにしておく。 */}
       <LoginForm
         anonymous={Boolean(user?.is_anonymous)}
         initialMode={params.mode === "signup" ? "signup" : "login"}
