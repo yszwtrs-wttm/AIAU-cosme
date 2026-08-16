@@ -97,20 +97,40 @@ KAWANAI が答えるのは次の4つ。
 
 判定は全部 Postgres 側で完結していて、Next.js は RPC を呼んで日本語に直すだけ。
 
-```
-                     Next.js 15 (App Router / Server Actions)
-  画面 ─┬─ /search ──────────── rpc search_products         (pg_trgm)
-        ├─ /products/[id] ───┬─ rpc find_cheaper_dupes      (pgvector cosine + ΔE)
-        │                    ├─ rpc find_duplicates_in_stash
-        │                    └─ src/lib/fit.ts / compare.ts / wording.ts（数値→日本語）
-        ├─ /color ───────────── rpc find_by_color           (CIELAB / lab_delta_e)
-        ├─ /stash ───────────── rpc find_stash_overlaps / find_palette_coverage
-        └─ /feed ───────────── Storage: review-images + trg_reviews_recompute（信頼度）
+```mermaid
+flowchart LR
+  user["ユーザー（スマホ / PC ブラウザ）"]
 
-  Postgres: products.ingredient_vec vector(256) ── HNSW 索引
-            product_colors.lab double precision[] ── トリガで HEX から変換
-            pg_cron: refresh_ingredient_idf_logged() を日次実行（IDF 再計算）
-            RLS: 公開読み取り / 投稿条件を DB 側で強制
+  subgraph vercel["Vercel"]
+    mw["middleware.ts<br/>セッション更新"]
+    rsc["Server Components / Server Actions<br/>/search /products/[id] /color /stash /feed /me /settings"]
+    cc["Client Components<br/>ColorLab（色抽出） / BarcodeScanner（zxing） / ReviewPanel"]
+    wording["src/lib/fit.ts / compare.ts / feel.ts / wording.ts<br/>数値 → 日本語"]
+  end
+
+  subgraph supabase["Supabase"]
+    auth["Auth<br/>メール確認 → パスワード（匿名は使わない）"]
+    fn["SQL 関数<br/>search_products / find_cheaper_dupes /<br/>find_duplicates_in_stash / find_stash_overlaps /<br/>find_by_color / find_palette_coverage / recompute_review_trust"]
+    pg[("Postgres + pgvector<br/>ingredient_vec vector(256)（HNSW） /<br/>product_colors.lab / pg_trgm 索引")]
+    rls["RLS<br/>公開読み取り / 投稿条件を DB 側で強制"]
+    cron["pg_cron<br/>refresh_ingredient_idf_logged() 日次"]
+    st["Storage<br/>review-images / avatars"]
+  end
+
+  openai["OpenAI API（任意）<br/>手持ちだけのメイク提案"]
+
+  user --> mw --> rsc
+  user --> cc
+  rsc -->|"@supabase/ssr（Cookie セッション）"| auth
+  rsc -->|rpc| fn
+  cc -->|rpc / insert / upload| fn
+  rsc --> wording
+  fn --> pg
+  rls --- pg
+  cron --> pg
+  cc -->|画像アップロード| st
+  rsc -->|公開 URL| st
+  rsc -.-> openai
 ```
 
 ### 成分ベクトル
@@ -179,7 +199,7 @@ CRUD だけでなく、**判定ロジック自体を Postgres 側に置いてい
 | RLS / セキュリティ | 公開読み取りと投稿条件を DB 側で強制（`20260815000600_review_policies.sql`、`20260816000100_profiles_and_reviews.sql`、`20260815000700_harden_functions.sql` で `search_path` 固定） |
 | Auth | メールのリンクで初回確認 → パスワード設定。匿名サインインは使わない |
 | Storage | 口コミ画像 `review-images`（1投稿4枚まで、WebP へ縮小して保存、画像変換でサムネ配信） |
-| Migrations / 型生成 | `supabase/migrations/` の14ファイルで再現。`npm run db:types` で TypeScript の型を生成する |
+| Migrations / 型生成 | `supabase/migrations/` の15ファイルで再現。`npm run db:types` で TypeScript の型を生成する |
 
 上の表の機能は `npm run db:smoke` で1つずつ実際に叩いて確認できる（[検証](#検証)に期待される出力を載せた）。
 
@@ -197,6 +217,25 @@ CRUD だけでなく、**判定ロジック自体を Postgres 側に置いてい
 | Issue テンプレートと、**Issue を立てると Devin が自動で調査して修正 PR を出す仕組み** | [#11](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/11) [#17](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/17) / `.github/workflows/devin-on-issue.yml` |
 | 上記の自動化で回した性能・セキュリティ・アクセシビリティの改善（trgm 検索、HNSW 索引、IDF の日次再計算、匿名サインイン廃止、画像の WebP 化 など） | [#104](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/104) [#113](https://github.com/yszwtrs-wttm/AIAU-cosme/pull/113) ほか。Issue 起点の PR が並んでいる |
 | ブラウザでの実機確認（全ページ表示・口コミ投稿・ポーチ公開の動作） | Devin のコンピュータ操作で実施 |
+
+開発は Issue 起点で回している。Issue を立てると GitHub Actions が Devin のセッションを作り、Devin が調査 → 実装 → 検証 → PR まで進める。
+
+```mermaid
+flowchart LR
+  issue["Issue を作成<br/>（または devin ラベルを付与）"]
+  wf[".github/workflows/devin-on-issue.yml<br/>プロンプト生成 → Devin API /v1/sessions"]
+  session["Devin セッション<br/>調査 → 実装 → lint / typecheck / build → 画面確認"]
+  pr["PR: devin/issue-N-説明 ブランチ<br/>本文に Fixes #N"]
+  review["レビュー → main にマージ"]
+  deploy["Vercel で本番反映"]
+
+  issue --> wf --> session --> pr --> review --> deploy
+  session -->|セッション URL / 結果| issue
+```
+
+- ワークフローは `issues: [opened, labeled]` で起動し、固定の手順（調査 → 最小限の実装 → `npm run lint` / `npx tsc --noEmit` / `npm run build` → 画面のスクリーンショット → `devin/issue-<番号>-<説明>` ブランチで PR）を添えて渡す。`idempotent: true` なので同じ Issue で二重にセッションは立たない。
+- セッション作成後は Issue にセッション URL がコメントされ、完了時に原因・変更内容・PR URL・未解決事項が Issue に残る。仕様が曖昧なときはコードを変更せず、調査結果と提案だけをコメントする運用。
+- 実績（2026-08 時点）: Issue 86 件、PR 99 本（31 本マージ済み）で、`devin/*` 以外のブランチから出た PR は 1 本も無い。
 
 エージェントが自走できるようにリポジトリ側も整えている。
 
