@@ -37,6 +37,8 @@ export type ProductQuery = {
 /** DB 側の並び替えに使った材料を持ったままの商品。ページ内での再計算に使う。 */
 export type RankedProduct = Product & {
   ranked_rating: number | null;
+  adjusted_rating: number | null;
+  counted_count: number;
   /** ポーチに登録済み */
   owned: boolean;
   /** 避けたい成分が入っている */
@@ -64,6 +66,25 @@ export async function searchProducts(
   });
 
   const rows = data ?? [];
+  const ratings = new Map<number, { adjusted_rating: number | null; counted_count: number }>();
+  if (rows.length > 0) {
+    const { data: ratingRows } = await supabase
+      .from("product_rating_summary")
+      .select("product_id, adjusted_rating, counted_count")
+      .in(
+        "product_id",
+        rows.map((row) => row.id),
+      );
+
+    for (const rating of ratingRows ?? []) {
+      if (rating.product_id == null) continue;
+      ratings.set(rating.product_id, {
+        adjusted_rating: rating.adjusted_rating,
+        counted_count: rating.counted_count ?? 0,
+      });
+    }
+  }
+
   const products = rows.map<RankedProduct>((row) => ({
     id: row.id,
     name: row.name,
@@ -79,6 +100,8 @@ export async function searchProducts(
     brands: { name: row.brand_name },
     product_colors: (row.product_colors as ProductColor[] | null) ?? [],
     ranked_rating: row.ranked_rating,
+    adjusted_rating: ratings.get(row.id)?.adjusted_rating ?? null,
+    counted_count: ratings.get(row.id)?.counted_count ?? 0,
     owned: row.owned,
     avoided: row.avoided,
   }));

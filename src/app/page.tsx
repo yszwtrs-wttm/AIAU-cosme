@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Camera,
   CircleDollarSign,
   Heart,
   Images,
@@ -29,9 +28,8 @@ export default async function Home() {
     return <LandingPage products={products} />;
   }
 
-  const [page, { count: stashCount }, profile, { data: allergenRows }] = await Promise.all([
+  const [page, profile, { data: allergenRows }] = await Promise.all([
     searchProducts(supabase, { sort: "recommended", limit: SUGGESTION_POOL }),
-    supabase.from("user_items").select("product_id", { count: "exact", head: true }),
     getMyProfile(),
     supabase.from("profile_allergens").select("ingredient_id").eq("user_id", user.id),
   ]);
@@ -67,7 +65,6 @@ export default async function Home() {
       displayName={profile?.display_name ?? "あなた"}
       hasSkinInfo={hasSkinInfo}
       suggestions={suggestions}
-      stashCount={stashCount ?? 0}
     />
   );
 }
@@ -84,8 +81,8 @@ function LandingPage({ products }: { products: Product[] }) {
             自分に合ってる？
           </h1>
           <p className="mt-5 max-w-xl text-sm leading-relaxed text-ink-600 sm:text-base">
-            成分・色・口コミから、気になった商品が自分に合いそうかを判定します。
-            買う前に知れば、買わないほうがいい理由も見つかります。
+            成分・色・口コミから、気になった商品が本当に自分に合うかを判定します。
+            数値で確かめて、納得して選べます。
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
@@ -112,8 +109,8 @@ function LandingPage({ products }: { products: Product[] }) {
 
       <section className="space-y-4">
         <div>
-          <h2 className="font-display text-2xl font-bold">買う前に、3つの視点で確認</h2>
-          <p className="mt-1 text-sm text-ink-600">「買わない」も含めて、自分で選べます。</p>
+          <h2 className="font-display text-2xl font-bold">本当に合うか、3つの視点で確認</h2>
+          <p className="mt-1 text-sm text-ink-600">数値で確かめて、自分で選べます。</p>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <FeatureCard
@@ -180,24 +177,29 @@ function PersonalizedHome({
   displayName,
   hasSkinInfo,
   suggestions,
-  stashCount,
 }: {
   displayName: string;
   hasSkinInfo: boolean;
   suggestions: { product: Product; fit: Fit }[];
-  stashCount: number;
 }) {
   return (
     <div className="space-y-8">
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <QuickLink href="/stash" icon={<Heart size={15} />} label="Myポーチ" />
+        <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
+        <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
+        <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
+      </section>
+
       <section className="border-b border-ink-200 pb-6">
         <p className="text-sm text-ink-500">こんにちは、{displayName}さん</p>
         <h1 className="mt-1 font-display text-3xl font-bold leading-tight sm:text-4xl">
-          今日の「買わない」を
+          本当に合うものを
           <br />
           見つけよう。
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-600">
-          手持ちと肌情報をもとに、あなたに必要なものだけを探せます。
+          肌情報と手持ちをもとに、あなたに合うものだけを探せます。
         </p>
       </section>
 
@@ -241,27 +243,6 @@ function PersonalizedHome({
           </Link>
         </section>
       )}
-
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
-          <div className="flex items-center gap-2 text-sm font-bold">
-            <Heart size={17} className="text-brand-600" /> Myポーチの状況
-          </div>
-          <p className="mt-3 font-display text-3xl font-bold tabular-nums">{stashCount}点</p>
-          <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
-            Myポーチを見る <ArrowRight className="inline" size={14} />
-          </Link>
-        </div>
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
-          <div className="text-sm font-bold">すぐ使える機能</div>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-            <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />
-            <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
-            <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
-            <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
