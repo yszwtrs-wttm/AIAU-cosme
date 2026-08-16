@@ -7,7 +7,7 @@ import { getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
 
-type StashItem = { product_id: number; products: Product };
+type StashItem = { product_id: number; created_at: string; products: Product };
 
 export default async function StashPage() {
   const user = await getMyUser();
@@ -19,8 +19,9 @@ export default async function StashPage() {
     supabase
       .from("user_items")
       .select(
-        "product_id, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
+        "product_id, created_at, products(id,name,category,is_mens,price_yen,volume,volume_unit,jan,image_url,color_hex,ingredients,brands(name),product_colors(pos,shade_name,hex))",
       )
+      .order("created_at", { ascending: false })
       .returns<StashItem[]>(),
     supabase
       .from("products")
@@ -38,6 +39,23 @@ export default async function StashPage() {
     <div className="space-y-6">
       <h1 className="font-display text-2xl font-bold">Myポーチ（{products.length}点）</h1>
 
+      {products.length > 0 ? (
+        <section className="space-y-2">
+          <h2 className="font-display text-lg font-bold">登録している商品</h2>
+          <p className="text-sm text-ink-600">新しく登録したものから並べています。</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {products.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+      ) : (
+        <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
+          まだ登録がありません。よく使う2〜3個登録すれば、調べた商品との違いを出せるようになります。
+          このページのバーコード登録か、リストから登録をはじめてみてください。
+        </p>
+      )}
+
       {products.length > 0 && <MakeupPlan products={products} />}
 
       <section className="space-y-2">
@@ -49,19 +67,6 @@ export default async function StashPage() {
       </section>
 
       <QuickStartPicker products={popular ?? []} />
-
-      {products.length === 0 && (
-        <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
-          まだ登録がありません。よく使う2〜3個登録すれば、調べた商品との違いを出せるようになります。
-          このページのバーコード登録か、リストから登録をはじめてみてください。
-        </p>
-      )}
-
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
-      </section>
     </div>
   );
 }
