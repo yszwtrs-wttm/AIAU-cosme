@@ -20,9 +20,9 @@ const display = Playfair_Display({
   display: "swap",
 });
 
-const title = "KAWANAI — そのコスメ、もう持ってるかも";
+const title = "KAWANAI — 本当に合うコスメを探す";
 const description =
-  "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。";
+  "成分・色・口コミの数値から、その商品が自分に合うかを確かめられるアプリ。";
 
 // OG画像を絶対URLで出すために基準URLが必要。ローカルとプレビューでも壊れないようにフォールバックする。
 const siteUrl =
