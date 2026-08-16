@@ -10,6 +10,10 @@ type CardProduct = Product & {
 
 export default function ProductCard({ product }: { product: CardProduct }) {
   const shades = [...(product.product_colors ?? [])].sort((a, b) => a.pos - b.pos);
+  const unitPrice =
+    product.volume && product.volume_unit
+      ? `¥${Math.round(product.price_yen / product.volume).toLocaleString()}/${product.volume_unit}`
+      : null;
 
   return (
     <Link
@@ -20,6 +24,7 @@ export default function ProductCard({ product }: { product: CardProduct }) {
         category={product.category}
         colors={shades}
         imageUrl={product.image_url}
+        brand={product.brands?.name}
         size={64}
         className="rounded-2xl"
       />
@@ -45,8 +50,10 @@ export default function ProductCard({ product }: { product: CardProduct }) {
             </span>
           </div>
         )}
-        <div className="text-sm font-medium tabular-nums text-ink-600">
-          ¥{product.price_yen.toLocaleString()}
+        <div className="flex items-center gap-2 text-sm font-medium tabular-nums text-ink-600">
+          <span>¥{product.price_yen.toLocaleString()}</span>
+          {unitPrice && <span className="text-[11px] text-ink-400">{unitPrice}</span>}
+          {shades.length > 1 && <span className="text-[11px] text-ink-400">{shades.length}色</span>}
         </div>
         {shades.length > 0 && (
           <div className="mt-1.5 flex items-center gap-1">
