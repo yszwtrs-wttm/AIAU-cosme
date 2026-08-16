@@ -193,6 +193,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           category={product.category}
           colors={shades}
           imageUrl={product.image_url}
+          brand={product.brands?.name}
           size={112}
           className="rounded-xl"
         />
