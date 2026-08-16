@@ -138,6 +138,8 @@ CRUD だけでなく、**判定ロジック自体を Postgres 側に置いてい
 | Storage | 口コミ画像 `review-images`（1投稿4枚まで、WebP へ縮小して保存、画像変換でサムネ配信） |
 | Migrations / 型生成 | `supabase/migrations/` の14ファイルで再現。`npm run db:types` で TypeScript の型を生成する |
 
+上の表の機能は `npm run db:smoke` で1つずつ実際に叩いて確認できる（[検証](#検証)に期待される出力を載せた）。
+
 ## Devin の使い方
 
 このリポジトリのコードはすべて Devin が書いている。人間がやったのは仕様の決定と却下、UI 文言の判断。
@@ -184,7 +186,25 @@ npm run dev                    # http://localhost:3000
 | `NEXT_PUBLIC_SUPABASE_IMAGE_TRANSFORM` | 任意 | 既定で Storage の画像変換を通す。使えない環境は `false` |
 | `OPENAI_API_KEY` | 任意 | メイク提案がルールベースにフォールバック（機能は動く） |
 
-Docker が使えない環境では、Supabase クラウドのプロジェクトに `supabase/migrations/` と `supabase/seed.sql` を適用し、`.env.local` にそのプロジェクトの URL と anon key を入れれば動く。
+### Docker が使えない場合
+
+判定ロジックは全部 Postgres 側にあるので、Supabase クラウドのプロジェクト（無料枠でよい）に流し込めばローカルと同じ状態になる。
+
+```bash
+npm install
+npx supabase login
+npx supabase link --project-ref <project-ref>
+npx supabase db push          # supabase/migrations/ を適用
+# シード投入: Supabase の SQL Editor に supabase/seed.sql を貼るか、接続文字列で流す
+psql "postgresql://postgres:<password>@db.<project-ref>.supabase.co:5432/postgres" -f supabase/seed.sql
+cp .env.example .env.local    # URL と anon key をクラウドの値にする
+npm run dev
+```
+
+- `vector` / `pg_trgm` / `pg_cron` はマイグレーション内で `create extension` しているので追加設定は不要
+- 口コミ画像用の Storage バケット `review-images` もマイグレーションで作られる
+- スモークテストはクラウドでも動く（SQL Editor に `scripts/smoke.sql` の SQL を貼る。先頭の `\echo` などのメタコマンドは除く）
+- DB を立てずにコードだけ確認する場合は `npm install && npm run lint && npm run typecheck && npm run build` が Docker 無しで通る
 
 つまずきやすい点:
 
@@ -203,10 +223,46 @@ npm run db:types
 
 ## 検証
 
+コードが通ること:
+
 ```bash
 npm run lint
 npm run typecheck
 npm run build
+```
+
+判定ロジックが実際に動くこと（ローカル Supabase 起動後）:
+
+```bash
+npm run db:smoke     # scripts/smoke.sql を流す
+```
+
+シードは決定論的に生成しているので、出力は毎回同じになる。期待される結果は次の通り。
+
+| # | 確認していること | 期待される出力 |
+| --- | --- | --- |
+| 1 | シード件数 | ブランド12 / 商品38 / 色番号52 / 口コミ14 / 成分85 |
+| 2 | トリガで成分ベクトルが入る | `missing = 0`, `filled = 38` |
+| 3 | トリガで HEX → Lab 変換が入る | `missing = 0`, `filled = 52` |
+| 4 | `lab_delta_e`（CIEDE2000）の実装 | 同色 `0.000`、白 vs 黒 `100.0` |
+| 5 | pg_trgm の商品検索 | 「リップ」で5件、スコア付きで返る |
+| 6 | `find_cheaper_dupes` | 4200円のリップに対し ing_sim 0.94 / 1100円の代替が最上位 |
+| 7 | `find_by_color` | 与えた Lab に近い順（ΔE 昇順）で5件 |
+| 8 | 口コミの信頼度計算 | 14件すべてにスコアが付き、5件が総合評価から除外される |
+| 9 | IDF の再計算（pg_cron が叩く関数） | `products = 38`, `ingredients = 75`, `status = success` |
+
+実際の出力（抜粋）:
+
+```
+== 6. 成分 cosine + 色差での「似ていて安い商品」 ==
+                     target                      |                  cheaper                  | price_yen | ing_sim | delta_e | score
+-------------------------------------------------+-------------------------------------------+-----------+---------+---------+-------
+ mode noir マットリップ 07 ダークプラム (4200円) | DAILY+ デイリーティント 05 レッドブリック |      1100 |   0.940 |   15.93 | 0.564
+
+== 8. 口コミの信頼度が計算され、集計に反映されているか ==
+ reviews | scored | excluded_from_score
+---------+--------+---------------------
+      14 |     14 |                   5
 ```
 
 ## 既知の制約
