@@ -3,7 +3,12 @@ import ProductThumb from "@/components/ProductThumb";
 import { CATEGORY_LABEL, type Product } from "@/lib/types";
 import { colorName } from "@/lib/wording";
 
-export default function ProductCard({ product }: { product: Product }) {
+type CardProduct = Product & {
+  adjusted_rating?: number | null;
+  counted_count?: number;
+};
+
+export default function ProductCard({ product }: { product: CardProduct }) {
   const shades = [...(product.product_colors ?? [])].sort((a, b) => a.pos - b.pos);
 
   return (
@@ -29,6 +34,17 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
         <div className="truncate text-sm font-bold">{product.name}</div>
+        {product.adjusted_rating !== undefined && product.counted_count !== undefined && (
+          <div className="mt-1 flex items-center gap-1.5 text-sm">
+            <span className="text-amber-500">★</span>
+            <span className="font-mono font-bold tabular-nums">
+              {product.adjusted_rating != null ? product.adjusted_rating.toFixed(1) : "—"}
+            </span>
+            <span className="font-mono text-xs tabular-nums text-ink-500">
+              {product.counted_count ? `（口コミ${product.counted_count}件）` : "（口コミなし）"}
+            </span>
+          </div>
+        )}
         <div className="font-mono text-sm font-medium tabular-nums text-ink-600">
           ¥{product.price_yen.toLocaleString()}
         </div>
