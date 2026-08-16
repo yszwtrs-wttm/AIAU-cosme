@@ -2,10 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "KAWANAI — そのコスメ、もう持ってるかも",
+    name: "KAWANAI — 本当に合うコスメを探す",
     short_name: "KAWANAI",
-    description:
-      "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
+    description: "成分・色・口コミの数値から、その商品が自分に合うかを確かめられるアプリ。",
     lang: "ja",
     start_url: "/",
     display: "standalone",

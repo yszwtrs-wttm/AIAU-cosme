@@ -53,8 +53,8 @@ cat > "$tmp/og.svg" <<'SVG'
     </g>
   </g>
   <text x="248" y="258" font-family="IPAGothic, sans-serif" font-size="96" font-weight="bold" fill="#241d22" letter-spacing="4">KAWANAI</text>
-  <text x="96" y="382" font-family="IPAGothic, sans-serif" font-size="52" font-weight="bold" fill="#d92668">そのコスメ、もう持ってるかも</text>
-  <text x="96" y="462" font-family="IPAGothic, sans-serif" font-size="32" fill="#5b5158">手持ちコスメと照らし合わせて、重複買いを防ぐアプリ</text>
+  <text x="96" y="382" font-family="IPAGothic, sans-serif" font-size="52" font-weight="bold" fill="#d92668">本当に合うコスメを探す</text>
+  <text x="96" y="462" font-family="IPAGothic, sans-serif" font-size="32" fill="#5b5158">成分と色の数値から、自分に合うかを確かめるアプリ</text>
 </svg>
 SVG
 rsvg-convert -w 1200 -h 630 "$tmp/og.svg" -o "$root/src/app/opengraph-image.png"
