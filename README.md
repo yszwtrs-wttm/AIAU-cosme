@@ -9,6 +9,8 @@ LIPS や @cosme は「何が人気か」を教えてくれる。KAWANAI は手�
 - 3日間のハッカソン（AIAU Craft Day）で開発。Supabase と Devin を使用。
 - コードはすべて Devin が書いている。人間がやったのは仕様の決定と却下、UI 文言の判断。
 
+評価者向けの最短ルート: まず https://kawanai.vercel.app/ を下のテストユーザーで触る → 独自性は [判定の仕組み](#判定の仕組み) → Supabase / Devin の使い方は該当セクション → 動くことの確認は `npm run db:smoke`（[検証](#検証)に期待される出力あり）。
+
 ## 審査項目とこの README の対応
 
 | 審査項目 | 該当セクション |
@@ -21,10 +23,12 @@ LIPS や @cosme は「何が人気か」を教えてくれる。KAWANAI は手�
 
 ## デモ
 
-<!-- TODO: 公開URL・デモ動画・スクリーンショットを貼る -->
-- 公開URL: （準備中）
-- デモ動画（30〜60秒）: （準備中）
-- ローカルで見る場合は [セットアップ](#セットアップ) の5コマンドで起動する。ログイン不要で `/search`・商品ページ・`/color`・`/feed` は閲覧できる。
+- 公開URL: https://kawanai.vercel.app/
+- テストユーザー（新規登録なしでログインできる）:
+  - メールアドレス: `kawanai.test1@example.com`
+  - パスワード: `kawanai-test-2026`
+- ログイン不要で `/search`・商品ページ・`/color`・`/feed` は閲覧できる。手持ち登録・ポーチ・口コミ投稿は上のテストユーザーでログインすると試せる。
+- ローカルで動かす場合は [セットアップ](#セットアップ) の5コマンド。
 
 3分で価値が伝わる動線:
 
@@ -78,6 +82,24 @@ KAWANAI が答えるのは次の4つ。
 | メンズ | シャンプー / トリートメント / BB / 日焼け止めをカテゴリに保持 |
 
 ## 判定の仕組み
+
+判定は全部 Postgres 側で完結していて、Next.js は RPC を呼んで日本語に直すだけ。
+
+```
+                     Next.js 15 (App Router / Server Actions)
+  画面 ─┬─ /search ──────────── rpc search_products         (pg_trgm)
+        ├─ /products/[id] ───┬─ rpc find_cheaper_dupes      (pgvector cosine + ΔE)
+        │                    ├─ rpc find_duplicates_in_stash
+        │                    └─ src/lib/fit.ts / compare.ts / wording.ts（数値→日本語）
+        ├─ /color ───────────── rpc find_by_color           (CIELAB / lab_delta_e)
+        ├─ /stash ───────────── rpc find_stash_overlaps / find_palette_coverage
+        └─ /feed ───────────── Storage: review-images + trg_reviews_recompute（信頼度）
+
+  Postgres: products.ingredient_vec vector(256) ── HNSW 索引
+            product_colors.lab double precision[] ── トリガで HEX から変換
+            pg_cron: refresh_ingredient_idf_logged() を日次実行（IDF 再計算）
+            RLS: 公開読み取り / 投稿条件を DB 側で強制
+```
 
 ### 成分ベクトル
 
@@ -221,7 +243,7 @@ npm run dev
 - ポート 3000 が埋まっている → `npm run dev -- -p 3001`
 - バーコードスキャンはカメラ権限が必要（HTTPS か localhost のみ）
 
-## 型定義
+### 型定義の再生成
 
 `src/lib/supabase/database.types.ts` は `supabase/migrations/` から生成する。マイグレーションを追加・変更したら再生成してコミットする。
 
@@ -274,9 +296,16 @@ npm run db:smoke     # scripts/smoke.sql を流す
       14 |     14 |                   5
 ```
 
-## 既知の制約
+## 既知の制約と今後
 
 - 商品・ブランド・口コミ・成分はすべて架空の生成データ。実商品の JAN マスタは未接続（バーコードは自前のデモコードで読める）
 - 成分辞書（`src/lib/ingredients.ts`）は主要成分のみ。辞書に無い成分は英語のまま出る
 - 合うかどうかの判定は肌の状態・肌の色・成分の役割からの推定で、医療・効能の断定はしない
-- 公開デプロイは未設定（リポジトリ所有者の権限が必要だったため、ローカル起動で確認）
+- 公開デモ（Vercel）は Supabase のホスト環境に繋いでいて、シードは上記の架空データ。口コミやポーチはテストユーザーの操作がそのまま残る
+
+今後やること（3日で切った範囲）:
+
+- 実商品の成分・JAN データ取り込み（成分ベクトルはトリガで自動生成されるので、データが入れば判定精度はそのまま伸びる）
+- 商品ページから既存の手持ちとの被りを常時出す（現在はポーチ登録済みユーザーのみ）
+- 口コミの信頼度モデルの評価（現在はルールベース。除外の妥当性を測る正解データがまだない）
+- 肌の色の入力を写真から自動判定（`/color` の色抽出を顔写真に適用する）
