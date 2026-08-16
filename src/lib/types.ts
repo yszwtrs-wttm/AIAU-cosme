@@ -5,7 +5,8 @@ export type Category =
   | "treatment"
   | "sunscreen"
   | "bb"
-  | "eyeshadow";
+  | "eyeshadow"
+  | "eyebrow";
 
 export const CATEGORY_LABEL: Record<Category, string> = {
   lip: "リップ",
@@ -15,6 +16,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   sunscreen: "日焼け止め",
   bb: "BBクリーム",
   eyeshadow: "アイシャドウ",
+  eyebrow: "アイブロウ",
 };
 
 export type ProductColor = {
@@ -94,6 +96,8 @@ export type Profile = {
   skin_type: SkinType | null;
   personal_color: PersonalColor | null;
   stash_public: boolean;
+  /** メンズ向け商品を優先して表示するか。検索の既定値に使う */
+  prefers_mens: boolean;
   created_at: string;
 };
 

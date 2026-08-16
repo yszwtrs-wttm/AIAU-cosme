@@ -8,6 +8,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  User,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
@@ -53,10 +54,14 @@ export default async function Home() {
   });
 
   const hasSkinInfo = Boolean(profile?.skin_type || profile?.skin_tone_hex);
+  const prefersMens = Boolean(profile?.prefers_mens);
   const suggestions = hasSkinInfo
     ? withFitOrder(page.products, profile)
         .map((product) => ({ product, fit: judgeFit(product, profile, avoidFor(product)) }))
         .filter(({ fit }) => fit.verdict === "good")
+        .sort((a, b) =>
+          prefersMens ? Number(b.product.is_mens) - Number(a.product.is_mens) : 0,
+        )
         .slice(0, 4)
     : [];
 
@@ -64,6 +69,7 @@ export default async function Home() {
     <PersonalizedHome
       displayName={profile?.display_name ?? "あなた"}
       hasSkinInfo={hasSkinInfo}
+      prefersMens={prefersMens}
       suggestions={suggestions}
     />
   );
@@ -102,6 +108,12 @@ function LandingPage({ products }: { products: Product[] }) {
               className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
             >
               ログインせずに探す <Search size={16} />
+            </Link>
+            <Link
+              href="/search?mens=1"
+              className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+            >
+              メンズ向けを見る <User size={16} />
             </Link>
           </div>
         </div>
@@ -176,19 +188,33 @@ function FeatureCard({
 function PersonalizedHome({
   displayName,
   hasSkinInfo,
+  prefersMens,
   suggestions,
 }: {
   displayName: string;
   hasSkinInfo: boolean;
+  prefersMens: boolean;
   suggestions: { product: Product; fit: Fit }[];
 }) {
   return (
     <div className="space-y-8">
-      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <QuickLink href="/stash" icon={<Heart size={15} />} label="Myポーチ" />
-        <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
-        <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
-        <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
+      <section className="space-y-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <QuickLink href="/stash" icon={<Heart size={15} />} label="Myポーチ" />
+          <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
+          <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
+          <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
+          <QuickLink href="/search?mens=1" icon={<User size={15} />} label="メンズ向け" />
+        </div>
+        {!prefersMens && (
+          <p className="text-[11px] text-ink-400">
+            メンズ向けをいつも先に出したいときは、
+            <Link href="/settings" className="font-bold text-brand-600">
+              設定
+            </Link>
+            で「メンズ向けを優先」を選べます。
+          </p>
+        )}
       </section>
 
       <section className="border-b border-ink-200 pb-6">
