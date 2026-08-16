@@ -10,6 +10,7 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
+    "db:smoke": "docker exec -i $(docker ps -qf name=supabase_db_) psql -U postgres -v ON_ERROR_STOP=1 -f - < scripts/smoke.sql",
     "seed:gen": "python3 scripts/generate_seed.py > supabase/seed.sql",
     "typecheck": "tsc --noEmit"
   },
