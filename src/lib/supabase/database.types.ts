@@ -430,6 +430,32 @@ export type Database = {
           },
         ]
       }
+      review_votes: {
+        Row: {
+          created_at: string
+          review_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          review_id: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          review_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_votes_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: false
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           author_key: string
@@ -439,6 +465,7 @@ export type Database = {
           excluded: boolean
           feel: Json | null
           flags: string[]
+          helpful_count: number
           id: number
           image_phash: string | null
           owner_verified: boolean
@@ -457,6 +484,7 @@ export type Database = {
           excluded?: boolean
           feel?: Json | null
           flags?: string[]
+          helpful_count?: number
           id?: never
           image_phash?: string | null
           owner_verified?: boolean
@@ -475,6 +503,7 @@ export type Database = {
           excluded?: boolean
           feel?: Json | null
           flags?: string[]
+          helpful_count?: number
           id?: never
           image_phash?: string | null
           owner_verified?: boolean
