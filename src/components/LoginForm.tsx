@@ -130,7 +130,7 @@ export default function LoginForm({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-ink-200 bg-white p-5">
+    <div className="space-y-4 rounded-xl border border-ink-200 bg-ink-0 p-5">
       <div>
         <h2 className="font-display text-xl font-bold">
           {mode === "signup" ? "新規登録" : resetPassword ? "パスワードを再設定" : "ログイン"}
@@ -161,7 +161,7 @@ export default function LoginForm({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
-            className="w-full rounded-2xl border border-brand-100 px-3 py-2.5 text-sm outline-none focus:border-brand-300"
+            className="w-full rounded-lg border border-brand-100 px-3 py-2.5 text-sm outline-none focus:border-brand-300"
           />
 
           {mode === "login" && !resetPassword && (
@@ -181,7 +181,7 @@ export default function LoginForm({
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full items-center justify-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-1.5 rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-ink-0 disabled:opacity-50"
           >
             {mode === "login" && !resetPassword ? (
               <>
@@ -210,7 +210,7 @@ export default function LoginForm({
                 setResetPassword(false);
                 setError(null);
               }}
-              className="w-full text-xs text-ink-400 underline"
+              className="w-full text-xs text-ink-500 underline"
             >
               ログインに戻る
             </button>
@@ -219,7 +219,7 @@ export default function LoginForm({
       )}
 
       {step === "sent" && (
-        <div className="space-y-3 rounded-2xl bg-brand-50 p-4 text-sm">
+        <div className="space-y-3 rounded-xl bg-brand-50 p-4 text-sm">
           <p>
             <span className="font-bold">{email}</span> にメールを送りました。
           </p>
@@ -229,7 +229,7 @@ export default function LoginForm({
           <button
             type="button"
             onClick={() => setStep("email")}
-            className="text-xs text-ink-400 underline"
+            className="text-xs text-ink-500 underline"
           >
             メールアドレスを直す
           </button>

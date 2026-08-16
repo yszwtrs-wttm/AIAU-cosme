@@ -24,7 +24,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
 
   return (
     <div className="space-y-3">
-      <div className="rounded-2xl border border-brand-300 bg-white p-4">
+      <div className="rounded-xl border border-brand-300 bg-ink-0 p-4">
         <ul className="space-y-1 text-sm leading-relaxed">
           {summarizeIngredientPoints(resolved).map((point) => (
             <li key={point} className="flex gap-1.5">
@@ -36,7 +36,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
       </div>
 
       {cautions.length > 0 && (
-        <ul className="space-y-1 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
+        <ul className="space-y-1 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
           {cautions.map((c) => (
             <li key={c.inci} className="flex gap-1.5">
               <AlertTriangle size={13} className="mt-0.5 shrink-0" />
@@ -48,7 +48,7 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
         </ul>
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-ink-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-ink-200 bg-ink-0">
         <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-ink-100 p-2">
           {groups.map((g) => (
             <TabButton
@@ -65,13 +65,13 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
 
         {current ? (
           <div role="tabpanel" className="p-4">
-            <div className="text-xs font-bold text-brand-600">{ROLE_LABEL[current.role]}</div>
+            <div className="font-mono text-xs font-semibold text-brand-600">{ROLE_LABEL[current.role]}</div>
             <ul className="mt-2 space-y-2">
               {current.items.map((item) => (
                 <li key={item.inci} className="text-sm">
                   <div className="flex flex-wrap items-baseline gap-1.5">
                     <span className="font-bold">{item.ja}</span>
-                    {item.known && <span className="text-[10px] text-ink-400">{item.inci}</span>}
+                    {item.known && <span className="text-[10px] text-ink-500">{item.inci}</span>}
                     {item.pos <= 3 && (
                       <span className="rounded-full bg-brand-50 px-1.5 text-[10px] text-brand-600">
                         多く入っています
@@ -85,11 +85,11 @@ export default function IngredientPanel({ ingredients }: { ingredients: string[]
           </div>
         ) : (
           <div role="tabpanel" className="p-4">
-            <div className="text-xs text-ink-400">全成分の原文（配合量の多い順）</div>
+            <div className="text-xs text-ink-500">全成分の原文（配合量の多い順）</div>
             <ol className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-ink-600">
               {resolved.map((item) => (
                 <li key={item.inci} className="rounded-full bg-ink-50 px-2 py-0.5">
-                  <span className="text-ink-400">{item.pos}.</span> {item.inci}
+                  <span className="text-ink-500">{item.pos}.</span> {item.inci}
                 </li>
               ))}
             </ol>
@@ -120,7 +120,7 @@ function TabButton({
       aria-selected={active}
       onClick={() => onSelect(id)}
       className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold transition ${
-        active ? "bg-brand-600 text-white" : "bg-ink-50 text-ink-600 hover:bg-ink-100"
+        active ? "bg-brand-600 text-ink-0" : "bg-ink-50 text-ink-600 hover:bg-ink-100"
       }`}
     >
       {label}

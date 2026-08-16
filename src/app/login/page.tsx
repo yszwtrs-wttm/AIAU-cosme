@@ -26,7 +26,7 @@ export default async function LoginPage({
       </section>
 
       {params.error && (
-        <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700">{params.error}</p>
+        <p className="rounded-lg bg-clay-100 px-3 py-2 text-xs text-clay-700">{params.error}</p>
       )}
 
       {/* 匿名セッションの発行はやめたが、以前の訪問で発行された分は本アカウントへ引き上げられるようにしておく。 */}
@@ -35,7 +35,7 @@ export default async function LoginPage({
         initialMode={params.mode === "signup" ? "signup" : "login"}
       />
 
-      <p className="text-xs leading-relaxed text-ink-400">
+      <p className="text-xs leading-relaxed text-ink-500">
         商品の検索・成分・口コミの閲覧・写真から色を探す機能はログイン不要です。
         手持ち登録とポーチの利用、口コミの投稿にはログインが必要です。
         <Link href="/search" className="ml-1 text-brand-600 underline">

@@ -18,7 +18,7 @@ export default function ProductCard({ product }: { product: CardProduct }) {
   return (
     <Link
       href={`/products/${product.id}`}
-      className="group flex gap-3 rounded-2xl border border-ink-200 bg-white p-3 transition "
+      className="group flex gap-3 rounded-xl border border-ink-200 bg-ink-0 p-3 transition "
     >
       <ProductThumb
         category={product.category}
@@ -26,34 +26,36 @@ export default function ProductCard({ product }: { product: CardProduct }) {
         imageUrl={product.image_url}
         brand={product.brands?.name}
         size={64}
-        className="rounded-2xl"
+        className="rounded-xl"
       />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 text-[11px] text-ink-400">
+        <div className="flex items-center gap-1.5 text-[11px] text-ink-500">
           <span className="truncate">{product.brands?.name}</span>
           <span className="rounded-full bg-brand-50 px-1.5 py-0.5 text-brand-600">
             {CATEGORY_LABEL[product.category]}
           </span>
           {product.is_mens && (
-            <span className="rounded-full bg-ink-900 px-1.5 py-0.5 text-[10px] text-white">MEN</span>
+            <span className="rounded-full bg-ink-900 px-1.5 py-0.5 text-[10px] text-ink-0">MEN</span>
           )}
         </div>
         <div className="truncate text-sm font-bold">{product.name}</div>
         {product.adjusted_rating !== undefined && product.counted_count !== undefined && (
           <div className="mt-1 flex items-center gap-1.5 text-sm">
             <span className="text-amber-500">★</span>
-            <span className="font-bold tabular-nums">
+            <span className="font-mono font-bold tabular-nums">
               {product.adjusted_rating != null ? product.adjusted_rating.toFixed(1) : "—"}
             </span>
-            <span className="text-xs text-ink-400">
+            <span className="font-mono text-xs tabular-nums text-ink-500">
               {product.counted_count ? `（口コミ${product.counted_count}件）` : "（口コミなし）"}
             </span>
           </div>
         )}
         <div className="flex items-center gap-2 text-sm font-medium tabular-nums text-ink-600">
           <span>¥{product.price_yen.toLocaleString()}</span>
-          {unitPrice && <span className="text-[11px] text-ink-400">{unitPrice}</span>}
-          {shades.length > 1 && <span className="text-[11px] text-ink-400">{shades.length}色</span>}
+          {unitPrice && <span className="font-mono text-[11px] text-ink-500">{unitPrice}</span>}
+          {shades.length > 1 && (
+            <span className="font-mono text-[11px] text-ink-500">{shades.length}色</span>
+          )}
         </div>
         {shades.length > 0 && (
           <div className="mt-1.5 flex items-center gap-1">
@@ -66,7 +68,7 @@ export default function ProductCard({ product }: { product: CardProduct }) {
               />
             ))}
             {shades.length > 6 && (
-              <span className="text-[10px] text-ink-400">+{shades.length - 6}</span>
+              <span className="text-[10px] text-ink-500">+{shades.length - 6}</span>
             )}
           </div>
         )}

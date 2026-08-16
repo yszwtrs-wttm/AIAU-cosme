@@ -48,7 +48,7 @@ export default function PasswordSettings({ hasPassword }: { hasPassword: boolean
   };
 
   return (
-    <section className="rounded-2xl border border-brand-200 bg-brand-50 p-4">
+    <section className="rounded-xl border border-brand-200 bg-brand-50 p-4">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -91,7 +91,7 @@ export default function PasswordSettings({ hasPassword }: { hasPassword: boolean
             type="button"
             onClick={() => void save()}
             disabled={busy}
-            className="rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
+            className="rounded-full bg-brand-600 px-4 py-2.5 text-sm font-bold text-ink-0 disabled:opacity-50"
           >
             {busy ? "設定中…" : hasPassword ? "変更する" : "パスワードを設定する"}
           </button>

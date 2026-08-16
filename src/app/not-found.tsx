@@ -6,7 +6,7 @@ export default function NotFound() {
   return (
     <section className="animate-rise space-y-5 py-10 text-center">
       <div>
-        <p className="text-xs font-bold tracking-widest text-brand-500">404</p>
+        <p className="font-mono text-xs font-semibold tracking-widest text-brand-600">404</p>
         <h1 className="mt-2 font-display text-2xl font-bold">ページが見つかりません</h1>
         <p className="mt-2 text-sm text-ink-600">
           URLが変わったか、商品が取り下げられたのかもしれません。探すページから見つけてみてください。
@@ -15,14 +15,14 @@ export default function NotFound() {
       <div className="flex flex-wrap justify-center gap-2">
         <Link
           href="/search"
-          className="flex items-center gap-1.5 rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-white"
+          className="flex items-center gap-1.5 rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-ink-0"
         >
           <Search size={16} />
           商品を探す
         </Link>
         <Link
           href="/"
-          className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+          className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-ink-0 px-5 py-3 text-sm font-bold"
         >
           <Home size={16} />
           トップへ

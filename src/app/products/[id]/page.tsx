@@ -179,7 +179,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="space-y-6">
-      <section className="flex flex-wrap items-start gap-4 rounded-2xl border border-ink-200 bg-white p-5">
+      <section className="flex flex-wrap items-start gap-4 rounded-xl border border-ink-200 bg-ink-0 p-5">
         <ProductThumb
           category={product.category}
           colors={shades}
@@ -189,32 +189,32 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           className="rounded-xl"
         />
         <div className="min-w-64 flex-1">
-          <div className="flex items-center gap-2 text-xs text-ink-400">
+          <div className="flex items-center gap-2 text-xs text-ink-500">
             <span>{product.brands?.name}</span>
             <span>{CATEGORY_LABEL[product.category]}</span>
             {product.is_mens && (
-              <span className="rounded bg-ink-900 px-1.5 py-0.5 text-[10px] text-white">MEN</span>
+              <span className="rounded bg-ink-900 px-1.5 py-0.5 text-[10px] text-ink-0">MEN</span>
             )}
           </div>
           <h1 className="font-display text-2xl font-bold">{product.name}</h1>
           <div className="mt-1 flex items-center gap-1.5 text-sm">
             <span className="text-amber-500">★</span>
-            <span className="font-bold tabular-nums">
+            <span className="font-mono font-bold tabular-nums">
               {summary?.adjusted_rating != null ? summary.adjusted_rating.toFixed(1) : "—"}
             </span>
-            <span className="text-xs text-ink-400">
+            <span className="text-xs text-ink-500">
               {summary?.counted_count ? `（口コミ${summary.counted_count}件）` : "（口コミなし）"}
             </span>
           </div>
           {avoidedIngredientLabels.length > 0 && (
-            <p className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700">
+            <p className="mt-2 rounded-lg bg-clay-100 px-3 py-2 text-xs font-bold text-clay-700">
               避けたい成分が入っています: {avoidedIngredientLabels.join("、")}
             </p>
           )}
-          <div className="mt-1 text-lg font-bold tabular-nums">
+          <div className="mt-1 font-mono text-lg font-bold tabular-nums">
             ¥{product.price_yen.toLocaleString()}
             {product.volume && (
-              <span className="ml-2 text-xs font-normal text-ink-400">
+              <span className="ml-2 text-xs font-normal text-ink-500">
                 {product.volume}
                 {product.volume_unit} ・ ¥{Math.round(product.price_yen / product.volume).toLocaleString()}/
                 {product.volume_unit}
@@ -227,7 +227,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 <li key={s.pos} className="flex items-center gap-1.5 rounded-full border border-ink-100 px-2 py-1">
                   <span className="swatch inline-block h-4 w-4 rounded-full" style={{ background: s.hex }} />
                   {s.shade_name}
-                  <span className="text-ink-400">{colorName(s.hex)}</span>
+                  <span className="text-ink-500">{colorName(s.hex)}</span>
                 </li>
               ))}
             </ul>
@@ -261,7 +261,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
         <>
           <section className="space-y-2">
             {topDupe ? (
-              <div className="rounded-2xl border border-ink-200 bg-white p-4">
+              <div className="rounded-xl border border-ink-200 bg-ink-0 p-4">
                 <p className="text-sm leading-relaxed">
                   ポーチの「{topDupe.brand} {topDupe.name}」と{formulaMatchText(topDupe.ing_sim)}。
                   {topDupe.delta_e !== null && `色は${colorMatchText(topDupe.delta_e).title}。`}
@@ -270,7 +270,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                     product.color_hex &&
                     `${colorDifferenceText(topDupe.color_hex, product.color_hex)}`}
                 </p>
-                <p className="mt-1 text-xs text-ink-400">
+                <p className="mt-1 text-xs text-ink-500">
                   使い分けたい理由があるなら買う意味はあります。同じ用途で足りるなら、持っている方で済みます。
                 </p>
                 <div className="mt-3 space-y-2">
@@ -280,9 +280,9 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-ink-200 bg-white p-4 text-sm">
+              <div className="rounded-xl border border-ink-200 bg-ink-0 p-4 text-sm">
                 <p className="font-bold">ポーチに近いものはありません</p>
-                <p className="mt-1 text-xs text-ink-400">
+                <p className="mt-1 text-xs text-ink-500">
                   持っていない色・処方なので、足りていない役割を埋められます。
                 </p>
               </div>
@@ -292,7 +292,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           {coverage.length > 1 && (
             <section className="space-y-2">
               <h2 className="font-display text-lg font-bold">手持ちで似た色が出せるか</h2>
-              <div className="rounded-2xl border border-ink-200 bg-white p-4">
+              <div className="rounded-xl border border-ink-200 bg-ink-0 p-4">
                 <div className="text-sm">
                   <span className="text-lg font-bold">
                     {coverage.length} 色中 {covered.length} 色
@@ -316,7 +316,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                           </span>
                         </span>
                       ) : (
-                        <span className="text-ink-400">持っていません</span>
+                        <span className="text-ink-500">持っていません</span>
                       )}
                     </li>
                   ))}

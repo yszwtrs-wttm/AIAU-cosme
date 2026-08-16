@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Zen_Kaku_Gothic_New } from "next/font/google";
+import { IBM_Plex_Mono, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
 import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
@@ -13,10 +13,10 @@ const sans = Zen_Kaku_Gothic_New({
   display: "swap",
 });
 
-const display = Playfair_Display({
+const mono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["500", "700"],
-  variable: "--font-display",
+  weight: ["400", "600"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -46,7 +46,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#d92668",
+  themeColor: "#006b76",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -54,12 +54,12 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   const real = isRealAccount(user);
 
   return (
-    <html lang="ja" className={`${sans.variable} ${display.variable}`}>
+    <html lang="ja" className={`${sans.variable} ${mono.variable}`}>
       <body className="min-h-screen text-ink-900 antialiased">
         <ToastProvider>
           <SiteHeader isRealAccount={real} />
           <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">{children}</main>
-          <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-28 text-[11px] text-ink-400 md:pb-10">
+          <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-28 text-[11px] text-ink-500 md:pb-10">
             <p>
               デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
             </p>

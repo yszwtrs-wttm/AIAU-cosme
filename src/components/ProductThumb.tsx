@@ -263,7 +263,7 @@ export default function ProductThumb({
         alt=""
         width={size}
         height={size}
-        className={`shrink-0 rounded-lg border border-neutral-200 object-cover ${className ?? ""}`}
+        className={`shrink-0 rounded-lg border border-ink-200 object-cover ${className ?? ""}`}
         style={{ width: size, height: size }}
       />
     );
@@ -279,7 +279,7 @@ export default function ProductThumb({
       height={size}
       role="img"
       aria-label="商品画像"
-      className={`shrink-0 rounded-lg border border-neutral-200 ${className ?? ""}`}
+      className={`shrink-0 rounded-lg border border-ink-200 ${className ?? ""}`}
       style={{ background: CATEGORY_BG[category] }}
     >
       {category === "eyeshadow" && colors.length > 0 ? (

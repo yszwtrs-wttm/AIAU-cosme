@@ -38,7 +38,7 @@ export default function QuickStartPicker({
 
       {Object.entries(groups).map(([category, items]) => (
         <div key={category} className="space-y-2">
-          <div className="text-xs font-bold text-brand-600">
+          <div className="font-mono text-xs font-semibold text-brand-600">
             {CATEGORY_LABEL[category as Category]}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -49,8 +49,8 @@ export default function QuickStartPicker({
                   key={p.id}
                   type="button"
                   onClick={() => toggle(p.id)}
-                  className={`flex items-center gap-2 rounded-2xl border px-2.5 py-2 text-left text-xs ${
-                    on ? "border-brand-400 bg-brand-50" : "border-brand-100 bg-white"
+                  className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs ${
+                    on ? "border-brand-400 bg-brand-50" : "border-brand-100 bg-ink-0"
                   }`}
                 >
                   <ProductThumb
@@ -62,7 +62,7 @@ export default function QuickStartPicker({
                     className="rounded-xl"
                   />
                   <span className="min-w-0">
-                    <span className="block text-[10px] text-ink-400">{p.brands?.name}</span>
+                    <span className="block text-[10px] text-ink-500">{p.brands?.name}</span>
                     <span className="block max-w-40 truncate font-bold">{p.name}</span>
                   </span>
                   {on && <Check size={14} className="text-brand-600" />}
@@ -95,7 +95,7 @@ export default function QuickStartPicker({
             onDone();
           })
         }
-        className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-40"
+        className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-bold text-ink-0 disabled:opacity-40"
       >
         {pending ? "登録中…" : selected.length > 0 ? `${selected.length}点を追加` : "追加"}
       </button>

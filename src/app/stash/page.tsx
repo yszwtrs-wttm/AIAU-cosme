@@ -51,7 +51,7 @@ export default async function StashPage() {
           ))}
         </div>
       ) : (
-        <p className="rounded-2xl border border-ink-200 bg-white p-5 text-sm text-ink-600">
+        <p className="rounded-xl border border-ink-200 bg-ink-0 p-5 text-sm text-ink-600">
           まだ登録がありません。よく使う2〜3個登録すれば、調べた商品との違いを出せるようになります。
           右上の「商品を追加」から、リストで選ぶかバーコードで登録できます。
         </p>

@@ -52,19 +52,19 @@ export default function ReviewImage({
           role="dialog"
           aria-modal="true"
           onClick={() => setOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/80 p-4"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={failed ? publicImageUrl(path) : imageUrl(path, { width: FULL_WIDTH, quality: 80 })}
             alt=""
             onError={() => setFailed(true)}
-            className="max-h-full max-w-full rounded-2xl object-contain"
+            className="max-h-full max-w-full rounded-xl object-contain"
           />
           <button
             type="button"
             aria-label="閉じる"
-            className="absolute right-4 top-4 rounded-full bg-white/90 p-2 text-ink-900"
+            className="absolute right-4 top-4 rounded-full bg-ink-0/90 p-2 text-ink-900"
           >
             <X size={18} />
           </button>

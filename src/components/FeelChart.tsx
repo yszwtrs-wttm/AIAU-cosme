@@ -16,12 +16,12 @@ export default function FeelChart({
   const estimated = reviewCount === 0;
 
   return (
-    <div className="rounded-2xl border border-ink-200 bg-white p-4">
+    <div className="rounded-xl border border-ink-200 bg-ink-0 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-sm font-bold">使い心地</div>
         <span
           className={`rounded-full px-2 py-0.5 text-[11px] ${
-            estimated ? "bg-plum-100 text-plum-700" : "bg-brand-50 text-brand-700"
+            estimated ? "bg-clay-100 text-clay-700" : "bg-brand-50 text-brand-700"
           }`}
         >
           {estimated ? "成分からの予想（口コミ待ち）" : `使った人${reviewCount}人の平均`}
@@ -33,7 +33,7 @@ export default function FeelChart({
           const v = Math.max(0, Math.min(100, values[axis.key] ?? 50));
           return (
             <li key={axis.key}>
-              <div className="flex items-center justify-between text-[11px] text-ink-400">
+              <div className="flex items-center justify-between text-[11px] text-ink-500">
                 <span>{axis.low}</span>
                 <span className="font-bold text-ink-900">{axis.label}</span>
                 <span>{axis.high}</span>

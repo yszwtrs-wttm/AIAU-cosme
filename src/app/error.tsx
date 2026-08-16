@@ -13,7 +13,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   return (
     <section className="animate-rise space-y-5 py-10 text-center">
       <div>
-        <p className="text-xs font-bold tracking-widest text-brand-500">ERROR</p>
+        <p className="font-mono text-xs font-semibold tracking-widest text-brand-600">ERROR</p>
         <h1 className="mt-2 font-display text-2xl font-bold">うまく読み込めませんでした</h1>
         <p className="mt-2 text-sm text-ink-600">
           通信かサーバーの調子が一時的に悪いようです。もう一度お試しください。
@@ -23,20 +23,20 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         <button
           type="button"
           onClick={reset}
-          className="flex items-center gap-1.5 rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-white"
+          className="flex items-center gap-1.5 rounded-full bg-ink-900 px-5 py-3 text-sm font-bold text-ink-0"
         >
           <RefreshCw size={16} />
           再試行する
         </button>
         <Link
           href="/search"
-          className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-white px-5 py-3 text-sm font-bold"
+          className="flex items-center gap-1.5 rounded-full border border-ink-200 bg-ink-0 px-5 py-3 text-sm font-bold"
         >
           <Search size={16} />
           商品を探す
         </Link>
       </div>
-      {error.digest && <p className="text-[11px] text-ink-400">エラーID: {error.digest}</p>}
+      {error.digest && <p className="text-[11px] text-ink-500">エラーID: {error.digest}</p>}
     </section>
   );
 }

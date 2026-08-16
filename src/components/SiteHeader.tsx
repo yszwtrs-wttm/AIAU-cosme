@@ -19,14 +19,14 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
       ];
 
   return (
-    <header className="sticky top-0 z-20 border-b border-ink-200 bg-white/90 backdrop-blur">
+    <header className="sticky top-0 z-20 border-b border-ink-200 bg-ink-0/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
         <Link href="/" prefetch className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-600 text-white">
+          <span className="grid h-8 w-8 place-items-center rounded-xl bg-brand-600 text-ink-0">
             <Sparkles size={16} />
           </span>
-          <span className="font-display text-xl font-bold tracking-tight">KAWANAI</span>
-          <span className="hidden text-[11px] text-ink-400 sm:inline">本当に合うものを探す</span>
+          <span className="font-mono text-xl font-semibold tracking-[0.12em]">KAWANAI</span>
+          <span className="hidden text-[11px] text-ink-500 sm:inline">本当に合うものを探す</span>
         </Link>
 
         <nav className="ml-auto hidden items-center gap-4 text-sm text-ink-600 md:flex">
@@ -41,11 +41,11 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
           <Link
             href={profile ? "/me" : "/settings"}
             prefetch
-            className="ml-auto flex items-center gap-2 rounded-full border border-brand-200 bg-white/80 px-2 py-1 text-sm md:ml-3"
+            className="ml-auto flex items-center gap-2 rounded-full border border-brand-200 bg-ink-0/80 px-2 py-1 text-sm md:ml-3"
           >
             <Avatar
               name={profile?.display_name ?? ""}
-              hue={profile?.avatar_hue ?? 330}
+              hue={profile?.avatar_hue ?? 200}
               avatarUrl={profile?.avatar_url}
               size="sm"
             />
@@ -56,7 +56,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
         ) : (
           <Link
             href="/login"
-            className="ml-auto flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-sm font-medium text-white md:ml-3"
+            className="ml-auto flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1.5 text-sm font-medium text-ink-0 md:ml-3"
           >
             <UserRound size={14} />
             ログイン

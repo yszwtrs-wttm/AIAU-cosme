@@ -176,7 +176,7 @@ export async function saveProfile(input: {
     skin_type: input.skinType ?? null,
     personal_color: input.personalColor ?? null,
     stash_public: input.stashPublic ?? true,
-    avatar_hue: input.avatarHue ?? 330,
+    avatar_hue: input.avatarHue ?? 200,
     avatar_url: input.avatarUrl ?? null,
   });
 

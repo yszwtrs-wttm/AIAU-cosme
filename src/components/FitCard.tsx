@@ -5,7 +5,7 @@ import { FIT_CONFIDENCE_LABEL, type Fit, type FitConfidence, type FitLevel, type
 const TONE: Record<Fit["verdict"], { box: string; text: string }> = {
   good: { box: "border-emerald-200 bg-emerald-50", text: "text-emerald-900" },
   caution: { box: "border-amber-200 bg-amber-50", text: "text-amber-900" },
-  unknown: { box: "border-ink-200 bg-white", text: "text-ink-900" },
+  unknown: { box: "border-ink-200 bg-ink-0", text: "text-ink-900" },
 };
 
 const ICON = {
@@ -23,7 +23,7 @@ const CONFIDENCE_BOX: Record<FitConfidence, string> = {
 const LEVEL_COLOR: Record<FitLevel["level"], string> = {
   3: "bg-emerald-500",
   2: "bg-amber-400",
-  1: "bg-rose-400",
+  1: "bg-clay-500",
   0: "bg-ink-200",
 };
 
@@ -38,7 +38,7 @@ function MaterialChip({ material }: { material: FitMaterial }) {
         />
       )}
       <span className="font-bold">{material.label}</span>
-      <span className={material.status === "used" ? "text-ink-600" : "text-ink-400"}>
+      <span className={material.status === "used" ? "text-ink-600" : "text-ink-500"}>
         {material.detail}
       </span>
       {material.status === "missing" && <Plus size={12} />}
@@ -49,7 +49,7 @@ function MaterialChip({ material }: { material: FitMaterial }) {
     return (
       <Link
         href={material.href}
-        className="flex items-center gap-1.5 rounded-full border border-dashed border-brand-300 bg-white px-2.5 py-1 text-[11px] text-brand-700"
+        className="flex items-center gap-1.5 rounded-full border border-dashed border-brand-300 bg-ink-0 px-2.5 py-1 text-[11px] text-brand-700"
       >
         {body}
       </Link>
@@ -60,8 +60,8 @@ function MaterialChip({ material }: { material: FitMaterial }) {
     <span
       className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] ${
         material.status === "used"
-          ? "border-ink-200 bg-white text-ink-700"
-          : "border-ink-100 bg-ink-50 text-ink-400"
+          ? "border-ink-200 bg-ink-0 text-ink-700"
+          : "border-ink-100 bg-ink-50 text-ink-500"
       }`}
     >
       {body}
@@ -97,14 +97,14 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
   const missing = fit.materials.filter((m) => m.status === "missing");
 
   return (
-    <div className={`rounded-2xl border p-4 ${tone.box}`}>
+    <div className={`rounded-xl border p-4 ${tone.box}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className={`flex items-center gap-2 text-base font-bold ${tone.text}`}>
           <Icon size={18} />
           {fit.headline}
         </div>
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${CONFIDENCE_BOX[fit.confidence]}`}
+          className={`rounded-full px-2 py-0.5 font-mono text-[11px] font-bold tabular-nums ${CONFIDENCE_BOX[fit.confidence]}`}
         >
           信頼度 {FIT_CONFIDENCE_LABEL[fit.confidence]}（材料{materialsUsed.length}/{fit.materials.length}）
         </span>
@@ -119,7 +119,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
                   ? "text-emerald-600"
                   : r.tone === "minus"
                     ? "text-amber-600"
-                    : "text-ink-400"
+                    : "text-ink-500"
               }
             >
               {r.tone === "minus" ? "−" : r.tone === "plus" ? "＋" : "・"}
@@ -129,7 +129,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
         ))}
       </ul>
 
-      <div className="mt-3 rounded-xl bg-white/70 p-3">
+      <div className="mt-3 rounded-xl bg-ink-0/70 p-3">
         <p className="text-[11px] font-bold text-ink-500">判定に使った材料</p>
         <ul className="mt-2 flex flex-wrap gap-1.5">
           {fit.materials.map((material) => (
@@ -160,7 +160,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
             style={{ background: fit.shade.hex }}
           />
           <span className="font-bold">{fit.shade.shade_name}</span>
-          <span className="text-xs text-ink-400">肌の色にいちばん近い番号</span>
+          <span className="text-xs text-ink-500">肌の色にいちばん近い番号</span>
         </div>
       )}
 
@@ -170,7 +170,7 @@ export default function FitCard({ fit, hasProfile }: { fit: Fit; hasProfile: boo
         </Link>
       )}
 
-      <p className="mt-3 text-[11px] leading-relaxed text-ink-400">
+      <p className="mt-3 text-[11px] leading-relaxed text-ink-500">
         成分表と色から言えることだけを書いています。肌に合うかは人によって違うので、心配な点は必ず現物で確かめてください。
       </p>
     </div>
