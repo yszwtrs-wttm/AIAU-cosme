@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import re
@@ -91,7 +92,7 @@ class Supabase:
 
 
 def average_hash(data: bytes) -> str:
-    with Image.open(__import__("io").BytesIO(data)) as image:
+    with Image.open(io.BytesIO(data)) as image:
         image = image.convert("RGB").resize((8, 8), Image.Resampling.LANCZOS)
         gray = [
             0.299 * red + 0.587 * green + 0.114 * blue
