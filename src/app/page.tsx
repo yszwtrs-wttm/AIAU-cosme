@@ -7,6 +7,7 @@ import {
   Palette,
   Search,
   ShieldCheck,
+  ShieldOff,
   Sparkles,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
@@ -28,8 +29,9 @@ export default async function Home() {
     return <LandingPage products={products} />;
   }
 
-  const [page, profile, { data: allergenRows }] = await Promise.all([
+  const [page, { data: skips }, profile, { data: allergenRows }] = await Promise.all([
     searchProducts(supabase, { sort: "recommended", limit: SUGGESTION_POOL }),
+    supabase.from("skipped_purchases").select("saved_yen"),
     getMyProfile(),
     supabase.from("profile_allergens").select("ingredient_id").eq("user_id", user.id),
   ]);
@@ -65,6 +67,8 @@ export default async function Home() {
       displayName={profile?.display_name ?? "あなた"}
       hasSkinInfo={hasSkinInfo}
       suggestions={suggestions}
+      skipCount={(skips ?? []).length}
+      savedYen={(skips ?? []).reduce((total, skip) => total + skip.saved_yen, 0)}
     />
   );
 }
@@ -131,6 +135,17 @@ function LandingPage({ products }: { products: Product[] }) {
         </div>
       </section>
 
+      <section className="rounded-2xl border-2 border-ink-900 bg-white p-5">
+        <div className="flex items-center gap-2 font-bold">
+          <ShieldOff size={17} />
+          このアプリは商品を売りません
+        </div>
+        <p className="mt-2 text-sm leading-relaxed text-ink-600">
+          カートも決済もなく、外部ショップへのアフィリエイトリンクも入れていません。
+          広告のために並び順を変えることもしません。数えているのは「買わなかった金額」です。
+        </p>
+      </section>
+
       {products.length > 0 && (
         <section className="space-y-4">
           <div className="flex items-end justify-between gap-3">
@@ -177,10 +192,14 @@ function PersonalizedHome({
   displayName,
   hasSkinInfo,
   suggestions,
+  skipCount,
+  savedYen,
 }: {
   displayName: string;
   hasSkinInfo: boolean;
   suggestions: { product: Product; fit: Fit }[];
+  skipCount: number;
+  savedYen: number;
 }) {
   return (
     <div className="space-y-8">
@@ -189,6 +208,19 @@ function PersonalizedHome({
         <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
         <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
         <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
+      </section>
+
+      <section className="rounded-2xl border border-ink-200 bg-white p-5">
+        <div className="flex items-center gap-2 text-sm font-bold">
+          <CircleDollarSign size={17} className="text-emerald-600" /> 買わなかった金額
+        </div>
+        <p className="mt-3 font-display text-3xl font-bold tabular-nums text-emerald-700">
+          ¥{savedYen.toLocaleString()}
+        </p>
+        <p className="mt-0.5 text-xs text-ink-400">見送った商品 {skipCount}点</p>
+        <Link href="/savings" className="mt-3 inline-block text-sm font-bold text-brand-600">
+          買わなかった記録を見る <ArrowRight className="inline" size={14} />
+        </Link>
       </section>
 
       <section className="border-b border-ink-200 pb-6">

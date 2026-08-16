@@ -83,6 +83,36 @@ export type StashOverlap = {
   score: number;
 };
 
+/** 見送りの理由。判定の根拠があるものだけを選べるようにする。 */
+export type SkipReason =
+  | "own_similar_color"
+  | "own_similar_formula"
+  | "cheaper_alternative"
+  | "not_fit"
+  | "other";
+
+export const SKIP_REASON_LABEL: Record<SkipReason, string> = {
+  own_similar_color: "近い色を持っている",
+  own_similar_formula: "成分が近いものを持っている",
+  cheaper_alternative: "似ていて安いものにした",
+  not_fit: "自分に合わなそう",
+  other: "今は必要ない",
+};
+
+export type SkippedPurchase = {
+  id: number;
+  product_id: number;
+  /** 見送った時点の価格 */
+  price_yen: number;
+  /** 実際に払わずに済んだ金額。安い代替に置き換えた場合は差額だけ。 */
+  saved_yen: number;
+  reason: SkipReason;
+  evidence_product_id: number | null;
+  evidence_price_yen: number | null;
+  created_at: string;
+  products?: Product | null;
+};
+
 export type Profile = {
   user_id: string;
   handle: string;

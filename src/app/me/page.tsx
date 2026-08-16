@@ -15,7 +15,7 @@ export default async function MyPage() {
   const profile = await getMyProfile();
   const real = isRealAccount(user);
 
-  const [{ data: stash }, { data: myReviews }] = await Promise.all([
+  const [{ data: stash }, { data: myReviews }, { data: skips }] = await Promise.all([
     supabase
       .from("user_items")
       .select(
@@ -30,7 +30,12 @@ export default async function MyPage() {
           .order("posted_at", { ascending: false })
           .returns<Review[]>()
       : Promise.resolve({ data: [] as Review[] }),
+    user
+      ? supabase.from("skipped_purchases").select("saved_yen")
+      : Promise.resolve({ data: [] as { saved_yen: number }[] }),
   ]);
+
+  const savedYen = (skips ?? []).reduce((total, skip) => total + skip.saved_yen, 0);
 
   const items = (stash ?? []).map((r) => r.products).filter((p): p is Product => Boolean(p));
 
@@ -77,7 +82,19 @@ export default async function MyPage() {
         {real && <LogoutButton />}
       </section>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <Link
+          href="/savings"
+          className="rounded-2xl border border-ink-200 bg-white p-4 hover:border-brand-300"
+        >
+          <div className="text-xs font-bold text-ink-400">買わなかった金額</div>
+          <div className="mt-1 font-display text-3xl font-bold tabular-nums text-emerald-700">
+            ¥{savedYen.toLocaleString()}
+          </div>
+          <div className="mt-0.5 text-[11px] text-brand-600">
+            見送った商品 {(skips ?? []).length}点
+          </div>
+        </Link>
         <div className="rounded-2xl border border-ink-200 bg-white p-4">
           <div className="text-xs font-bold text-ink-400">Myポーチの数</div>
           <div className="mt-1 font-display text-3xl font-bold tabular-nums">{items.length}</div>

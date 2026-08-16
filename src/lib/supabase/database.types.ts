@@ -523,6 +523,91 @@ export type Database = {
           },
         ]
       }
+      skipped_purchases: {
+        Row: {
+          created_at: string
+          evidence_delta_e: number | null
+          evidence_ing_sim: number | null
+          evidence_price_yen: number | null
+          evidence_product_id: number | null
+          id: number
+          price_yen: number
+          product_id: number
+          reason: string
+          saved_yen: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          evidence_delta_e?: number | null
+          evidence_ing_sim?: number | null
+          evidence_price_yen?: number | null
+          evidence_product_id?: number | null
+          id?: never
+          price_yen: number
+          product_id: number
+          reason: string
+          saved_yen: number
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          evidence_delta_e?: number | null
+          evidence_ing_sim?: number | null
+          evidence_price_yen?: number | null
+          evidence_product_id?: number | null
+          id?: never
+          price_yen?: number
+          product_id?: number
+          reason?: string
+          saved_yen?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skipped_purchases_evidence_product_id_fkey"
+            columns: ["evidence_product_id"]
+            isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "skipped_purchases_evidence_product_id_fkey"
+            columns: ["evidence_product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "skipped_purchases_evidence_product_id_fkey"
+            columns: ["evidence_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skipped_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_rating_summary"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "skipped_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "product_score"
+            referencedColumns: ["product_id"]
+          },
+          {
+            foreignKeyName: "skipped_purchases_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_items: {
         Row: {
           created_at: string
