@@ -62,8 +62,8 @@ function LandingPage({ products }: { products: Product[] }) {
             自分に合ってる？
           </h1>
           <p className="mt-5 max-w-xl text-sm leading-relaxed text-ink-600 sm:text-base">
-            成分・色・口コミから、気になった商品が自分に合いそうかを判定します。
-            買う前に知れば、買わないほうがいい理由も見つかります。
+            成分・色・口コミから、気になった商品が本当に自分に合うかを判定します。
+            数値で確かめて、納得して選べます。
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
@@ -90,8 +90,8 @@ function LandingPage({ products }: { products: Product[] }) {
 
       <section className="space-y-4">
         <div>
-          <h2 className="font-display text-2xl font-bold">買う前に、3つの視点で確認</h2>
-          <p className="mt-1 text-sm text-ink-600">「買わない」も含めて、自分で選べます。</p>
+          <h2 className="font-display text-2xl font-bold">本当に合うか、3つの視点で確認</h2>
+          <p className="mt-1 text-sm text-ink-600">数値で確かめて、自分で選べます。</p>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <FeatureCard
@@ -175,12 +175,12 @@ function PersonalizedHome({
       <section className="border-b border-ink-200 pb-6">
         <p className="text-sm text-ink-500">こんにちは、{displayName}さん</p>
         <h1 className="mt-1 font-display text-3xl font-bold leading-tight sm:text-4xl">
-          今日の「買わない」を
+          本当に合うものを
           <br />
           見つけよう。
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-600">
-          手持ちと肌情報をもとに、あなたに必要なものだけを探せます。
+          肌情報と手持ちをもとに、あなたに合うものだけを探せます。
         </p>
       </section>
 
