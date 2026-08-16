@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Camera,
   Heart,
   Images,
   Palette,
@@ -26,9 +25,8 @@ export default async function Home() {
     return <LandingPage products={products} />;
   }
 
-  const [page, { count: stashCount }, profile] = await Promise.all([
+  const [page, profile] = await Promise.all([
     searchProducts(supabase, { sort: "recommended", limit: SUGGESTION_POOL }),
-    supabase.from("user_items").select("product_id", { count: "exact", head: true }),
     getMyProfile(),
   ]);
 
@@ -45,7 +43,6 @@ export default async function Home() {
       displayName={profile?.display_name ?? "あなた"}
       hasSkinInfo={hasSkinInfo}
       suggestions={suggestions}
-      stashCount={stashCount ?? 0}
     />
   );
 }
@@ -156,15 +153,20 @@ function PersonalizedHome({
   displayName,
   hasSkinInfo,
   suggestions,
-  stashCount,
 }: {
   displayName: string;
   hasSkinInfo: boolean;
   suggestions: { product: Product; fit: ReturnType<typeof judgeFit> }[];
-  stashCount: number;
 }) {
   return (
     <div className="space-y-8">
+      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <QuickLink href="/stash" icon={<Heart size={15} />} label="Myポーチ" />
+        <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
+        <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
+        <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
+      </section>
+
       <section className="border-b border-ink-200 pb-6">
         <p className="text-sm text-ink-500">こんにちは、{displayName}さん</p>
         <h1 className="mt-1 font-display text-3xl font-bold leading-tight sm:text-4xl">
@@ -216,27 +218,6 @@ function PersonalizedHome({
           </Link>
         </section>
       )}
-
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-ink-200 bg-ink-0 p-5">
-          <div className="flex items-center gap-2 text-sm font-bold">
-            <Heart size={17} className="text-brand-600" /> Myポーチの状況
-          </div>
-          <p className="mt-3 font-mono text-3xl font-semibold tabular-nums">{stashCount}点</p>
-          <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
-            Myポーチを見る <ArrowRight className="inline" size={14} />
-          </Link>
-        </div>
-        <div className="rounded-xl border border-ink-200 bg-ink-0 p-5">
-          <div className="text-sm font-bold">すぐ使える機能</div>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-            <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />
-            <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
-            <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
-            <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
@@ -245,7 +226,7 @@ function QuickLink({ href, icon, label }: { href: string; icon: React.ReactNode;
   return (
     <Link
       href={href}
-      className="flex items-center gap-1.5 rounded-xl border border-ink-200 px-2.5 py-2 text-xs font-bold text-ink-700"
+      className="flex items-center gap-1.5 rounded-xl border border-ink-200 bg-ink-0 px-2.5 py-2 text-xs font-bold text-ink-700"
     >
       {icon}
       {label}
