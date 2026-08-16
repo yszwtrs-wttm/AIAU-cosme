@@ -20,10 +20,25 @@ const mono = IBM_Plex_Mono({
   display: "swap",
 });
 
+const title = "KAWANAI — 本当に合うコスメを探す";
+const description =
+  "成分・色・口コミの数値から、その商品が自分に合うかを確かめられるアプリ。";
+
+// OG画像を絶対URLで出すために基準URLが必要。ローカルとプレビューでも壊れないようにフォールバックする。
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
-  title: "KAWANAI — そのコスメ、もう持ってるかも",
-  description:
-    "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  applicationName: "KAWANAI",
+  appleWebApp: { capable: true, title: "KAWANAI", statusBarStyle: "default" },
+  openGraph: { type: "website", siteName: "KAWANAI", locale: "ja_JP", title, description },
+  twitter: { card: "summary_large_image", title, description },
 };
 
 // スマホ利用が前提なので、ノッチ端末でも下タブが安全領域に収まるようにする。
@@ -31,6 +46,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#006b76",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
