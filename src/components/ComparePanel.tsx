@@ -112,6 +112,7 @@ function SideHead({
           category={side.category}
           colors={side.colors}
           imageUrl={side.imageUrl}
+          brand={side.brand}
           size={72}
           className="max-w-full shrink-0 rounded-xl"
         />
