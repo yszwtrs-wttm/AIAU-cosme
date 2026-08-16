@@ -8,12 +8,14 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
   const navLinks = real
     ? [
         { href: "/search", label: "商品を探す" },
+        { href: "/color", label: "色から探す" },
         { href: "/feed", label: "みんなの投稿" },
         { href: "/stash", label: "Myポーチ" },
         { href: "/savings", label: "買わなかった記録" },
       ]
     : [
         { href: "/search", label: "商品を探す" },
+        { href: "/color", label: "色から探す" },
         { href: "/feed", label: "みんなの投稿" },
       ];
 
@@ -25,7 +27,7 @@ export default async function SiteHeader({ isRealAccount: real }: { isRealAccoun
             <Sparkles size={16} />
           </span>
           <span className="font-display text-xl font-bold tracking-tight">KAWANAI</span>
-          <span className="hidden text-[11px] text-ink-400 sm:inline">買わない判断</span>
+          <span className="hidden text-[11px] text-ink-400 sm:inline">本当に合うものを探す</span>
         </Link>
 
         <nav className="ml-auto hidden items-center gap-4 text-sm text-ink-600 md:flex">

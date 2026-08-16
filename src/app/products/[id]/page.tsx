@@ -92,13 +92,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   if (!product) notFound();
 
   let avoidedIngredientLabels: string[] = [];
-  if (user && product.ingredients.length > 0) {
+  let avoidRegisteredCount = 0;
+  if (user) {
     const { data: allergenRows } = await supabase
       .from("profile_allergens")
       .select("ingredient_id")
       .eq("user_id", user.id);
     const ingredientIds = (allergenRows ?? []).map((row) => row.ingredient_id);
-    if (ingredientIds.length > 0) {
+    avoidRegisteredCount = ingredientIds.length;
+    if (ingredientIds.length > 0 && product.ingredients.length > 0) {
       const { data: masters } = await supabase
         .from("ingredients_master")
         .select("id,inci,name_ja")
@@ -184,7 +186,10 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     feel: feelValues,
   };
 
-  const fit = judgeFit(product, profile);
+  const fit = judgeFit(product, profile, {
+    registered: avoidRegisteredCount,
+    matched: avoidedIngredientLabels,
+  });
   const isOwned = Boolean(owned);
   const canUseStash = isRealAccount(user);
   const canPost = canUseStash;
@@ -232,6 +237,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           category={product.category}
           colors={shades}
           imageUrl={product.image_url}
+          brand={product.brands?.name}
           size={112}
           className="rounded-xl"
         />

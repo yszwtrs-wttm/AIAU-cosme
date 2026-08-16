@@ -1,0 +1,182 @@
+{
+  "note": "口コミ写真のシードデータ。既存の口コミに写真を足し、写真つきの口コミを追加する。写真の使い回し（拾い画）を検出する動きを見せるため、同じ画像を複数の投稿に意図的に割り当てている。",
+  "bucket": "review-images",
+  "owner_handle": "kawanai_test",
+  "delete_review_body_patterns": ["Issue50%", "PR93%"],
+  "existing": [
+    {
+      "brand": "mode noir",
+      "product_like": "セラムファンデーション%",
+      "author_name": "mikan_88",
+      "body_prefix": "カバー力は十分",
+      "images": ["fnd_bottle_shelf", "fnd_swatch_hand"]
+    },
+    {
+      "brand": "mode noir",
+      "product_like": "セラムファンデーション%",
+      "author_name": "kt_no_diary",
+      "body_prefix": "色は合うけど乾燥する",
+      "images": ["fnd_drop_finger"]
+    },
+    {
+      "brand": "mode noir",
+      "product_like": "セラムファンデーション%",
+      "author_name": "sekkachi",
+      "body_prefix": "崩れにくさは今まで",
+      "images": ["fnd_bottle_desk"]
+    },
+    {
+      "brand": "mode noir",
+      "product_like": "セラムファンデーション%",
+      "author_name": "yuu_cosme",
+      "body_prefix": "自分の肌には黄みが",
+      "images": ["fnd_jawline_mismatch"]
+    },
+    {
+      "brand": "mode noir",
+      "product_like": "セラムファンデーション%",
+      "author_name": "nagi_r",
+      "body_prefix": "少量で伸びる",
+      "images": ["fnd_pump_drop"]
+    },
+    {
+      "brand": "mode noir",
+      "product_like": "セラムファンデーション%",
+      "author_name": "pr_account_a",
+      "body_prefix": "本当に神コスメすぎる",
+      "images": ["pr_flatlay_a"]
+    },
+    {
+      "brand": "mode noir",
+      "product_like": "セラムファンデーション%",
+      "author_name": "pr_account_b",
+      "body_prefix": "まじで神コスメすぎる",
+      "images": ["pr_flatlay_a"]
+    },
+    {
+      "brand": "mode noir",
+      "product_like": "セラムファンデーション%",
+      "author_name": "pr_account_c",
+      "body_prefix": "神コスメすぎました",
+      "images": ["pr_flatlay_b"]
+    },
+    {
+      "brand": "mode noir",
+      "product_like": "マットリップ%",
+      "author_name": "brand_fan_1",
+      "body_prefix": "このブランドは全部良い。文句なし",
+      "images": ["lip_plum_bullet", "lip_plum_swatch"]
+    },
+    {
+      "brand": "PRICO",
+      "product_like": "カバーリキッド%",
+      "author_name": "mikan_88",
+      "body_prefix": "値段の割にちゃんと隠れる",
+      "images": ["fnd_cheap_bottle"]
+    },
+    {
+      "brand": "PRICO",
+      "product_like": "カバーリキッド%",
+      "author_name": "nagi_r",
+      "body_prefix": "高いやつと並べても",
+      "images": ["fnd_two_bottles"]
+    },
+    {
+      "brand": "mode noir",
+      "product_like": "クチュールアイパレット%",
+      "author_name": null,
+      "body_prefix": "神コスメすぎる",
+      "images": ["eye_mauve_palette"]
+    },
+    {
+      "brand": "CLEAR BASE",
+      "product_like": "アミノ酸デイリー%",
+      "author_name": null,
+      "body_prefix": "いい匂い続いて",
+      "images": ["shampoo_amino"]
+    }
+  ],
+  "new": [
+    {
+      "brand": "LUMINA",
+      "product_like": "グロウリップスティック%",
+      "author_name": "haru_makeup",
+      "rating": 4,
+      "body": "落ちにくさは値段なり。ただ乾燥はしないので、色を足したい日の普段使いにはちょうどいい。",
+      "posted_ago": "9 days",
+      "images": ["lip_terracotta_lux"]
+    },
+    {
+      "brand": "PRICO",
+      "product_like": "メルティリップ%",
+      "author_name": "yuu_cosme",
+      "rating": 4,
+      "body": "3800円のと並べて塗ってみたけど発色はほぼ一緒だった。減りは早いので、色を試す用に割り切れば十分。",
+      "posted_ago": "7 days",
+      "images": ["lip_terracotta_cheap"]
+    },
+    {
+      "brand": "LUMINA",
+      "product_like": "デイリーアイパレット%",
+      "author_name": "sekkachi",
+      "rating": 4,
+      "body": "捨て色がないのは本当。ラメが下まぶたに落ちるので、粉のまま重ねるより指で押さえたほうが良かった。",
+      "posted_ago": "12 days",
+      "images": ["eye_brown_palette"]
+    },
+    {
+      "brand": "PRICO",
+      "product_like": "9色アイパレット%",
+      "author_name": "mikan_88",
+      "rating": 3,
+      "body": "粉っぽさはあるけど色の並びは高いパレットとほぼ同じ。ベースを仕込めば夕方までの持ちも変わらなかった。",
+      "posted_ago": "6 days",
+      "images": ["eye_brown_swatch"]
+    },
+    {
+      "brand": "GRIT",
+      "product_like": "スカルプシャンプー%",
+      "author_name": "ryo_1103",
+      "rating": 4,
+      "body": "洗い上がりはさっぱりで、夕方の頭皮のにおいは気にならなくなった。清涼感が強いので冬は少し寒い。",
+      "posted_ago": "4 days",
+      "images": ["shampoo_mens"]
+    },
+    {
+      "brand": "SERAFI",
+      "product_like": "ヴェルベットティント%",
+      "author_name": "kirakira_cosme7",
+      "rating": 5,
+      "body": "発色が神！みんなに教えたい！絶対リピします！",
+      "posted_ago": "3 hours",
+      "images": ["stock_lip_stolen"]
+    },
+    {
+      "brand": "SERAFI",
+      "product_like": "ヴェルベットティント%",
+      "author_name": "cosme_love_2024",
+      "rating": 5,
+      "body": "発色が神すぎる！みんなに教えたい！絶対リピートします！",
+      "posted_ago": "2 hours",
+      "images": ["stock_lip_stolen"]
+    },
+    {
+      "brand": "SERAFI",
+      "product_like": "ヴェルベットティント%",
+      "author_name": "beauty_room_9",
+      "rating": 5,
+      "body": "発色が神ってる！これはみんなに教えたい！絶対リピ確定！",
+      "posted_ago": "1 hours",
+      "images": ["stock_lip_stolen"]
+    },
+    {
+      "brand": "DAILY+",
+      "product_like": "デイリーティント%",
+      "author_name": "kirakira_cosme7",
+      "rating": 5,
+      "body": "こっちも神発色！プチプラなのに最高すぎる！提供でいただきました！",
+      "posted_ago": "50 minutes",
+      "images": ["stock_lip_stolen"]
+    }
+  ]
+}

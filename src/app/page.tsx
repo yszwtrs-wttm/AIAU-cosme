@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
-import { judgeFit } from "@/lib/fit";
+import { FIT_CONFIDENCE_LABEL, judgeFit, type Fit, type FitAvoid } from "@/lib/fit";
 import { searchProducts, withFitOrder } from "@/lib/products";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
@@ -24,21 +24,40 @@ export default async function Home() {
   const supabase = await createClient();
   const user = await getMyUser();
 
-  if (!isRealAccount(user)) {
+  if (!user || !isRealAccount(user)) {
     const { products } = await searchProducts(supabase, { sort: "rating", limit: 8 });
     return <LandingPage products={products} />;
   }
 
-  const [page, { data: skips }, profile] = await Promise.all([
+  const [page, { data: skips }, profile, { data: allergenRows }] = await Promise.all([
     searchProducts(supabase, { sort: "recommended", limit: SUGGESTION_POOL }),
     supabase.from("skipped_purchases").select("saved_yen"),
     getMyProfile(),
+    supabase.from("profile_allergens").select("ingredient_id").eq("user_id", user.id),
   ]);
+
+  const allergenIds = (allergenRows ?? []).map((row) => row.ingredient_id);
+  const { data: allergenMaster } =
+    allergenIds.length > 0
+      ? await supabase.from("ingredients_master").select("inci,name_ja").in("id", allergenIds)
+      : { data: [] };
+  const avoidByInci = new Map(
+    (allergenMaster ?? []).map((ingredient) => [
+      ingredient.inci.toUpperCase(),
+      ingredient.name_ja || ingredient.inci,
+    ]),
+  );
+  const avoidFor = (product: Product): FitAvoid => ({
+    registered: allergenIds.length,
+    matched: product.ingredients
+      .map((ingredient) => avoidByInci.get(ingredient.toUpperCase()))
+      .filter((label): label is string => Boolean(label)),
+  });
 
   const hasSkinInfo = Boolean(profile?.skin_type || profile?.skin_tone_hex);
   const suggestions = hasSkinInfo
     ? withFitOrder(page.products, profile)
-        .map((product) => ({ product, fit: judgeFit(product, profile) }))
+        .map((product) => ({ product, fit: judgeFit(product, profile, avoidFor(product)) }))
         .filter(({ fit }) => fit.verdict === "good")
         .slice(0, 4)
     : [];
@@ -66,8 +85,8 @@ function LandingPage({ products }: { products: Product[] }) {
             自分に合ってる？
           </h1>
           <p className="mt-5 max-w-xl text-sm leading-relaxed text-ink-600 sm:text-base">
-            成分・色・口コミから、気になった商品が自分に合いそうかを判定します。
-            買う前に知れば、買わないほうがいい理由も見つかります。
+            成分・色・口コミから、気になった商品が本当に自分に合うかを判定します。
+            数値で確かめて、納得して選べます。
           </p>
           <div className="mt-7 flex flex-wrap gap-2">
             <Link
@@ -94,8 +113,8 @@ function LandingPage({ products }: { products: Product[] }) {
 
       <section className="space-y-4">
         <div>
-          <h2 className="font-display text-2xl font-bold">買う前に、3つの視点で確認</h2>
-          <p className="mt-1 text-sm text-ink-600">「買わない」も含めて、自分で選べます。</p>
+          <h2 className="font-display text-2xl font-bold">本当に合うか、3つの視点で確認</h2>
+          <p className="mt-1 text-sm text-ink-600">数値で確かめて、自分で選べます。</p>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <FeatureCard
@@ -178,7 +197,7 @@ function PersonalizedHome({
 }: {
   displayName: string;
   hasSkinInfo: boolean;
-  suggestions: { product: Product; fit: ReturnType<typeof judgeFit> }[];
+  suggestions: { product: Product; fit: Fit }[];
   skipCount: number;
   savedYen: number;
 }) {
@@ -207,12 +226,12 @@ function PersonalizedHome({
       <section className="border-b border-ink-200 pb-6">
         <p className="text-sm text-ink-500">こんにちは、{displayName}さん</p>
         <h1 className="mt-1 font-display text-3xl font-bold leading-tight sm:text-4xl">
-          今日の「買わない」を
+          本当に合うものを
           <br />
           見つけよう。
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink-600">
-          手持ちと肌情報をもとに、あなたに必要なものだけを探せます。
+          肌情報と手持ちをもとに、あなたに合うものだけを探せます。
         </p>
       </section>
 
@@ -235,6 +254,7 @@ function PersonalizedHome({
                   <p className="px-1 text-xs text-ink-600">
                     {fit.reasons.find((reason) => reason.tone === "plus")?.text ?? fit.headline}
                   </p>
+                  <FitBasis fit={fit} />
                 </div>
               ))}
             </div>
@@ -255,6 +275,37 @@ function PersonalizedHome({
           </Link>
         </section>
       )}
+    </div>
+  );
+}
+
+/** 一覧では「何を根拠に選んだか」を短く出し、未登録の材料は登録導線にする。 */
+function FitBasis({ fit }: { fit: Fit }) {
+  const used = fit.materials.filter((material) => material.status === "used");
+  const missing = fit.materials.filter((material) => material.status === "missing");
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 px-1 text-[11px]">
+      <span className="text-ink-400">
+        信頼度 {FIT_CONFIDENCE_LABEL[fit.confidence]} ・ 根拠
+      </span>
+      {used.map((material) => (
+        <span
+          key={material.key}
+          className="rounded-full border border-ink-200 bg-white px-2 py-0.5 text-ink-600"
+        >
+          {material.label}
+        </span>
+      ))}
+      {missing.map((material) => (
+        <Link
+          key={material.key}
+          href={material.href ?? "/settings"}
+          className="rounded-full border border-dashed border-brand-300 px-2 py-0.5 font-bold text-brand-700"
+        >
+          {material.label}を登録
+        </Link>
+      ))}
     </div>
   );
 }
