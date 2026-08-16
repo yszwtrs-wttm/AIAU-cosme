@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Zen_Kaku_Gothic_New } from "next/font/google";
 import "./globals.css";
-import AnonAuth from "@/components/AnonAuth";
 import BottomTabBar from "@/components/BottomTabBar";
 import SiteHeader from "@/components/SiteHeader";
+import ToastProvider from "@/components/Toast";
 import { getMyUser, isRealAccount } from "@/lib/auth";
 
 const sans = Zen_Kaku_Gothic_New({
@@ -20,10 +20,25 @@ const display = Playfair_Display({
   display: "swap",
 });
 
+const title = "KAWANAI — 本当に合うコスメを探す";
+const description =
+  "成分・色・口コミの数値から、その商品が自分に合うかを確かめられるアプリ。";
+
+// OG画像を絶対URLで出すために基準URLが必要。ローカルとプレビューでも壊れないようにフォールバックする。
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
-  title: "KAWANAI — そのコスメ、もう持ってるかも",
-  description:
-    "手持ちコスメと買おうとしている商品を照らし合わせて、「買わなくていい」を教えてくれるアプリ。",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  applicationName: "KAWANAI",
+  appleWebApp: { capable: true, title: "KAWANAI", statusBarStyle: "default" },
+  openGraph: { type: "website", siteName: "KAWANAI", locale: "ja_JP", title, description },
+  twitter: { card: "summary_large_image", title, description },
 };
 
 // スマホ利用が前提なので、ノッチ端末でも下タブが安全領域に収まるようにする。
@@ -31,6 +46,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#d92668",
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -40,16 +56,17 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="ja" className={`${sans.variable} ${display.variable}`}>
       <body className="min-h-screen text-ink-900 antialiased">
-        <AnonAuth />
-        <SiteHeader isRealAccount={real} />
-        <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">{children}</main>
-        <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-28 text-[11px] text-ink-400 md:pb-10">
-          <p>
-            デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
-          </p>
-          <p>© {new Date().getFullYear()} Team Cosme. All rights reserved.</p>
-        </footer>
-        <BottomTabBar isRealAccount={real} />
+        <ToastProvider>
+          <SiteHeader isRealAccount={real} />
+          <main className="mx-auto max-w-5xl px-4 pb-28 pt-5 md:pb-14">{children}</main>
+          <footer className="mx-auto max-w-5xl space-y-2 px-4 pb-28 text-[11px] text-ink-400 md:pb-10">
+            <p>
+              デモデータです。ブランド名・商品名・口コミはすべて架空で、実在の製品の成分表は使っていません。
+            </p>
+            <p>© {new Date().getFullYear()} Team Cosme. All rights reserved.</p>
+          </footer>
+          <BottomTabBar isRealAccount={real} />
+        </ToastProvider>
       </body>
     </html>
   );

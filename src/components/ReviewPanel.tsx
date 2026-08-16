@@ -6,10 +6,15 @@ import { Flag, ImagePlus, Lock, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { attachReviewImages, postReview, reportReview } from "@/app/actions";
 import Avatar from "@/components/Avatar";
+import { useToast } from "@/components/Toast";
+import { japaneseError } from "@/lib/errors";
 import { axesFor } from "@/lib/feel";
 import { closenessScore } from "@/lib/fit";
+import ReviewImage from "@/components/ReviewImage";
+import { shrinkImage } from "@/lib/image";
 import { averageHash } from "@/lib/phash";
-import { publicImageUrl } from "@/lib/storage";
+import { THUMB_WIDTH } from "@/lib/storage";
+import { REVIEW_FLAG_LABEL } from "@/lib/wording";
 import type { Category, RatingSummary, Review, SkinType } from "@/lib/types";
 import { SKIN_TYPE_LABEL } from "@/lib/types";
 
@@ -28,6 +33,7 @@ function Stars({ value }: { value: number }) {
 
 function ReviewCard({ review, close }: { review: Review; close: boolean }) {
   const [reported, setReported] = useState(false);
+  const showToast = useToast();
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
   const skin = review.profiles?.skin_type;
@@ -57,7 +63,16 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
           type="button"
           disabled={reported}
           onClick={async () => {
-            await reportReview(review.id, "fake");
+            try {
+              const res = await reportReview(review.id, "fake");
+              if (!res.ok) {
+                showToast(japaneseError(res.error, "報告できませんでした"));
+                return;
+              }
+            } catch (e) {
+              showToast(japaneseError(e, "報告できませんでした"));
+              return;
+            }
             setReported(true);
           }}
           className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
@@ -89,12 +104,11 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
       {images.length > 0 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
           {images.map((img) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <ReviewImage
               key={img.id}
-              src={publicImageUrl(img.path)}
-              alt=""
-              className="h-28 w-28 shrink-0 rounded-2xl object-cover"
+              path={img.path}
+              width={THUMB_WIDTH}
+              className="h-28 w-28 overflow-hidden rounded-2xl"
             />
           ))}
         </div>
@@ -130,6 +144,7 @@ export default function ReviewPanel({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
+  const showToast = useToast();
 
   // 不正判定は Postgres の trigger が走らせる。結果は Realtime で降ってくる。
   useEffect(() => {
@@ -169,6 +184,7 @@ export default function ReviewPanel({
     .filter((r) => !r.excluded)
     .map((r) => ({ review: r, score: closenessScore(viewer, r.profiles) }))
     .sort((a, b) => b.score - a.score);
+  const excluded = reviews.filter((review) => review.excluded);
   const rated = summary?.adjusted_rating ?? null;
   const counted = summary?.counted_count ?? 0;
   const hasViewerProfile = Boolean(viewer.skinType || viewer.skinToneHex);
@@ -176,9 +192,15 @@ export default function ReviewPanel({
   const submit = () => {
     setError(null);
     startTransition(async () => {
-      const res = await postReview({ productId, rating, body, feel });
+      let res: Awaited<ReturnType<typeof postReview>>;
+      try {
+        res = await postReview({ productId, rating, body, feel });
+      } catch (e) {
+        setError(japaneseError(e, "投稿できませんでした"));
+        return;
+      }
       if (!res.ok || !res.reviewId) {
-        setError(res.error ?? "投稿できませんでした");
+        setError(japaneseError(res.error, "投稿できませんでした"));
         return;
       }
 
@@ -189,19 +211,34 @@ export default function ReviewPanel({
         } = await supabase.auth.getUser();
         const uploaded: { path: string; phash?: string | null }[] = [];
 
-        for (const file of files.slice(0, MAX_IMAGES)) {
+        const targets = files.slice(0, MAX_IMAGES);
+
+        for (const original of targets) {
+          const file = await shrinkImage(original);
           const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
           const path = `${user!.id}/${res.reviewId}-${uploaded.length}.${ext}`;
           const { error: upErr } = await supabase.storage
             .from("review-images")
-            .upload(path, file, { upsert: true });
+            .upload(path, file, { upsert: true, contentType: file.type });
           if (upErr) continue;
           uploaded.push({ path, phash: await averageHash(file) });
         }
 
-        if (uploaded.length > 0) await attachReviewImages(res.reviewId, uploaded);
+        const attached: { ok: boolean; error?: string } =
+          uploaded.length > 0 ? await attachReviewImages(res.reviewId, uploaded) : { ok: true };
+
+        // 口コミ本文は保存できているので、写真だけ失敗したことを伝える。
+        if (!attached.ok || uploaded.length < targets.length) {
+          showToast(
+            japaneseError(
+              attached.ok ? null : attached.error,
+              "口コミは投稿できましたが、写真を上げられませんでした",
+            ),
+          );
+        }
       }
 
+      showToast("口コミを投稿しました", "success");
       setBody("");
       setFiles([]);
       if (fileInput.current) fileInput.current.value = "";
@@ -231,6 +268,20 @@ export default function ReviewPanel({
           )}
         </div>
       </div>
+
+      {(summary?.excluded_count ?? 0) > 0 && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-950">
+          <div className="font-bold">点数に入れていない口コミ {summary?.excluded_count} 件</div>
+          <div className="mt-1 text-xs">口コミは削除せず、信頼性に関わる投稿だけ点数から外しています。</div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {(summary?.exclusion_reasons ?? []).map((flag) => (
+              <span key={flag} className="rounded-full bg-white px-2 py-0.5 text-[11px] text-amber-900">
+                {REVIEW_FLAG_LABEL[flag] ?? flag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {hasViewerProfile && shown.some((s) => s.score > 0) && (
         <p className="text-[11px] text-ink-400">あなたと肌が近い人の口コミを上に並べています。</p>
@@ -353,6 +404,31 @@ export default function ReviewPanel({
           <ReviewCard key={review.id} review={review} close={score > 0} />
         ))}
       </div>
+
+      {excluded.length > 0 && (
+        <details className="rounded-2xl border border-ink-200 bg-ink-50/40 p-4">
+          <summary className="cursor-pointer text-sm font-bold">
+            点数から外した口コミを見る（{excluded.length}件）
+          </summary>
+          <p className="mt-2 text-xs text-ink-500">
+            不正の可能性があるため点数には入れていませんが、投稿自体は削除していません。
+          </p>
+          <div className="mt-3 space-y-3">
+            {excluded.map((review) => (
+              <div key={review.id}>
+                <div className="mb-1.5 flex flex-wrap gap-1.5">
+                  {review.flags.map((flag) => (
+                    <span key={flag} className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] text-amber-900">
+                      {REVIEW_FLAG_LABEL[flag] ?? flag}
+                    </span>
+                  ))}
+                </div>
+                <ReviewCard review={review} close={false} />
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

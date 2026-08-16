@@ -3,7 +3,12 @@ import ProductThumb from "@/components/ProductThumb";
 import { CATEGORY_LABEL, type Product } from "@/lib/types";
 import { colorName } from "@/lib/wording";
 
-export default function ProductCard({ product }: { product: Product }) {
+type CardProduct = Product & {
+  adjusted_rating?: number | null;
+  counted_count?: number;
+};
+
+export default function ProductCard({ product }: { product: CardProduct }) {
   const shades = [...(product.product_colors ?? [])].sort((a, b) => a.pos - b.pos);
   const unitPrice =
     product.volume && product.volume_unit
@@ -34,12 +39,21 @@ export default function ProductCard({ product }: { product: Product }) {
           )}
         </div>
         <div className="truncate text-sm font-bold">{product.name}</div>
+        {product.adjusted_rating !== undefined && product.counted_count !== undefined && (
+          <div className="mt-1 flex items-center gap-1.5 text-sm">
+            <span className="text-amber-500">★</span>
+            <span className="font-bold tabular-nums">
+              {product.adjusted_rating != null ? product.adjusted_rating.toFixed(1) : "—"}
+            </span>
+            <span className="text-xs text-ink-400">
+              {product.counted_count ? `（口コミ${product.counted_count}件）` : "（口コミなし）"}
+            </span>
+          </div>
+        )}
         <div className="flex items-center gap-2 text-sm font-medium tabular-nums text-ink-600">
           <span>¥{product.price_yen.toLocaleString()}</span>
           {unitPrice && <span className="text-[11px] text-ink-400">{unitPrice}</span>}
-          {shades.length > 1 && (
-            <span className="text-[11px] text-ink-400">{shades.length}色</span>
-          )}
+          {shades.length > 1 && <span className="text-[11px] text-ink-400">{shades.length}色</span>}
         </div>
         {shades.length > 0 && (
           <div className="mt-1.5 flex items-center gap-1">
