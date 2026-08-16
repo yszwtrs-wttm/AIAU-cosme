@@ -75,7 +75,7 @@ KAWANAI が答えるのは次の4つ。
 | 手持ち登録 | `/stash`（本アカウント限定、`/scan` はここへリダイレクト）。人気商品のチェックリストで一括登録 + zxing の連続バーコードスキャン（`src/components/BarcodeScanner.tsx`） |
 | 被り検出 | `find_duplicates_in_stash` / `find_stash_overlaps`（pgvector cosine + ΔE） |
 | 安い代替 | `find_cheaper_dupes`（類似スコア閾値 × 価格差） |
-| 口コミ信頼度 | `recompute_review_trust`。スコアと除外理由は内部で使い、UI には出さない |
+| 口コミ信頼度 | `recompute_review_trust`。点数から外した口コミと理由を日本語で確認できる |
 | 画像から色検出 | `/color`。主要色を抽出 → Lab 変換 → `find_by_color`。色名・系統・肌トーン順で提示 |
 | 手持ちだけのメイク提案 | `/stash`（本アカウント限定）。`OPENAI_API_KEY` があれば LLM、無ければルールベース（公開デモは未設定なのでルールベースで動いている。画面下に生成方法を表示している） |
 | 認証 / プロフィール | `/login`（初回はメールのリンクで確認し、プロフィール作成画面でパスワードを設定。以降はメールアドレス＋パスワードでログイン）、`/settings`、`/me`、`/u/[handle]` |
@@ -170,6 +170,9 @@ UI には数値を出さず、`src/lib/wording.ts` で「見分けがつきま�
 
 - 文体の類似クラスタ / 投稿バースト / 同一ブランドへの偏重 / PR定型文 / 画像 pHash の使い回し（`src/lib/phash.ts`）
 
+除外された口コミは削除せず、商品ページで「点数に入れていない口コミ」として折りたたんで表示する。
+理由は「他の投稿と同じ写真」「似た文章の連投」など、数値を使わない日本語で示す。
+
 投稿ゲート: 本アカウント必須（未ログインは不可）、1日5件・同一ブランド1日2件・1商品1件まで。通報3件で総合評価から除外（削除はしない）。
 持っているかどうかは自己申告なので投稿条件にはせず、手持ちに登録済みの人の口コミを集計で少し重く見る（`trust_score * 1.3`）だけにしている。
 これらはすべて RLS ポリシーと DB のトリガで強制していて、アプリ側の実装ミスでは抜けない。
@@ -249,6 +252,17 @@ npm run dev                    # http://localhost:3000
 
 期待される状態: `npm run db:reset` の後、ブランド12件・商品38件・色番号52件・口コミ14件・成分85件が入る。
 シードを作り直す場合は `npm run seed:gen`（`scripts/generate_seed.py` が決定論的に生成）。
+
+口コミ写真のシードを投入する場合は、Pillow を用意したうえで次を実行する。
+画像は `supabase/seed-images/manifest.json` の割り当てに従い、冪等に追加・更新される。
+
+```bash
+pip install Pillow
+SUPABASE_URL=https://<project>.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
+python3 scripts/seed_review_images.py --dry-run
+python3 scripts/seed_review_images.py
+```
 
 シードの商品・ブランド・口コミはすべて架空。実在商品のデータは使っていない。
 
