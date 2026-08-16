@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
-import BarcodeScanner from "@/components/BarcodeScanner";
+import AddToStashDialog from "@/components/AddToStashDialog";
 import MakeupPlan from "@/components/MakeupPlan";
 import ProductCard from "@/components/ProductCard";
-import QuickStartPicker from "@/components/QuickStartPicker";
 import { getMyUser, isRealAccount } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import type { Product } from "@/lib/types";
@@ -37,36 +36,28 @@ export default async function StashPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold">Myポーチ（{products.length}点）</h1>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Myポーチ（{products.length}点）</h1>
+          <p className="text-sm text-ink-600">新しく登録したものから並べています。</p>
+        </div>
+        <AddToStashDialog popular={popular ?? []} />
+      </div>
 
       {products.length > 0 ? (
-        <section className="space-y-2">
-          <h2 className="font-display text-lg font-bold">登録している商品</h2>
-          <p className="text-sm text-ink-600">新しく登録したものから並べています。</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {products.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
       ) : (
         <p className="rounded-xl border border-ink-200 bg-ink-0 p-5 text-sm text-ink-600">
           まだ登録がありません。よく使う2〜3個登録すれば、調べた商品との違いを出せるようになります。
-          このページのバーコード登録か、リストから登録をはじめてみてください。
+          右上の「商品を追加」から、リストで選ぶかバーコードで登録できます。
         </p>
       )}
 
       {products.length > 0 && <MakeupPlan products={products} />}
-
-      <section className="space-y-2">
-        <h2 className="font-display text-lg font-bold">バーコードで登録</h2>
-        <p className="text-sm text-ink-600">
-          リストに無いものは、パッケージのバーコードをかざしてください。続けて読み取れます。
-        </p>
-        <BarcodeScanner />
-      </section>
-
-      <QuickStartPicker products={popular ?? []} />
     </div>
   );
 }
