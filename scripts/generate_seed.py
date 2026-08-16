@@ -114,6 +114,8 @@ LIP_SHADES = [
     ("03 テラコッタ", "#B8604A"), ("04 モーヴピンク", "#B96C81"),
     ("05 レッドブリック", "#9E3B33"), ("06 コーラルオレンジ", "#D96A4B"),
     ("07 ダークプラム", "#7A3348"), ("08 ミルクティー", "#C79A82"),
+    ("09 マンダリンオレンジ", "#E0842E"), ("10 アプリコットオレンジ", "#EFA24E"),
+    ("11 グリーンチェンジ", "#3FC98C"),
 ]
 
 FOUNDATION_SHADES = [
@@ -153,16 +155,21 @@ jan_counter = 4901234000000
 
 
 def add_product(brand, name, category, price, volume, unit, ingredients,
-                shades=None, is_mens=False):
-    """shades: [(色名, HEX)]。アイシャドウパレットのような複数色商品もここで表す。"""
+                shades=None, is_mens=False, jan=None):
+    """shades: [(色名, HEX)]。アイシャドウパレットのような複数色商品もここで表す。
+
+    jan: 既存商品の JAN をとどめるため、後から追加する商品は連番を使わずに直接指定する。
+    """
     global jan_counter
-    jan_counter += 7
+    if jan is None:
+        jan_counter += 7
+        jan = str(jan_counter)
     shades = shades or []
     products.append({
         "brand": brand, "name": name, "category": category, "price": price,
         "volume": volume, "unit": unit, "ingredients": ingredients,
         "shades": shades, "hex": shades[0][1] if shades else None,
-        "is_mens": is_mens, "jan": str(jan_counter),
+        "is_mens": is_mens, "jan": jan,
     })
 
 
@@ -314,6 +321,14 @@ PINK_PALETTE = [
     ("シアーピンク", "#EFD2D2"), ("ベビーピンク", "#E3A9AE"), ("モーヴ", "#B96C81"),
     ("コーラル", "#D96A4B"), ("ワインレッド", "#8E2F3E"), ("シルバー", "#C9C5C1"),
 ]
+GREEN_PALETTE = [
+    ("ミントベース", "#DCEFE4"), ("ライトミント", "#8ED9B4"), ("エメラルドミント", "#3FC98C"),
+    ("グリーン", "#2FA773"), ("ディープグリーン", "#1F6E4F"), ("カーキ", "#6E7A4E"),
+]
+ORANGE_PALETTE = [
+    ("シアーアプリコット", "#F3D8BE"), ("アプリコット", "#EFA24E"), ("マンダリン", "#E0842E"),
+    ("パンプキン", "#C86A20"), ("ブロンズ", "#8C5A2B"), ("チャコール", "#3A3A3A"),
+]
 
 eye_specs = [
     ("LUMINA", "デイリーアイパレット 01 ブラウンベージュ", 6800, EYE_BASE_A, BROWN_PALETTE, 0),
@@ -332,6 +347,48 @@ for brand, name, price, base, palette, dev in eye_specs:
         formula[i], formula[i + 1] = formula[i + 1], formula[i]
     add_product(brand, name, "eyeshadow", price, round(len(shades) * 1.2, 1), "g",
                 formula + pigments, shades)
+
+
+# --- グリーン / オレンジの色展開 ------------------------------------------------
+# 「写真の色から探す」でブラウン系以外を投げても近い色が出るように、
+# ビビッドなオレンジとグリーンを追加する。JAN は既存商品と衝突しない別枠。
+COLOR_EXPANSION_JAN = 4901234000468
+
+color_expansion_lip_specs = [
+    ("KIRA COSME", "ジューシーオレンジリップ", 1980, LIP_BASE_A, 8, 0),
+    ("PRICO", "オレンジティント", 850, LIP_BASE_B, 8, 5),      # ← KIRA COSME の安い代替
+    ("Nuance", "アプリコットグロス", 1680, LIP_BASE_A, 9, 0),
+    # 塗るとピンクに変わるグリーンのバーム。緑の写真から探したときの受け皿。
+    ("PLUME", "カラーチェンジリップバーム", 2200, LIP_BASE_A, 10, 0),
+]
+
+color_expansion_eye_specs = [
+    ("LUMINA", "ボタニカルアイパレット 03 グリーン", 7200, EYE_BASE_B, GREEN_PALETTE, 0),
+    ("DAILY+", "6色アイパレット 03 グリーン", 1380, EYE_BASE_B, GREEN_PALETTE, 5),
+    ("mode noir", "クチュールアイパレット 04 オレンジ", 7800, EYE_BASE_A, ORANGE_PALETTE, 0),
+    ("PRICO", "6色アイパレット 04 オレンジ", 1280, EYE_BASE_A, ORANGE_PALETTE, 6),
+]
+
+expansion_jan = COLOR_EXPANSION_JAN
+for brand, name, price, base, shade_idx, dev in color_expansion_lip_specs:
+    shade_name, shade_hex = LIP_SHADES[shade_idx]
+    color = jitter(shade_hex, dev) if dev else shade_hex
+    pigments = random.sample(["CI 15850", "CI 45410", "CI 77491", "CI 77891", "CI 19140", "CI 42090", "MICA", "TITANIUM DIOXIDE"], 4)
+    add_product(brand, f"{name} {shade_name}", "lip", price, 3.5, "g",
+                lip_formula(base, pigments, noise=1 if dev else 0), [(shade_name, color)],
+                jan=str(expansion_jan))
+    expansion_jan += 7
+
+for brand, name, price, base, palette, dev in color_expansion_eye_specs:
+    shades = [(shade, jitter(hex_color, dev) if dev else hex_color) for shade, hex_color in palette]
+    pigments = random.sample(["CI 77491", "CI 77492", "CI 77499", "CI 77891", "CI 15850", "CI 42090"], 4)
+    formula = list(base)
+    for _ in range(1 if dev else 0):
+        i = random.randrange(0, len(formula) - 1)
+        formula[i], formula[i + 1] = formula[i + 1], formula[i]
+    add_product(brand, name, "eyeshadow", price, round(len(shades) * 1.2, 1), "g",
+                formula + pigments, shades, jan=str(expansion_jan))
+    expansion_jan += 7
 
 
 # --- メンズ向け（ベース・眉・リップ） ------------------------------------------
@@ -387,8 +444,14 @@ mens_specs = [
      MENS_LIP_BASE + ["CI 77491", "TITANIUM DIOXIDE"], [("01 ベージュ", "#C78B7B")]),
 ]
 
+# JAN は既存商品・色展開分と衝突しない別枠から振る。
+MENS_JAN = 4901234000600
+
+mens_jan = MENS_JAN
 for brand, name, category, price, volume, unit, formula, shades in mens_specs:
-    add_product(brand, name, category, price, volume, unit, formula, shades, is_mens=True)
+    add_product(brand, name, category, price, volume, unit, formula, shades,
+                is_mens=True, jan=str(mens_jan))
+    mens_jan += 7
 
 
 # --- 口コミ ------------------------------------------------------------------

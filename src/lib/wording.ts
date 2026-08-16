@@ -7,6 +7,14 @@
 
 import { deltaE, hexToLab } from "./color";
 
+export const REVIEW_FLAG_LABEL: Record<string, string> = {
+  image_reuse: "他の投稿と同じ写真",
+  similar_text: "似た文章の連投",
+  burst: "短時間に集中した高評価",
+  brand_bias: "同じブランドへの満点連投",
+  pr_boilerplate: "PR・案件の定型文",
+};
+
 /** 色の近さ。ΔE(CIEDE2000) を言葉に置き換える。 */
 export function colorMatchText(dE: number): { title: string; tone: "same" | "close" | "near" | "diff" } {
   if (dE < 1) return { title: "見分けがつきません", tone: "same" };

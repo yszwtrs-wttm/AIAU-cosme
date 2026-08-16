@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Check, Search } from "lucide-react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
@@ -33,7 +32,7 @@ const CHIP_OFF = "border-ink-200 bg-white text-ink-600";
  * 連続スキャン。1本ごとにカメラを止めず、読めたらそのまま登録して次に進める。
  * 「1個ずつ登録が面倒」を減らすのが目的。
  */
-export default function BarcodeScanner() {
+export default function BarcodeScanner({ onDone }: { onDone: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<{ stop: () => void } | null>(null);
   const busyRef = useRef(false);
@@ -217,12 +216,16 @@ export default function BarcodeScanner() {
               </li>
             ))}
           </ul>
-          <Link
-            href="/stash"
+          <button
+            type="button"
+            onClick={() => {
+              stop();
+              onDone();
+            }}
             className="mt-3 inline-block rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white"
           >
-            Myポーチを見る
-          </Link>
+            閉じてMyポーチを見る
+          </button>
         </div>
       )}
 

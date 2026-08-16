@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Palette, Search } from "lucide-react";
 import ProductList from "@/components/ProductList";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
 import {
@@ -144,6 +144,22 @@ export default async function SearchPage({
             検索
           </button>
         </form>
+        {/* 色で探したい人は商品名が分からないので、検索欄の直下に写真からの導線を置く。 */}
+        <Link
+          href="/color"
+          prefetch
+          className="flex items-center gap-2 rounded-2xl border border-brand-200 bg-brand-50 px-3 py-2.5 text-sm text-ink-700"
+        >
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-white text-brand-600">
+            <Palette size={15} />
+          </span>
+          <span className="min-w-0">
+            <span className="block font-bold">写真の色から探す</span>
+            <span className="block text-xs text-ink-500">
+              なりたい色の写真から、近い色のコスメを探せます
+            </span>
+          </span>
+        </Link>
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={filterHref({ q: params.q, mens: mensOnly ? "0" : undefined, sort })}
