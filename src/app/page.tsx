@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Camera,
   CircleDollarSign,
   Heart,
   Images,
@@ -30,9 +29,8 @@ export default async function Home() {
     return <LandingPage products={products} />;
   }
 
-  const [page, { count: stashCount }, profile] = await Promise.all([
+  const [page, profile] = await Promise.all([
     searchProducts(supabase, { sort: "recommended", limit: SUGGESTION_POOL }),
-    supabase.from("user_items").select("product_id", { count: "exact", head: true }),
     getMyProfile(),
   ]);
 
@@ -54,7 +52,6 @@ export default async function Home() {
       hasSkinInfo={hasSkinInfo}
       prefersMens={prefersMens}
       suggestions={suggestions}
-      stashCount={stashCount ?? 0}
     />
   );
 }
@@ -174,16 +171,33 @@ function PersonalizedHome({
   hasSkinInfo,
   prefersMens,
   suggestions,
-  stashCount,
 }: {
   displayName: string;
   hasSkinInfo: boolean;
   prefersMens: boolean;
   suggestions: { product: Product; fit: ReturnType<typeof judgeFit> }[];
-  stashCount: number;
 }) {
   return (
     <div className="space-y-8">
+      <section className="space-y-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          <QuickLink href="/stash" icon={<Heart size={15} />} label="Myポーチ" />
+          <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
+          <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
+          <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
+          <QuickLink href="/search?mens=1" icon={<User size={15} />} label="メンズ向け" />
+        </div>
+        {!prefersMens && (
+          <p className="text-[11px] text-ink-400">
+            メンズ向けをいつも先に出したいときは、
+            <Link href="/settings" className="font-bold text-brand-600">
+              設定
+            </Link>
+            で「メンズ向けを優先」を選べます。
+          </p>
+        )}
+      </section>
+
       <section className="border-b border-ink-200 pb-6">
         <p className="text-sm text-ink-500">こんにちは、{displayName}さん</p>
         <h1 className="mt-1 font-display text-3xl font-bold leading-tight sm:text-4xl">
@@ -235,37 +249,6 @@ function PersonalizedHome({
           </Link>
         </section>
       )}
-
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
-          <div className="flex items-center gap-2 text-sm font-bold">
-            <Heart size={17} className="text-brand-600" /> Myポーチの状況
-          </div>
-          <p className="mt-3 font-display text-3xl font-bold tabular-nums">{stashCount}点</p>
-          <Link href="/stash" className="mt-3 inline-block text-sm font-bold text-brand-600">
-            Myポーチを見る <ArrowRight className="inline" size={14} />
-          </Link>
-        </div>
-        <div className="rounded-2xl border border-ink-200 bg-white p-5">
-          <div className="text-sm font-bold">すぐ使える機能</div>
-          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-            <QuickLink href="/stash" icon={<Camera size={15} />} label="手持ちを登録" />
-            <QuickLink href="/color" icon={<Palette size={15} />} label="色から探す" />
-            <QuickLink href="/feed" icon={<Images size={15} />} label="みんなの投稿" />
-            <QuickLink href="/search" icon={<Search size={15} />} label="商品を探す" />
-            <QuickLink href="/search?mens=1" icon={<User size={15} />} label="メンズ向け" />
-          </div>
-          {!prefersMens && (
-            <p className="mt-3 text-[11px] text-ink-400">
-              メンズ向けをいつも先に出したいときは、
-              <Link href="/settings" className="font-bold text-brand-600">
-                設定
-              </Link>
-              で「メンズ向けを優先」を選べます。
-            </p>
-          )}
-        </div>
-      </section>
     </div>
   );
 }
