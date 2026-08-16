@@ -23,7 +23,7 @@ const CONFIDENCE_BOX: Record<FitConfidence, string> = {
 const LEVEL_COLOR: Record<FitLevel["level"], string> = {
   3: "bg-emerald-500",
   2: "bg-amber-400",
-  1: "bg-clay-300",
+  1: "bg-clay-500",
   0: "bg-ink-200",
 };
 
