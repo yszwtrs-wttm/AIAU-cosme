@@ -2,9 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Flag, ImagePlus, Lock, X } from "lucide-react";
+import { Flag, ImagePlus, Lock, Pencil, Trash2, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { attachReviewImages, postReview, reportReview } from "@/app/actions";
+import {
+  attachReviewImages,
+  deleteReview,
+  postReview,
+  reportReview,
+  updateReview,
+} from "@/app/actions";
 import Avatar from "@/components/Avatar";
 import { useToast } from "@/components/Toast";
 import { japaneseError } from "@/lib/errors";
@@ -31,12 +37,55 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-function ReviewCard({ review, close }: { review: Review; close: boolean }) {
+function ReviewCard({
+  review,
+  close,
+  mine,
+  onUpdated,
+  onDeleted,
+}: {
+  review: Review;
+  close: boolean;
+  mine: boolean;
+  onUpdated: (review: Review) => void;
+  onDeleted: (reviewId: number) => void;
+}) {
   const [reported, setReported] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draftBody, setDraftBody] = useState(review.body);
+  const [draftRating, setDraftRating] = useState(review.rating);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
   const showToast = useToast();
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
   const skin = review.profiles?.skin_type;
+
+  const save = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await updateReview({ reviewId: review.id, rating: draftRating, body: draftBody });
+      if (!res.ok) {
+        setError(japaneseError(res.error, "保存できませんでした"));
+        return;
+      }
+      onUpdated({ ...review, rating: draftRating, body: draftBody });
+      setEditing(false);
+    });
+  };
+
+  const remove = () => {
+    if (!window.confirm("この口コミと写真を削除します。元に戻せません。")) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await deleteReview(review.id);
+      if (!res.ok) {
+        setError(japaneseError(res.error, "削除できませんでした"));
+        return;
+      }
+      onDeleted(review.id);
+    });
+  };
 
   return (
     <div className="rounded-2xl border border-ink-200 bg-white p-4">
@@ -59,26 +108,51 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
           </div>
           <Stars value={review.rating} />
         </div>
-        <button
-          type="button"
-          disabled={reported}
-          onClick={async () => {
-            try {
-              const res = await reportReview(review.id, "fake");
-              if (!res.ok) {
-                showToast(japaneseError(res.error, "報告できませんでした"));
+        {mine ? (
+          <div className="flex shrink-0 items-center gap-2 text-[11px]">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                setDraftBody(review.body);
+                setDraftRating(review.rating);
+                setEditing((v) => !v);
+              }}
+              className="flex items-center gap-1 text-ink-400 hover:text-brand-600 disabled:opacity-50"
+            >
+              <Pencil size={12} /> {editing ? "やめる" : "編集"}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={remove}
+              className="flex items-center gap-1 text-ink-400 hover:text-red-600 disabled:opacity-50"
+            >
+              <Trash2 size={12} /> 削除
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={reported}
+            onClick={async () => {
+              try {
+                const res = await reportReview(review.id, "fake");
+                if (!res.ok) {
+                  showToast(japaneseError(res.error, "報告できませんでした"));
+                  return;
+                }
+              } catch (e) {
+                showToast(japaneseError(e, "報告できませんでした"));
                 return;
               }
-            } catch (e) {
-              showToast(japaneseError(e, "報告できませんでした"));
-              return;
-            }
-            setReported(true);
-          }}
-          className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
-        >
-          <Flag size={12} /> {reported ? "報告しました" : "報告"}
-        </button>
+              setReported(true);
+            }}
+            className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
+          >
+            <Flag size={12} /> {reported ? "報告しました" : "報告"}
+          </button>
+        )}
       </div>
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
@@ -99,7 +173,41 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
         )}
       </div>
 
-      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{review.body}</p>
+      {editing ? (
+        <div className="mt-2 space-y-2">
+          <div className="flex items-center gap-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setDraftRating(n)}
+                className={`text-2xl leading-none ${n <= draftRating ? "text-amber-500" : "text-amber-200"}`}
+                aria-label={`${n}点`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={draftBody}
+            onChange={(e) => setDraftBody(e.target.value)}
+            rows={3}
+            className="w-full rounded-2xl border border-brand-100 bg-white px-3 py-2 text-sm outline-none focus:border-brand-300"
+          />
+          <button
+            type="button"
+            disabled={pending || !draftBody.trim()}
+            onClick={save}
+            className="rounded-full bg-brand-600 px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50"
+          >
+            {pending ? "保存中…" : "保存する"}
+          </button>
+        </div>
+      ) : (
+        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed">{review.body}</p>
+      )}
+
+      {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
 
       {images.length > 0 && (
         <div className="mt-3 flex gap-2 overflow-x-auto">
@@ -124,6 +232,7 @@ export default function ReviewPanel({
   initialSummary,
   canPost,
   viewer,
+  viewerId,
 }: {
   productId: number;
   category: Category;
@@ -131,6 +240,7 @@ export default function ReviewPanel({
   initialSummary: RatingSummary | null;
   canPost: boolean;
   viewer: Viewer;
+  viewerId: string | null;
 }) {
   const axes = axesFor(category);
   const [reviews, setReviews] = useState(initialReviews);
@@ -180,8 +290,9 @@ export default function ReviewPanel({
   }, [productId]);
 
   // 自分と近い肌の人の声を上に出す。同じ近さなら新しい順（元の並び）。
+  // 点数から外した投稿も、自分のものは消せるように残す。
   const shown = reviews
-    .filter((r) => !r.excluded)
+    .filter((r) => !r.excluded || (viewerId !== null && r.user_id === viewerId))
     .map((r) => ({ review: r, score: closenessScore(viewer, r.profiles) }))
     .sort((a, b) => b.score - a.score);
   const excluded = reviews.filter((review) => review.excluded);
@@ -401,7 +512,16 @@ export default function ReviewPanel({
 
       <div className="space-y-2">
         {shown.map(({ review, score }) => (
-          <ReviewCard key={review.id} review={review} close={score > 0} />
+          <ReviewCard
+            key={review.id}
+            review={review}
+            close={score > 0}
+            mine={Boolean(viewerId && review.user_id === viewerId)}
+            onUpdated={(next) =>
+              setReviews((prev) => prev.map((r) => (r.id === next.id ? next : r)))
+            }
+            onDeleted={(reviewId) => setReviews((prev) => prev.filter((r) => r.id !== reviewId))}
+          />
         ))}
       </div>
 

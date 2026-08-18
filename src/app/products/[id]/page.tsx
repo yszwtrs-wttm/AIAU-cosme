@@ -340,6 +340,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
           initialReviews={reviews ?? []}
           initialSummary={summary ?? null}
           canPost={canPost}
+          viewerId={canUseStash ? user!.id : null}
           viewer={{
             skinType: profile?.skin_type ?? null,
             skinToneHex: profile?.skin_tone_hex ?? null,

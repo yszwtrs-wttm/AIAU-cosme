@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import Avatar from "@/components/Avatar";
+import DeleteReviewButton from "@/components/DeleteReviewButton";
 import LogoutButton from "@/components/LogoutButton";
 import ProductCard from "@/components/ProductCard";
 import { getMyProfile, getMyUser, isRealAccount } from "@/lib/auth";
@@ -117,9 +118,12 @@ export default async function MyPage() {
           <ul className="space-y-2">
             {(myReviews ?? []).map((r) => (
               <li key={r.id} className="rounded-2xl border border-ink-200 bg-white p-4">
-                <Link href={`/products/${r.product_id}`} className="text-xs text-brand-600">
-                  この商品を見る
-                </Link>
+                <div className="flex items-center justify-between gap-2">
+                  <Link href={`/products/${r.product_id}`} className="text-xs text-brand-600">
+                    この商品を見る
+                  </Link>
+                  <DeleteReviewButton reviewId={r.id} />
+                </div>
                 <div className="text-amber-500">{"★".repeat(r.rating)}</div>
                 <p className="text-sm">{r.body}</p>
               </li>
