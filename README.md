@@ -234,6 +234,21 @@ python3 scripts/seed_review_images.py
 | `NEXT_PUBLIC_SUPABASE_IMAGE_TRANSFORM` | 任意 | 既定で Storage の画像変換を通す。使えない環境は `false` |
 | `OPENAI_API_KEY` | 任意 | メイク提案がルールベースにフォールバック（機能は動く） |
 
+## デプロイのリージョン
+
+全ページが Cookie を読む動的レンダリングで、1 リクエストごとに Supabase へ数往復する。そのため
+`vercel.json` の `regions` は **Supabase プロジェクトのリージョンと同じ場所**にする。ユーザーの
+現在地ではなく DB との距離が待ち時間を決める。
+
+| | 現在の設定 |
+| --- | --- |
+| Supabase プロジェクト | `ap-southeast-1`（シンガポール） |
+| Vercel 関数 (`vercel.json` の `regions`) | `sin1`（シンガポール） |
+
+関数から Supabase REST への 1 往復を計測すると、同居（`sin1`）で中央値 24ms、東京（`hnd1`）に
+離すと 91ms かかる。ページあたり 2〜3 往復が直列に走るので、離すだけで 130〜200ms 増える。
+Supabase を東京（`ap-northeast-1`）へ移すなら、`regions` も `hnd1` に変える。
+
 ## 型定義
 
 `src/lib/supabase/database.types.ts` は `supabase/migrations/` から生成する。マイグレーションを追加・変更したら再生成してコミットする。
