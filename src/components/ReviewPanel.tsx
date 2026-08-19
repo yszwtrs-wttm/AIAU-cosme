@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Flag, ImagePlus, Lock, X } from "lucide-react";
+import { ImagePlus, Lock, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { attachReviewImages, postReview, reportReview } from "@/app/actions";
+import { attachReviewImages, postReview } from "@/app/actions";
 import Avatar from "@/components/Avatar";
+import ReportReviewButton from "@/components/ReportReviewButton";
 import { useToast } from "@/components/Toast";
 import { japaneseError } from "@/lib/errors";
 import { axesFor } from "@/lib/feel";
@@ -31,9 +32,17 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-function ReviewCard({ review, close }: { review: Review; close: boolean }) {
-  const [reported, setReported] = useState(false);
-  const showToast = useToast();
+function ReviewCard({
+  review,
+  close,
+  canReport,
+  reported,
+}: {
+  review: Review;
+  close: boolean;
+  canReport: boolean;
+  reported: boolean;
+}) {
   const name = review.profiles?.display_name ?? review.author_name;
   const images = [...(review.review_images ?? [])].sort((a, b) => a.pos - b.pos);
   const skin = review.profiles?.skin_type;
@@ -59,26 +68,11 @@ function ReviewCard({ review, close }: { review: Review; close: boolean }) {
           </div>
           <Stars value={review.rating} />
         </div>
-        <button
-          type="button"
-          disabled={reported}
-          onClick={async () => {
-            try {
-              const res = await reportReview(review.id, "fake");
-              if (!res.ok) {
-                showToast(japaneseError(res.error, "報告できませんでした"));
-                return;
-              }
-            } catch (e) {
-              showToast(japaneseError(e, "報告できませんでした"));
-              return;
-            }
-            setReported(true);
-          }}
-          className="flex shrink-0 items-center gap-1 text-[11px] text-ink-400 hover:text-brand-600 disabled:opacity-50"
-        >
-          <Flag size={12} /> {reported ? "報告しました" : "報告"}
-        </button>
+        <ReportReviewButton
+          reviewId={review.id}
+          canReport={canReport}
+          alreadyReported={reported}
+        />
       </div>
 
       <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
@@ -145,6 +139,22 @@ export default function ReviewPanel({
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
   const showToast = useToast();
+  const [reportedIds, setReportedIds] = useState<number[]>([]);
+
+  // 自分の通報（RLS で自分の行しか読めない）。再訪時に「報告しました」を出すため。
+  useEffect(() => {
+    if (!canPost) return;
+    let alive = true;
+    createClient()
+      .from("review_reports")
+      .select("review_id")
+      .then(({ data }) => {
+        if (alive && data) setReportedIds(data.map((row) => row.review_id));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [canPost]);
 
   // 不正判定は Postgres の trigger が走らせる。結果は Realtime で降ってくる。
   useEffect(() => {
@@ -401,7 +411,13 @@ export default function ReviewPanel({
 
       <div className="space-y-2">
         {shown.map(({ review, score }) => (
-          <ReviewCard key={review.id} review={review} close={score > 0} />
+          <ReviewCard
+            key={review.id}
+            review={review}
+            close={score > 0}
+            canReport={canPost}
+            reported={reportedIds.includes(review.id)}
+          />
         ))}
       </div>
 
